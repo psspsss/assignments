@@ -1,0 +1,4 @@
+2025-09-12 14:32:10 INFO Application started
+2025-09-12 14:33:45 ERROR Database connection failed
+2025-09-12 14:34:02 WARN Low memory
+2025-09-12 14:35:18 ERROR Timeout while connecting to server
