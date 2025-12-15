@@ -7,3 +7,8 @@ git remote add origin https://github.com/psspsss/assignments.git
 git commit -m "initial first commit"
 
 git push origin main
+
+
+--------------------
+
+this changes were made for assignment 3 using the hotfix branch and were merged to main branch

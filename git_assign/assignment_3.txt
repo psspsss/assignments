@@ -1,0 +1,19 @@
+git branch hotfix
+
+git checkout hotfix
+
+nvim assignment_1.txt
+  - make necessary changes to the main code
+
+git add .
+
+git commit -m "fixing main code using hotfix branch and merging into main branch"
+
+git push origin hotfix
+
+now open the github repository in the browser where we will click compare and pull request from the hotfix
+branch into the main branch and create a pull request stating the changes to the maintainer of the repository
+
+the maintainer of the repository checks out the changes from the hotfix branch adn then merges if not issues
+persists along with merge comment 
+
