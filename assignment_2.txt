@@ -1,0 +1,11 @@
+git branch feature
+
+git checkout feature
+
+vi assignment_2.txt
+
+git add .
+
+git commit -m "added assignment_2 file into new branch feature"
+
+git push origin feature
