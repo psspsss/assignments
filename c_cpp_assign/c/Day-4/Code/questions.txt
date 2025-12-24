@@ -1,0 +1,24 @@
+1. Write a C++ program to declare 3 pointer variables of three different data types and initialize them with their respective variable address. 
+
+		Try copying one type of pointer to another without typecasting.
+		
+		Try the same program in C. Compare the results.
+		
+
+2. Combine the given 2 programs. 
+		1. rand() usage and 
+		2. dynamic array with user given size.
+	Create a dynamic array with user given size, and fill the array with random values using rand(). Print the array.
+ 
+3. 	Use the previous question as data, find the sum and average of the array data.
+ 
+4. Find the largest and smallest number from the 2 question logic.
+ 
+5. Reverse the data stored in dynamic array.
+ 
+6. Sort the dynamic array created with question #2 logic.
+
+7. Try implementing 2 D dynamic array.
+8. Insert a new element into a dynamically allocated array(Created using question #2).
+	#Remember inserting or deleting at a position needs reallocation/resizing of the memory.
+9. Delete an element from dynamically allocated array(Created using question #2).
