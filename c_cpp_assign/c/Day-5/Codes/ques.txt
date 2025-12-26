@@ -1,0 +1,130 @@
+Problem for practice:
+	---------------------
+	1. Area Calculator
+		Create overloaded functions named area() to calculate:
+			Area of a square
+			Area of a rectangle
+			Area of a circle
+ 
+		Requirements
+			Same function name
+			Different parameter lists
+			Use appropriate data types
+=======================================================
+	2. Simple Interest
+			Create a function simpleInterest() with:
+				Principal
+				Rate (default = 5%)
+				Time (default = 1 year)
+	3. Power Function
+			Create a function power() where:
+				Base is mandatory
+				Exponent is optional (default = 2)	
+	4. Calendar Printer
+		Create a function printCalendar() with:
+			Day(default = 1)
+			Month (default = 12)
+			Year (default = 2025)
+
+Problems to Solve:
+	------------------
+	1. Implement the class Calendar with the given data and methods(functions) as given below.
+		class Calendar{
+			int day, month, Year;//private by default
+		public:
+			void setDate(int dd=1, mm=12, int yyyy=2025);
+			bool valideDate();
+			int dayOfWeek();
+			int maxDays();
+			bool isLeap();
+			void printCalendar();			
+		};
+	2. 	Implement the class Num with the given data and methods as given below.
+		class Num{
+			int num;
+		public:
+			void setNum(int n = 10);
+			void dispNum();
+			bool isEven();
+			bool isPrime();			
+		};
+	3. 	Implement the class BankAccount with the given data and methods as given below.
+		Data:
+	    	Account number
+			Account holder name
+			Balance
+        Provide functions to:
+			setAccount --> Initial value of number, name and balance, 
+        	Deposit money
+        	Withdraw money
+        	Display balance
+
+Problem 4:
+----------
+	Define a class MyArray, you provide constructors (default, single parameterized, copy), printArray(), extend(It will add new contents from an existing array).
+	class MyArray{
+		int arr[100];
+		int size;
+	public:
+		MyArray();
+		MyArray(int data);
+		MyArray(const MyArray&);
+		void printArray();
+		void extend(const MyArray&);
+	};
+
+
+notes
+
+C With Classes:
+
+		The concept of Classes was introduced by Bjarne Stroustrup based on his understanding of a Simula. C++ is not the first Object-oriented Programming language. 
+
+		There were other OOP languages like Algol, Simula.
+
+		If a language is said to be an OOP language then it should support all the following 4 key principles.
+
+		Key Principles
+
+        	Abstraction
+
+        	Encapsulation
+
+			Inheritance
+
+        	Polymorphism        	
+
+	======================================================
+
+	Abstraction(Implementation Hiding): 
+
+		Abstraction means showing only the essentail features with clear boundary by hiding the implementation details.
+
+	Encapsulation(Data Hiding):
+
+		Encapsulation is the bundling of data and function that operator on that data into a single unit(Object). while restricting direct access to internal data(using private access specifier).
+
+	Inheritance(Code re-use):
+
+		Inheritance allows a class to inherit (derive) the features(data and functions) of an existing class (Base/Super/Parent). The newly created class is referred to as Derived/Sub/Child class.
+
+		By Inheriting from an existing class, you tend to re-use the existing class.
+
+		Inheritance provide a way of code re-usability by derivation.
+
+	Polymorphism(Many Forms):
+
+		Polymorphism allows the same interface (same name) to behave diffently depending on the object.
+
+		When it comes to inheritance from OOP point of view, It is run-time polymorphism or function/method overriding.
+
+		But for theoritical reasons,
+
+			Indian authors use the term 
+
+			Compile time polymorphism (using function overloading and operator overloading).
+
+			Runtime polymorphism: function overriding using inheritance and virtual functions.
+
+	There are other code re-usable 	terminology in addition to Inheritance, Composition and Aggregation.
+ 
