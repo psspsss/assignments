@@ -1,3 +1,9 @@
+// Purpose: Demonstrate switch-case menu selection using user input in a loop
+// Date: 19/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <stdio.h>
 
 int main(){

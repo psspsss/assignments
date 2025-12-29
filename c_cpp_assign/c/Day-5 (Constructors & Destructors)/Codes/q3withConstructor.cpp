@@ -1,3 +1,9 @@
+// Purpose: BankAccount class with constructor and methods for deposit, withdrawal, and display
+// Date: 26/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <iostream>
 #include <string>
 using namespace std;

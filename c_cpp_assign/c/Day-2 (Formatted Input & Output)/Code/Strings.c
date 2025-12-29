@@ -1,3 +1,9 @@
+// Purpose: Implement and demonstrate custom string functions: strlen, strcpy, strcat, strcmp
+// Date: 22/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <stdio.h>
 
 

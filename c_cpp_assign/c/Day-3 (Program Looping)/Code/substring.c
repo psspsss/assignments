@@ -1,3 +1,9 @@
+// Purpose: Find and replace occurrences of a substring within a string, then print
+// Date: 23/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <stdio.h>
 
 void findAndReplace(char str[], char find[], char replace[]) {

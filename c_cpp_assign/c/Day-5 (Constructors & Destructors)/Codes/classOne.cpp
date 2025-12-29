@@ -1,3 +1,9 @@
+// Purpose: Define Employee class with methods to input and display employee details
+// Date: 26/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <iostream>
 
 using namespace std;

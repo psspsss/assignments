@@ -1,3 +1,9 @@
+// Purpose: Print Fibonacci sequence up to nth term using iterative approach
+// Date: 23/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <stdio.h>
 
 int main() {

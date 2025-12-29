@@ -1,3 +1,9 @@
+// Purpose: Reverse a dynamically allocated array in-place and print the result
+// Date: 24/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <cstdlib>
 #include <ctime>
 #include <iostream>

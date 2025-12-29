@@ -1,3 +1,9 @@
+// Purpose: Count characters, words, and spaces in a string using pointer traversal
+// Date: 23/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <stdio.h>
 
 int main() {

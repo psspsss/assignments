@@ -1,3 +1,9 @@
+// Purpose: Convert temperature between Celsius and Fahrenheit using simple functions
+// Date: 22/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <stdio.h>
 
 float cToF(float c) {

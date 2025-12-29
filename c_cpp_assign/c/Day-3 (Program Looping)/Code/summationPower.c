@@ -1,3 +1,9 @@
+// Purpose: Compute sum of powers of two from 2^0 to 2^n using pow function
+// Date: 23/12/2025
+// Author: Vinayak Majhi
+// ID: 58618
+// Batch ID: 25SUB4505 - DATACOM+5G
+
 #include <math.h>
 #include <stdio.h>
 
