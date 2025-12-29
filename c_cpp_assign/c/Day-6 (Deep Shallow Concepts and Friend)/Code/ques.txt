@@ -1,0 +1,46 @@
+Create a class which a pointer as a data member(you may have other members) with dynamic memory.
+	Task:
+		Pass object by value to a function
+		Track how many times copy constructor is called
+		Explain shallow vs deep impact
+
+
+Remember is a system, CPU is a resource, file is a resource, network is a resource, memory is a resource.
+
+2.  Create a class Resource that has a pointer as a data member that(store these resources as string in a char *ptr):
+
+		Allocates memory dynamically
+
+		Uses default copy behavior
+
+	Task:
+
+		Copy objects
+
+		Destroy them
+
+		Demonstrate double deletion problem
+
+		Fix it using deep copy
+
+Problem #1:
+-----------
+	Implement a class MyString so that, 
+	1. It represents an array of characters which is allocated dynamically 
+	2. Perform deep copy by defining default, single parameterized and copy constructor. Also provide destructor.
+	Data members:
+		char *data;//stores null terminated string  
+		unsigned int len;//stores the length 
+	Functions:
+		default constructor // creates an empty string 
+		single parameterized ctor // allocate memory an store the string. 
+		copy constructor // Deep copy 
+		Destructor 
+		unsigned int size()const; //returns length
+		const char *cStr()const; //returns data 
+		void disp() const; //prints length and data
+
+
+Daywise/Modulewise or Classwork/Assignments
+
+Eg : Day 6/ Copy Constructor / Assignment 1
