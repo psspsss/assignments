@@ -1,0 +1,61 @@
+main ()
+{
+  int D.40033;
+
+  {
+    struct Test objOne;
+    struct Test objTwo;
+
+    try
+      {
+        _1 = std::operator<< <std::char_traits<char> > (&cout, "In main() objOne --> ");
+        _2 = std::basic_ostream<char>::operator<< (_1, &objOne);
+        std::basic_ostream<char>::operator<< (_2, endl);
+        _3 = std::operator<< <std::char_traits<char> > (&cout, "In main() objTwo --> ");
+        _4 = std::basic_ostream<char>::operator<< (_3, &objTwo);
+        std::basic_ostream<char>::operator<< (_4, endl);
+        Test::funOne (&objOne);
+        Test::funOne (&objTwo);
+      }
+    finally
+      {
+        objOne = {CLOBBER};
+        objTwo = {CLOBBER};
+      }
+  }
+  D.40033 = 0;
+  return D.40033;
+}
+
+
+Test::funOne (struct Test * const this)
+{
+  _1 = std::operator<< <std::char_traits<char> > (&cout, "in funOne ");
+  _2 = std::basic_ostream<char>::operator<< (_1, this);
+  std::basic_ostream<char>::operator<< (_2, endl);
+}
+
+
+__static_initialization_and_destruction_0 (int __initialize_p, int __priority)
+{
+  if (__initialize_p == 1) goto <D.40043>; else goto <D.40044>;
+  <D.40043>:
+  if (__priority == 65535) goto <D.40045>; else goto <D.40046>;
+  <D.40045>:
+  std::ios_base::Init::Init (&__ioinit);
+  __cxa_atexit (__dt_comp , &__ioinit, &__dso_handle);
+  goto <D.40047>;
+  <D.40046>:
+  <D.40047>:
+  goto <D.40048>;
+  <D.40044>:
+  <D.40048>:
+}
+
+
+_GLOBAL__sub_I_main ()
+{
+  __static_initialization_and_destruction_0 (1, 65535);
+}
+
+

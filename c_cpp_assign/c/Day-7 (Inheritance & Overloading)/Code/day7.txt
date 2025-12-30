@@ -1,0 +1,6 @@
+1. Are we overloading as member or non-member function(global friend)
+			2. Is it Unary or Binary operator 
+			3. If Unary and it is a member function, then no argument is necessary.
+			If Unary and it is a Non-member function, then one argument is necessary.
+			4. If operator is Binary and it is used as a member function then one argument is necessary.
+			If overloaded as non-member then both the arguments are to be passed.
