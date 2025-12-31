@@ -1,0 +1,87 @@
+1. Shape Drawing System
+ 
+Shape
+|-- Circle
+|-- Rectangle
+|-- Triangle
+ 
+Requirements:
+	Base class Shape with virtual function draw()
+	Derived classes override draw()
+	Use Shape* to call draw() for different objects
+2. Payment Gateway System
+ 
+PaymentMethod
+|-- CreditCard
+|-- DebitCard
+|-- NetBanking 
+|-- UPI
+ 
+Requirements:
+	PaymentMethod is abstract
+	Pure virtual function pay(double amount)
+	Demonstrate polymorphism with base pointer
+3. Banking Account System
+ 
+Account
+|-- SavingsAccount
+|-- CurrentAccount
+|-- FixedDepositAccount
+ 
+Requirements
+	Virtual functions: calculateInterest(), display()
+	Use base-class references
+	Add virtual destructor
+
+Create the following hierarchy without virtual inheritance:
+ 
+        Person
+
+       /      \
+
+   Student    Employee
+
+       \      /
+
+        Intern
+
+Requirements
+
+	Person has name
+
+	Student has rollNo
+
+	Employee has empId
+
+	Intern inherits from both Student and Employee
+
+Tasks --> Perform before virtual inheritance
+
+	Try accessing name from Intern
+
+	Observe and explain the ambiguity error
+
+	Print object sizes
+
+	Access name unambiguously
+
+	Verify only one Person subobject exists
+
+	Compare memory size before and after	
+
+	Observe constructor call order
+
+	Modify constructors to accept parameters
+
+	Initialize Person correctly from Intern class
+ 
+Simple API Designing	
+ 
+		Database --> ABC 
+			virtual void connect() = 0;
+			virtual void query() = 0;
+			virtual void disconnect() = 0;
+		MySQL: public Database
+			overriding the function here 
+		OracleDB: public Database
+			overriding the function here
