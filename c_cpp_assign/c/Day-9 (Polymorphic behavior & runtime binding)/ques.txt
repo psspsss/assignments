@@ -1,0 +1,26 @@
+Problem #4:
+
+-----------
+
+	Array Operations System (Abstract Behavior via Inheritance)
+
+Problem Statement
+
+	An array processing system supports different types of arrays such as IntegerArray, FloatArray, and StringArray.
+
+	Each array type performs operations like insert elements and display elements.
+ 
+	Define a base class ArrayBase with virtual methods insert() and display().
+
+	Derived classes must override these methods to handle different data types.
+
+	The program should dynamically create an array object based on user input and perform operations.
+ 
+Concepts Tested
+
+	Polymorphic behavior
+
+	Abstract design using base class
+
+	Runtime method binding
+ 
