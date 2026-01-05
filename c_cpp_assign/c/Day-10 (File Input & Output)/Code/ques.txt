@@ -1,0 +1,109 @@
+Problems :
+----------
+	1. Implement your own cat program, which will take file name as an argument and print the contents of the file on the screen.
+	2. Update your own cat program, which will take -n option and file name as an arguments and print the contents of the file on the screen along with the line numbers.
+	3. Implement your wc program, which takes in file name as an argument and print number of lines, number of words and number of characters present in the file along with the file name 
+	command Prompt $ ./wc ioOne.cpp
+	  9  16 100 ioOne.cpp
+		here 9 lines, 16 words and 100 characters.
+
+
+
+Student Record Management
+
+	Create a binary file–based program to manage student records.
+
+	Each record contains:
+
+		Roll number
+
+		Name
+
+		Marks
+
+	Operations:
+
+		Create (add) a record
+
+		Read (display) all records
+ 
+	Constraints:
+
+		Use a class
+
+		Store objects directly in a binary file
+ 
+	4. Student Record Management
+
+		Create a binary file–based program to manage student records.
+ 
+		Each record contains:
+
+			Roll number
+
+			Name
+
+			Marks
+
+		Operations:
+
+			Create (add student)
+
+			Read (display all students)
+
+			Update marks of a student using roll number
+
+			Delete a student record
+
+		Requirements:
+
+			Use a class
+
+			Store objects directly in a binary file
+
+			Use file pointers (seekg, seekp)
+
+	5. 	Book Inventory (Create + Read)
+
+			Maintain a binary file of books.
+
+		Fields:
+
+			Book ID
+
+			Title
+
+			Price
+
+		Operations:
+
+			Add book
+
+			List all books	
+
+ 
+Library Management System
+
+	Create a binary file–based library system.
+
+Fields:
+
+	Book ID
+
+	Book name
+
+	Author
+
+	Availability status
+
+Operations:
+
+	Add book
+
+	Issue book
+
+	Return book
+
+	Delete book record
+
+ 
