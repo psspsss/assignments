@@ -1,0 +1,33 @@
+1. DynArray:
+		Implement a generic class so it can be an array of any type.
+	Operatios:
+		Constructor
+			default 
+			parameterized 
+				single --> size 
+				two --> size, element			
+		Destructor 
+		Display()
+------------------------------------------------------
+2. MyStack
+		Design a generic stack using class templates.
+	Operations
+		push
+		pop
+		top
+		isEmpty
+------------------------------------------------------
+3. Matrix
+		Create a class template Matrix<T>:
+	Operations:
+		Store 2D matrix
+		Add two matrices
+		Display matrix
+
+
+4. Create an Dynamic array program that we used in exception handling yesterday without classes inside createArray(size);
+	instead of using raw pointer use unique_ptr. (Yesterday's program involved using raw pointer)
+	Task to perform:
+		1. Initialize values 
+		2. Print elements 
+		3. Ensure proper cleanup
