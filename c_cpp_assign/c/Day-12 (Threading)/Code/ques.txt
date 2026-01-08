@@ -1,0 +1,27 @@
+1. Hello World 
+		Create a program that creates a single thread.
+		Prints "Hello world from thread"
+		Prints "Hello world from main"
+	using 
+		std::thread 
+		join()
+	2. get_id() --> Printing ID of the thread.
+		Create 3 threads so that they can 
+			print its own thread ID using 
+				std::this_thread::get_id() 
+	3. Print 1 to 10 
+		a. passing function as argument 
+		b. passing lambda as argument
+	4. join & detach 
+		Create 2 threads
+			one thread is joined 
+			one thread is detached 
+		task:
+			print "hello world" to show execution order 
+		Experiment:	
+			What happens if main() exits first.
+ 
+	5. Create 5 threads using vector to store thread objects. synchronize with main using join() with all 5 threads
+
+	6. Create an array of 100 elements(global or static array), create 5 threads from main, fill the array elements where each thread fills 20 elements only.	
+ 
