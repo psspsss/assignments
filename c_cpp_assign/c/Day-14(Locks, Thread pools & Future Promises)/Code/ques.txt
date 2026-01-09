@@ -1,0 +1,602 @@
+/*
+
+*      Filling an array of 100 elements with 5 threads
+
+*
+
+*              Using global array variable
+
+*
+
+*/
+ 
+#include <iostream>
+
+#include <thread>
+
+#include <vector>
+ 
+// Global array of 100 elements
+
+int arr[100];
+ 
+// Thread function
+
+void fillArray(int startIndex, int count)
+
+{
+
+    for (int i = startIndex; i < startIndex + count; i++) {
+
+        arr[i] = 100 + i;   // Fill with thread ID for visibility
+
+    }
+
+}
+ 
+int main()
+
+{
+
+    const int numThreads = 5;
+
+    const int elementsPerThread = 20;
+ 
+    std::vector<std::thread> threads;
+ 
+    // Create 5 threads
+
+    for (int i = 0; i < numThreads; i++) {
+
+        threads.emplace_back(
+
+            fillArray,
+
+            i * elementsPerThread,   // start index
+
+            elementsPerThread
+
+        );
+
+    }
+ 
+    // Wait for all threads to complete
+
+    for (auto& t : threads) {
+
+        t.join();
+
+    }
+ 
+        std::cout<<"Array: ";
+
+    // Verify the result
+
+    for (int i = 0; i < 100; i++) {
+
+        std::cout << arr[i] << " ";
+
+    }
+
+        std::cout<<std::endl;
+
+    return 0;
+
+}
+ 
+/*
+
+* using local static array
+
+*
+
+*
+
+*/
+ 
+#include <iostream>
+
+#include <thread>
+
+#include <vector>
+ 
+// Thread function
+
+void fillArray(int* arr, int startIndex, int count)
+
+{
+
+    for (int i = startIndex; i < startIndex + count; i++) {
+
+        arr[i] = 100 + i;
+
+    }
+
+}
+ 
+int main()
+
+{
+
+    // Static array (shared across threads)
+
+    static int arr[100];
+ 
+    const int numThreads = 5;
+
+    const int elementsPerThread = 20;
+ 
+    std::vector<std::thread> threads;
+ 
+    // Create threads
+
+    for (int i = 0; i < numThreads; i++) {
+
+        threads.emplace_back(
+
+            fillArray,
+
+            arr,                      // pointer to static array
+
+            i * elementsPerThread,    // start index
+
+            elementsPerThread        // number of elements
+
+        );
+
+    }
+ 
+    // Join threads
+
+    for (auto& t : threads) {
+
+        t.join();
+
+    }
+ 
+    // Print array contents
+
+        std::cout<<"Array: ";
+
+    for (int i = 0; i < 100; i++) {
+
+        std::cout << arr[i] << " ";
+
+    }
+
+        std::cout<<std::endl;
+ 
+    return 0;
+
+}
+ 
+#include <iostream>
+
+#include <thread>
+
+#include <vector>
+ 
+// Thread function
+
+void fillArray(int* arr, int startIndex, int count)
+
+{
+
+    for (int i = startIndex; i < startIndex + count; i++) {
+
+        arr[i] = 100 + i;
+
+    }
+
+}
+ 
+int main()
+
+{
+
+    //Heap array (shared across threads)
+
+    int *arr = new  int[100];
+ 
+    const int numThreads = 5;
+
+    const int elementsPerThread = 20;
+ 
+    std::vector<std::thread> threads;
+ 
+    // Create threads
+
+    for (int i = 0; i < numThreads; i++) {
+
+        threads.emplace_back(
+
+            fillArray,
+
+            arr,                      // pointer to heap array
+
+            i * elementsPerThread,    // start index
+
+            elementsPerThread        // number of elements
+
+        );
+
+    }
+ 
+    // Join threads
+
+    for (auto& t : threads) {
+
+        t.join();
+
+    }
+ 
+    // Print array contents
+
+        std::cout<<"Array: ";
+
+    for (int i = 0; i < 100; i++) {
+
+        std::cout << arr[i] << " ";
+
+    }
+
+        std::cout<<std::endl;
+ 
+        delete []arr;
+ 
+    return 0;
+
+}
+ 
+#include <iostream>
+
+#include <thread>
+
+#include <vector>
+
+using namespace std;
+ 
+// Thread function
+
+void fillArray(vector<int> &arr, int startIndex, int count)
+
+{
+
+    for (int i = startIndex; i < startIndex + count; i++) {
+
+        arr[i] = 100 + i;
+
+    }
+
+}
+ 
+int main()
+
+{
+
+    // Static array (shared across threads)
+
+    vector<int> vArr(100);
+ 
+    const int numThreads = 5;
+
+    const int elementsPerThread = 20;
+ 
+    vector<thread> threads;
+ 
+    // Create threads
+
+    for (int i = 0; i < numThreads; i++) {
+
+        threads.emplace_back(
+
+            fillArray,
+
+            ref(vArr),                      // pointer to heap array
+
+            i * elementsPerThread,    // start index
+
+            elementsPerThread        // number of elements
+
+        );
+
+    }
+ 
+    // Join threads
+
+    for (auto& t : threads) {
+
+        t.join();
+
+    }
+ 
+    // Print array contents
+
+        cout<<"Array: ";
+
+    for (int i : vArr) {
+
+        cout << i << " ";
+
+    }
+
+        cout<<endl;
+ 
+    return 0;
+
+}
+ 
+#include <iostream>
+
+#include <thread>
+
+#include <vector>
+
+using namespace std;
+ 
+// Thread function
+
+void fillArray(int* arr, int startIndex, int count)
+
+{
+
+    for (int i = startIndex; i < startIndex + count; i++) {
+
+        arr[i] = 100 + i;
+
+    }
+
+}
+ 
+int main()
+
+{
+ 
+    auto arr = make_unique<int[]>(100); //unique_ptr
+ 
+    const int numThreads = 5;
+
+    const int elementsPerThread = 20;
+ 
+    vector<thread> threads;
+ 
+    // Create threads
+
+    for (int i = 0; i < numThreads; i++) {
+
+        threads.emplace_back(
+
+            fillArray,
+
+            arr.get(),  //using get() pointer to heap array
+
+            i * elementsPerThread,    // start index
+
+            elementsPerThread        // number of elements
+
+        );
+
+    }
+ 
+    // Join threads
+
+    for (auto& t : threads) {
+
+        t.join();
+
+    }
+ 
+    // Print array contents
+
+        cout<<"Array: ";
+
+    for (int i = 0; i < 100; i++) {
+
+        cout << arr[i] << " ";
+
+    }
+
+        cout<<endl;
+ 
+    return 0;
+
+}
+
+ 
+#include <iostream>
+
+#include <thread>
+
+#include <mutex>
+
+using namespace std;
+ 
+int globVar = 0;
+
+mutex mVar;
+ 
+void Update(){
+
+        unique_lock<mutex> lock(mVar);
+
+        for (int cnt=0;cnt < 100000; cnt++)
+
+                globVar++;
+
+        lock.unlock();
+
+}
+ 
+int main(){
+
+        thread t1(Update);
+
+        thread t2(Update);
+
+        thread t3(Update);
+ 
+        t1.join();
+
+        t2.join();
+
+        t3.join();
+ 
+        cout<<"global var: "<<globVar<<endl;
+
+}
+
+ 
+Problem:
+
+1.	Sum of Numbers.
+
+	Create a shared variable sum, where you have 3 threads adding 1 to 1000 to sum variable.
+
+	Focus: on correct placement of mutex lock
+
+		a. lock_guard 
+
+		b. unique_lock
+ 
+2.  Printing series of values:
+ 
+	Create 3 threads which will 
+
+		print numbers from 1 - 10
+
+		output should be like given below
+
+	Output:
+
+		Thread #1: 1 2 3 4 5 6 7 8 9 10
+
+		Thread #2: 1 2 3 4 5 6 7 8 9 10
+
+		Thread #3: 1 2 3 4 5 6 7 8 9 10
+
+	Here synchronization is on IO
+ 
+3. Bank Account Simulation
+
+	Create a BankAccount class with:
+
+		balance (shared)
+
+		deposit(int)
+
+		withdraw(int)
+
+	Task
+
+		Run deposit and withdraw operations from multiple threads
+
+		Protect the balance using a mutex
+
+		Focus
+
+			Mutex inside a class
+
+			Thread-safe methods
+ 
+4. Deadlock Scenario (Analysis)
+
+	Create two mutexes m1 and m2.
+
+	Task
+
+		Thread A locks m1 then m2
+
+		Thread B locks m2 then m1
+
+	Questions
+
+		What happens?
+
+		Why is this dangerous?
+
+	Focus
+
+		Deadlock understanding
+
+	Fixing the above problem:
+
+		Locking mutexes in a consistent order
+
+			OR
+
+		Using std::lock(m1, m2)
+ 
+5. Shared Resource Access Control
+
+	Create:
+
+		One shared resource
+
+			5 reader threads
+
+			2 writer threads
+
+	Task
+
+		Allow only one writer at a time
+
+		Readers must wait while writing		
+ 
+
+Problem:
+
+6. Write a C program, with 4 functions (fun(), funOne(), funTwo(), funThree()) called from main().
+
+	Have the prototypes in fun.h
+
+	definitions in respective files ((fun() --> fun.c), (funOne() --> funOne.c), (funTwo() --> funTwo.c), (funThree() --> funThree.c), (funFour() --> funFour.c))
+
+	(main() --> testMain.c) -->
+
+	Create 
+
+		Static library myLib.a 
+
+			compile your program with myLib.a 
+
+			run and test the output 
+
+			Debug the code using gdb
+
+		Dynamic library libMine.so 
+
+			compile your program with libMine.so 
+
+			run and test the output
+
+			Debug the code using gdb
+
+====================================================
+
+7. Write a C++ program, with a Class Test with 4 functions (fun(), funOne(), funTwo(), funThree()) called from main().
+
+	Have the prototypes in fun.h
+
+	definitions in respective files ((fun() --> fun.cpp), (funOne() --> funOne.cpp), (funTwo() --> funTwo.cpp), (funThree() --> funThree.cpp), (funFour() --> funFour.cpp))
+
+	(main() --> testMain.cpp) -->
+
+	Create 
+
+		Static library myLib.a 
+
+			compile your program with myLib.a 
+
+			run and test the output 
+
+		Dynamic library libMine.so 
+
+			compile your program with libMine.so 
+
+			run and test the output
+
+			Debug the code using gdb
+
+====================================================			
+
+ 
