@@ -1,0 +1,1 @@
+https://github.com/psspsss/wipro-devops-repo/blob/0dde87c7c03a22168422b443e2cc5d66e3f3a5ab/k8s/deployment.yml
