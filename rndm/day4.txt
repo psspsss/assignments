@@ -2,3 +2,11 @@ https://github.com/psspsss/wipro-devops-repo/blob/0dde87c7c03a22168422b443e2cc5d
 
 
 https://raw.githubusercontent.com/psspsss/wipro-devops-repo/refs/heads/main/k8s/deployment.yml
+
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+kubectl get pods -n kube-system | findstr metrics
+
+kubectl get pods -n kube-system | findstr metrics
+ 
