@@ -58,3 +58,55 @@ node {
 
     }
 }
+
+
+
+write a manifest file to deploy 3 replica of the docker image on Kubernetes image is on docker repo it should be stateful with volume
+
+
+
+# Headless Service (required for StatefulSet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-headless
+spec:
+  clusterIP: None
+  selector:
+    app: stateful-app
+  ports:
+    - port: 80
+---
+# StatefulSet with 3 replicas and persistent volume
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stateful-app
+spec:
+  serviceName: app-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: stateful-app
+  template:
+    metadata:
+      labels:
+        app: stateful-app
+    spec:
+      containers:
+        - name: app-container
+          image: nginx:latest   # replace with your Docker repo image
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
