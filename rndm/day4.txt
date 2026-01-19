@@ -31,3 +31,30 @@ node {
 
 }
  
+
+
+
+
+
+
+node {
+
+    stage('Stage 1: Checkout Code from Git') {
+
+        // Clone Space Science repository into Jenkins workspace
+        git branch: 'main', url: 'https://github.com/harsh3109/Space-Science.git'
+
+    }
+
+    stage('Stage 2: Copy Files to NGINX html Folder') {
+
+        bat '''
+        echo Copying files from Jenkins workspace to NGINX html folder...
+
+        xcopy "%WORKSPACE%\\*" "C:\\Users\\Administrator\\Downloads\\nginx-1.29.4\\html\\" /E /I
+
+        echo Files copied successfully.
+        '''
+
+    }
+}
