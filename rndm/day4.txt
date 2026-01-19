@@ -13,3 +13,21 @@ kubectl get pods -n kube-system | findstr metrics
 
 
 @echo off setlocal REM Source and destination paths set SRC=C:\ProgramData\Jenkins\.jenkins\workspace\New Job set DEST=C:\Users\Administrator\Downloads\nginx-1.28.1\html echo Cleaning destination folder... if exist "%DEST%" ( del /q "%DEST%\** for /d %%d in ("%DEST%\*") do rmdir /s /q "%%d" ) echo Copying files from Jenkins workspace to Nginx html... хсору "%SRC%\*" "%DEST%\" /E/I/Y echo Deployment completed successfully. endlocal
+
+
+node {
+
+    def mvnHome
+ 
+    stage('Preparation') {
+
+        // Checkout the correct branch from GitHub
+
+        git branch: 'main',
+
+            url: 'https://github.com/diptendramaity/jenkins_apps'
+
+    }
+
+}
+ 
