@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4G LTE EPC Architecture - Technical Reference</title>
+    <style>
+        /* Everforest Hard Dark Palette */
+        :root {
+            --bg-dim: #232a2e;
+            --bg0: #2b3339;
+            --bg1: #323c41;
+            --bg2: #3a454a;
+            --bg3: #445055;
+            --fg: #d3c6aa;
+            --red: #e67e80;
+            --orange: #e69875;
+            --yellow: #dbbc7f;
+            --green: #a7c080;
+            --blue: #7fbbb3;
+            --aqua: #83c092;
+            --purple: #d699b6;
+            --grey: #859289;
+            
+            --user-plane-stroke: var(--green);
+            --control-plane-stroke: var(--blue);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Credits */
+        .credit {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 0.85rem;
+            color: var(--grey);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            z-index: 1000;
+            text-transform: uppercase;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 1.2fr;
+            height: 100%;
+            gap: 15px;
+            padding: 50px 30px;
+            position: relative;
+        }
+
+        /* Column Styles */
+        .column {
+            background-color: rgba(50, 60, 65, 0.4);
+            border: 1px solid var(--bg3);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 25px;
+            position: relative;
+        }
+        .column-header {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--aqua);
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Node Styles */
+        .node {
+            width: 185px;
+            padding: 18px;
+            border-radius: 14px;
+            text-align: center;
+            color: var(--bg-dim);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.4);
+            filter: brightness(1.1);
+        }
+        .node h3 { font-size: 1.2rem; margin-bottom: 6px; font-weight: 800; }
+        .node p { font-size: 0.7rem; font-weight: 600; opacity: 0.9; line-height: 1.3; }
+
+        /* Everforest Node Colors */
+        #UE { background: var(--grey); color: var(--bg0); margin-top: 150px; }
+        #enodeB { background: var(--aqua); color: var(--bg0); margin-top: 150px; }
+        
+        #MME { background: var(--blue); color: var(--bg0); margin-bottom: 40px; }
+        #HSS { background: var(--purple); color: var(--bg0); position: absolute; top: 120px; right: 25px; }
+        
+        #SGW { background: var(--green); color: var(--bg0); margin-bottom: 30px; }
+        #PGW { background: var(--green); color: var(--bg0); margin-bottom: 30px; width: 160px;}
+        
+        #PCRF { background: var(--yellow); color: var(--bg0); margin-top: 20px; }
+        #Internet { background: var(--orange); color: var(--bg0); margin-top: 130px; width: 230px; height: 150px; border-radius: 3rem; }
+
+        /* Characteristics Box */
+        .info-box {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            left: 25px;
+            background: var(--bg1);
+            border: 1px solid var(--bg3);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 0.75rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            pointer-events: none;
+            color: var(--fg);
+        }
+        .info-box h4 { grid-column: span 2; text-align: center; margin-bottom: 8px; color: var(--yellow); text-transform: uppercase; }
+
+        /* SVG Connections */
+        #svg-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5;
+        }
+        .interface-line { fill: none; stroke-width: 3; transition: 0.3s; stroke-linecap: round; }
+        .user-path { stroke: var(--user-plane-stroke); }
+        .control-path { stroke: var(--control-plane-stroke); stroke-dasharray: 6, 6; }
+        
+        .label-text { 
+            font-size: 11px; 
+            font-weight: 800; 
+            fill: var(--fg); 
+            paint-order: stroke; 
+            stroke: var(--bg0); 
+            stroke-width: 3px;
+        }
+
+        /* Packet Animation */
+        .packet { fill: var(--yellow); filter: drop-shadow(0 0 4px var(--yellow)); }
+        .signal { fill: var(--blue); filter: drop-shadow(0 0 3px var(--blue)); }
+
+        /* Modal Styles */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg1);
+            border: 1px solid var(--bg3);
+            color: var(--fg);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            z-index: 2000;
+            width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #modal::-webkit-scrollbar { width: 5px; }
+        #modal::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 10px; }
+        
+        #modal h2 { color: var(--green); margin-bottom: 10px; font-weight: 800; }
+        #modal h4 { color: var(--aqua); font-size: 0.8rem; text-transform: uppercase; margin-top: 15px; border-bottom: 1px solid var(--bg3); padding-bottom: 5px;}
+        #modal ul { margin: 15px 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.6; color: var(--fg); }
+        #modal li { margin-bottom: 8px; }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1999;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+        .close-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg2);
+            color: var(--fg);
+            border: 1px solid var(--bg3);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .close-btn:hover { background: var(--bg3); }
+
+        .legend {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            background: var(--bg1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--bg3);
+            font-size: 0.8rem;
+            z-index: 100;
+        }
+        .legend-item { display: flex; align-items: center; margin: 6px 0; font-weight: 600; color: var(--fg); }
+        .l-line { width: 35px; height: 3px; margin-right: 12px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="credit">Designed by Vinayak Majhi</div>
+
+<div class="main-container" id="container">
+    <svg id="svg-canvas"></svg>
+
+    <div class="column">
+        <div class="column-header">User Equipment</div>
+        <div class="node" id="UE" onclick="openModal('UE')">
+            <h3>UE</h3>
+            <p>User Equipment (Mobile Device)</p>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="column-header">Radio Access</div>
+        <div class="node" id="enodeB" onclick="openModal('ENB')">
+            <h3>eNodeB</h3>
+            <p>LTE Base Station</p>
+        </div>
+    </div>
+
+    <div class="column" style="background-color: rgba(50, 60, 65, 0.6); border: 1px solid var(--blue);">
+        <div class="column-header" style="color: var(--blue);">Evolved Packet Core</div>
+        
+        <div class="node" id="MME" onclick="openModal('MME')">
+            <h3>MME</h3>
+            <p>Mobility Management Entity</p>
+            <p style="font-weight: 800; font-size: 9px; margin-top:8px; padding: 2px 0; background: rgba(0,0,0,0.15); border-radius: 4px;">CONTROL PLANE</p>
+        </div>
+
+        <div class="node" id="HSS" onclick="openModal('HSS')">
+            <h3>HSS</h3>
+            <p>Home Subscriber Server</p>
+            <p style="font-weight: 800; font-size: 9px; margin-top:8px; padding: 2px 0; background: rgba(0,0,0,0.15); border-radius: 4px;">USER DATABASE</p>
+        </div>
+
+        <div class="epc-middle">
+            <div class="node" id="SGW" onclick="openModal('SGW')">
+                <h3>S-GW</h3>
+                <p>Serving Gateway</p>
+                <p style="font-weight: 800; font-size: 9px; margin-top:8px; padding: 2px 0; background: rgba(0,0,0,0.15); border-radius: 4px;">USER PLANE ANCHOR</p>
+            </div>
+            <div class="node" id="PGW" onclick="openModal('PGW')">
+                <h3>P-GW</h3>
+                <p>PDN Gateway</p>
+                <p style="font-weight: 800; font-size: 9px; margin-top:8px; padding: 2px 0; background: rgba(0,0,0,0.15); border-radius: 4px;">IP ALLOCATION & QoS</p>
+            </div>
+        </div>
+
+        <div class="node" id="PCRF" onclick="openModal('PCRF')">
+            <h3>PCRF</h3>
+            <p>Policy & Charging Rules Function</p>
+        </div>
+
+        <div class="info-box">
+            <h4>4G EPC Key Characteristics (3GPP TS 23.401)</h4>
+            <div>• All-IP flat architecture<br>• Separation of Control & User Plane<br>• QoS with 9 QCI classes</div>
+            <div>• Peak DL: 300 Mbps (Cat 6)<br>• ~10ms latency (one-way)<br>• VoLTE, NB-IoT support</div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="column-header">External Networks</div>
+        <div class="node" id="Internet" onclick="openModal('INET')">
+            <h3>Internet / PDN</h3>
+            <p>Packet Data Networks</p>
+            <div style="margin-top:12px; opacity: 0.7; font-size: 9px; font-weight: 700; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px;">IMS, Internet, Services</div>
+        </div>
+    </div>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="l-line" style="background: var(--user-plane-stroke);"></div> User Plane (Data)</div>
+    <div class="legend-item"><div class="l-line" style="border-top: 3px dashed var(--control-plane-stroke);"></div> Control Plane (Signaling)</div>
+</div>
+
+<div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
+<div id="modal">
+    <h2 id="m-title">Title</h2>
+    <p id="m-plane" style="font-weight:800; color:var(--orange); text-transform: uppercase; letter-spacing: 0.05em;"></p>
+    <h4>Overview & Role</h4>
+    <p id="m-desc" style="font-size: 0.85rem; line-height: 1.5; color: var(--fg); margin: 10px 0;"></p>
+    <h4>Technical Responsibilities</h4>
+    <ul id="m-list"></ul>
+    <button class="close-btn" onclick="closeModal()">CLOSE DETAILS</button>
+</div>
+
+<script>
+    const data = {
+        UE: { 
+            title: "User Equipment (UE)", 
+            plane: "Plane: User & Control", 
+            desc: "The UE is the mobile device (smartphone, tablet, or IoT module) that allows the subscriber to access network services. It terminates the radio link from the eNodeB and handles the user-facing side of the protocol stack.",
+            list: [
+                "Terminates NAS (Non-Access Stratum) signaling for authentication and mobility management.",
+                "Manages Radio Resource Control (RRC) states (Idle vs Connected).",
+                "Performs radio signal measurements and provides reports to the eNodeB for handover decisions.",
+                "Handles encryption and integrity protection for the radio interface (Uu)."
+            ] 
+        },
+        ENB: { 
+            title: "eNodeB (LTE Base Station)", 
+            plane: "Plane: User & Control", 
+            desc: "The eNodeB is an intelligent base station. Unlike 3G base stations, it handles many control functions locally to reduce latency. It acts as the bridge between the air interface (Uu) and the wired EPC.",
+            list: [
+                "Radio Resource Management (RRM): Dynamic allocation of resources to UEs.",
+                "IP Header Compression (ROHC) and encryption of user data over the air.",
+                "MME Selection: Chooses an MME when the UE attaches.",
+                "User Plane Routing: Forwards user traffic to the SGW via S1-U tunnels.",
+                "Control Plane Routing: Forwards signaling to the MME via S1-MME."
+            ] 
+        },
+        MME: { 
+            title: "Mobility Management Entity (MME)", 
+            plane: "Plane: Control Plane Only", 
+            desc: "The MME is the 'brain' of the EPC control plane. It does not handle any user data; instead, it manages the signaling, security, and mobility of the UEs.",
+            list: [
+                "NAS Signaling Security: Manages authentication and encryption keys with the HSS.",
+                "Reachability Management: Paging the UE when it is in Idle mode to deliver incoming calls/data.",
+                "Tracking Area Management: Monitors UE location at the Tracking Area (TA) level.",
+                "Bearer Management: Coordinates the setup and release of data paths (EPS bearers).",
+                "Selection logic for SGW and PGW during the initial attach procedure."
+            ] 
+        },
+        HSS: { 
+            title: "Home Subscriber Server (HSS)", 
+            plane: "Plane: Control Plane", 
+            desc: "The HSS is a central database that stores all subscriber-related information. It is the evolution of the HLR from 2G/3G networks.",
+            list: [
+                "Subscription Management: Stores user profiles, service entitlements, and roaming restrictions.",
+                "Authentication Vectors: Generates security keys for the MME to authenticate the UE.",
+                "Location Storage: Keeps track of which MME is currently serving a specific subscriber.",
+                "Diameter Protocol: Communicates with the MME via the S6a interface."
+            ] 
+        },
+        SGW: { 
+            title: "Serving Gateway (S-GW)", 
+            plane: "Plane: User Plane", 
+            desc: "The SGW acts as the local mobility anchor. It handles the data packets and ensures they follow the UE as it moves between different base stations.",
+            list: [
+                "Mobility Anchor: Ensures data session continuity during inter-eNodeB handovers.",
+                "Packet Routing: Forwards data between the eNodeB (S1-U) and the PGW (S5/S8).",
+                "Downlink Buffering: Temporarily stores incoming data packets while the MME pages an Idle UE.",
+                "Usage Reporting: Collects data volume info for legal interception and charging."
+            ] 
+        },
+        PGW: { 
+            title: "PDN Gateway (P-GW)", 
+            plane: "Plane: User Plane & Policy Enforcement", 
+            desc: "The PGW is the entry/exit point for the EPC to the outside world. It is the highest-level anchor in the system.",
+            list: [
+                "IP Allocation: Assigns dynamic or static IP addresses to the UE.",
+                "PCEF (Policy and Charging Enforcement): Enforces QoS rules received from the PCRF.",
+                "Packet Screening: Performs Deep Packet Inspection (DPI) to identify application types.",
+                "Anchor point for mobility between 3GPP and non-3GPP networks (like Trusted Wi-Fi).",
+                "Gating: Blocks or allows traffic based on subscriber rules."
+            ] 
+        },
+        PCRF: { 
+            title: "Policy & Charging Rules Function", 
+            plane: "Plane: Control Plane", 
+            desc: "The PCRF is the policy decision maker. It decides how the network should treat specific flows of data based on the user's subscription.",
+            list: [
+                "PCC Rule Creation: Translates service requirements into technical rules for the PGW.",
+                "QoS Management: Assigns QCI (QoS Class Identifier) levels to prioritize traffic (e.g., VoLTE vs Web).",
+                "Usage Monitoring: Dynamically adjusts policies if a user hits a data cap.",
+                "Diameter Gx Interface: Pushes real-time decisions to the PGW enforcement point."
+            ] 
+        },
+        INET: { 
+            title: "Internet / PDN", 
+            plane: "Plane: External Data Network", 
+            desc: "Packet Data Networks (PDN) are the destinations for user traffic. This is where the service requested by the user actually resides.",
+            list: [
+                "Public Internet: Access to websites, social media, and cloud services.",
+                "IMS (IP Multimedia Subsystem): The platform that enables VoLTE (Voice over LTE).",
+                "Operator Services: Internal services like firmware updates or visual voicemail.",
+                "Corporate VPNs: Private secure tunnels for enterprise users."
+            ] 
+        }
+    };
+
+    function openModal(id) {
+        document.getElementById('m-title').innerText = data[id].title;
+        document.getElementById('m-plane').innerText = data[id].plane;
+        document.getElementById('m-desc').innerText = data[id].desc;
+        document.getElementById('m-list').innerHTML = data[id].list.map(i => `<li>${i}</li>`).join('');
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function drawLines() {
+        const svg = document.getElementById('svg-canvas');
+        svg.innerHTML = '';
+        const rect = document.getElementById('container').getBoundingClientRect();
+
+        const connect = (fromId, toId, label, type) => {
+            const f = document.getElementById(fromId).getBoundingClientRect();
+            const t = document.getElementById(toId).getBoundingClientRect();
+            
+            const x1 = f.left + f.width - rect.left;
+            const y1 = f.top + f.height/2 - rect.top;
+            const x2 = t.left - rect.left;
+            const y2 = t.top + t.height/2 - rect.top;
+
+            const isVertical = Math.abs(x2 - x1) < 60;
+            const x1_v = f.left + f.width/2 - rect.left;
+            const y1_v = (y1 < y2) ? f.top + f.height - rect.top : f.top - rect.top;
+            const x2_v = t.left + t.width/2 - rect.left;
+            const y2_v = (y1 < y2) ? t.top - rect.top : t.top + t.height - rect.top;
+
+            let pathD = isVertical ? `M ${x1_v} ${y1_v} L ${x2_v} ${y2_v}` : `M ${x1} ${y1} L ${x2} ${y2}`;
+
+            if (fromId === 'enodeB' && toId === 'MME') pathD = `M ${x1} ${y1} L ${x2} ${y2 - 25}`;
+            if (fromId === 'enodeB' && toId === 'SGW') pathD = `M ${x1} ${y1} L ${x2} ${y2 + 25}`;
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathD);
+            path.setAttribute("class", `interface-line ${type === 'user' ? 'user-path' : 'control-path'}`);
+            svg.appendChild(path);
+
+            const midX = isVertical ? x1_v + 15 : (x1 + x2) / 2;
+            const midY = isVertical ? (y1_v + y2_v) / 2 : (y1 + y2) / 2 - 10;
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", midX);
+            text.setAttribute("y", midY);
+            text.setAttribute("class", "label-text");
+            text.textContent = label;
+            svg.appendChild(text);
+
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("r", "3.5");
+            circle.setAttribute("class", type === 'user' ? "packet" : "signal");
+            const animate = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
+            animate.setAttribute("dur", type === 'user' ? "2.5s" : "5s");
+            animate.setAttribute("repeatCount", "indefinite");
+            animate.setAttribute("path", pathD);
+            circle.appendChild(animate);
+            svg.appendChild(circle);
+        };
+
+        connect('UE', 'enodeB', 'Uu (Radio)', 'control'); 
+        connect('enodeB', 'MME', 'S1-MME', 'control'); 
+        connect('enodeB', 'SGW', 'S1-U', 'user');   
+        connect('SGW', 'PGW', 'S5/S8', 'user');
+        connect('PGW', 'Internet', 'SGi', 'user');
+        connect('MME', 'HSS', 'S6a', 'control');
+        connect('MME', 'SGW', 'S11', 'control');
+        connect('PCRF', 'PGW', 'Gx', 'control');
+    }
+
+    window.addEventListener('load', drawLines);
+    window.addEventListener('resize', drawLines);
+</script>
+
+</body>
+</html>

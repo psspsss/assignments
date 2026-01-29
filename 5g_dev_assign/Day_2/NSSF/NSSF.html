@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSSF Interactions in 5G Core | Interactive Architecture</title>
+    <!-- GSAP for robust technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-hard: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            background: var(--bg1);
+            border-bottom: 2px solid var(--bg2);
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        header h1 { margin: 0; font-size: 1.8rem; letter-spacing: -0.5px; color: #2d353b; }
+        header p { margin: 5px 0 0; opacity: 0.7; font-size: 1rem; }
+
+        .simulation-bar {
+            position: absolute;
+            top: 100px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+        }
+
+        .btn {
+            background: white;
+            border: 1px solid var(--bg2);
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--fg);
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .btn:hover { background: var(--orange); color: white; border-color: var(--orange); transform: translateX(-5px); }
+
+        main {
+            position: relative;
+            height: calc(100vh - 100px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #nssf-svg {
+            max-width: 100%;
+            max-height: 90%;
+            width: 1100px;
+            height: auto;
+        }
+
+        /* Node Interactivity */
+        .node { cursor: pointer; transition: var(--transition); }
+        .node:hover { transform: translateY(-5px); }
+        .node rect, .node circle { transition: stroke-width 0.3s; }
+        .node:hover rect, .node:hover circle { stroke-width: 4px; }
+
+        /* Sidebar Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: white;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 6px solid var(--orange);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--bg4); letter-spacing: 1px; }
+        .panel-title { font-size: 2.2rem; color: var(--orange); margin: 10px 0 25px; line-height: 1.1; }
+        .panel-content { line-height: 1.8; font-size: 1.1rem; color: var(--fg); text-align: justify; }
+
+        /* Toast feedback */
+        #toast {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--fg);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .signature {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            font-family: 'Brush Script MT', cursive;
+            font-size: 1.8rem;
+            color: var(--fg);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>NSSF Interactions in 5G Core</h1>
+        <p>How NSSF communicates with other Network Functions</p>
+    </header>
+
+    <div class="simulation-bar">
+        <button class="btn" onclick="startFlow('query')">▶ Simulate Slice Query</button>
+        <button class="btn" onclick="startFlow('update')">▶ Simulate Subscription Check</button>
+        <button class="btn" onclick="resetSim()" style="border-color: var(--red); color: var(--red);">↺ Reset Diagram</button>
+    </div>
+
+    <main>
+        <svg id="nssf-svg" viewBox="0 0 1000 650" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3a94c5"/></marker>
+                <marker id="arr-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#35a77c"/></marker>
+                <marker id="arr-pink" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#df69ba"/></marker>
+                <marker id="arr-purple" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7fbbb3"/></marker>
+            </defs>
+
+            <!-- Decorative Concentric Circles -->
+            <circle cx="500" cy="350" r="140" fill="none" stroke="var(--orange)" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>
+            <circle cx="500" cy="350" r="110" fill="none" stroke="var(--orange)" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.6"/>
+
+            <!-- CONNECTIONS -->
+            <!-- AMF -> NSSF -->
+            <path id="path-amf" d="M 160 330 L 420 400" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arr-blue)"/>
+            <text x="280" y="345" fill="var(--blue)" font-size="11" font-weight="bold" transform="rotate(15, 280, 345)">Query Slice</text>
+
+            <!-- UDM <-> NSSF -->
+            <path id="path-udm" d="M 500 200 L 500 280" stroke="var(--purple)" stroke-width="2.5" fill="none"/>
+            <text x="510" y="240" fill="var(--purple)" font-size="11" font-weight="bold">Subscribed NSSAI</text>
+
+            <!-- NRF -> NSSF -->
+            <path id="path-nrf" d="M 840 330 L 580 400" stroke="var(--aqua)" stroke-width="2.5" fill="none" marker-end="url(#arr-green)"/>
+            <text x="710" y="345" fill="var(--aqua)" font-size="11" font-weight="bold" transform="rotate(-15, 710, 345)">Get Availability</text>
+
+            <!-- PCF <-> NSSF -->
+            <path id="path-pcf" d="M 500 480 L 500 550" stroke="#7e57c2" stroke-width="2" stroke-dasharray="4,4" fill="none"/>
+            <text x="510" y="525" fill="#7e57c2" font-size="10" font-weight="bold">Policy (Optional)</text>
+
+            <!-- PARTICLES -->
+            <circle id="part-query" class="particle" r="6" fill="var(--blue)" />
+            <circle id="part-sub" class="particle" r="6" fill="var(--purple)" />
+
+            <!-- NODES -->
+            <!-- AMF -->
+            <g class="node" onclick="openNode('amf')">
+                <rect x="50" y="300" width="110" height="90" rx="10" fill="#0d47a1" />
+                <text x="105" y="335" text-anchor="middle" fill="white" font-weight="bold" font-size="14">AMF</text>
+                <text x="105" y="355" text-anchor="middle" fill="white" font-size="9" opacity="0.8">Primary Consumer</text>
+                <text x="105" y="375" text-anchor="middle" fill="#ffca28" font-size="9" font-weight="bold">★ Queries NSSF</text>
+            </g>
+
+            <!-- UDM -->
+            <g class="node" onclick="openNode('udm')">
+                <rect x="445" y="110" width="110" height="90" rx="10" fill="#d81b60" />
+                <text x="500" y="145" text-anchor="middle" fill="white" font-weight="bold" font-size="14">UDM</text>
+                <text x="500" y="165" text-anchor="middle" fill="white" font-size="9" opacity="0.8">Subscription Data</text>
+                <text x="500" y="180" text-anchor="middle" fill="#ffca28" font-size="8">Subscribed NSSAI</text>
+            </g>
+
+            <!-- NRF -->
+            <g class="node" onclick="openNode('nrf')">
+                <rect x="840" y="300" width="110" height="90" rx="10" fill="#00c853" />
+                <text x="895" y="335" text-anchor="middle" fill="white" font-weight="bold" font-size="14">NRF</text>
+                <text x="895" y="355" text-anchor="middle" fill="white" font-size="9" opacity="0.8">Slice Availability</text>
+                <text x="895" y="375" text-anchor="middle" fill="#ffca28" font-size="9" font-weight="bold">★ Data Source</text>
+            </g>
+
+            <!-- PCF -->
+            <g class="node" onclick="openNode('pcf')">
+                <rect x="445" y="550" width="110" height="90" rx="10" fill="#7e57c2" />
+                <text x="500" y="585" text-anchor="middle" fill="white" font-weight="bold" font-size="14">PCF</text>
+                <text x="500" y="605" text-anchor="middle" fill="white" font-size="9" opacity="0.8">Policy Control</text>
+                <text x="500" y="620" text-anchor="middle" fill="white" font-size="8">(Optional)</text>
+            </g>
+
+            <!-- NSSF (Center) -->
+            <g class="node" onclick="openNode('nssf')">
+                <circle id="center-nssf" cx="500" cy="400" r="75" fill="var(--orange)" stroke="white" stroke-width="2" />
+                <text x="500" y="405" text-anchor="middle" fill="white" font-weight="bold" font-size="18">NSSF</text>
+                <text x="500" y="428" text-anchor="middle" fill="white" font-size="10">Slice Selector</text>
+            </g>
+        </svg>
+
+        <div id="toast">Diagram Ready</div>
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Detail Panel -->
+    <div id="side-panel">
+        <div class="close-btn" onclick="closePanel()">✕</div>
+        <div class="panel-header">
+            <span id="p-tag" class="panel-tag">NETWORK FUNCTION</span>
+            <h2 id="p-title" class="panel-title">Component Name</h2>
+        </div>
+        <div id="p-body" class="panel-content">
+            Details will populate here.
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techInfo = {
+            nssf: {
+                title: "Network Slice Selection Function (NSSF)",
+                body: "The NSSF is a critical control-plane entity in the 5G core responsible for selecting the specific set of Network Slice instances to serve a User Equipment (UE). In 5G, slicing allows operators to create virtualized independent networks over the same physical infrastructure, tailored for specific use cases like IoT, mobile broadband, or low-latency communications. The NSSF determines the 'Allowed NSSAI' (Network Slice Selection Assistance Information) and, if necessary, the mapping to the 'Subscribed S-NSSAIs'. It essentially acts as the master coordinator that evaluates a user's subscription, location, and requested services to find the most appropriate network segment for their session."
+            },
+            amf: {
+                title: "Access & Mobility Management (AMF)",
+                body: "The AMF acts as the primary consumer of the NSSF services. During the initial UE Registration procedure, the AMF receives a slice request (NSSAI) from the device. Since the AMF might not have the intelligence to determine which specific slice instance is best or authorized for the user, it queries the NSSF over the Nnssf_NSSelection interface. The AMF receives a list of allowed slices and the mapping of NF (Network Function) instances. It is the AMF's responsibility to then steer the UE's connection toward the specific Slice instance selected by the NSSF, ensuring seamless mobility and session management."
+            },
+            udm: {
+                title: "Unified Data Management (UDM)",
+                body: "The UDM serves as the authoritative repository for subscriber data, including slice subscription information. When the NSSF is making a selection decision, it needs to verify what slices the user is actually allowed to access according to their service contract. The interaction between NSSF and UDM (via Nudm_SDM) involves retrieving the 'Subscribed NSSAI'. This ensures that a user cannot arbitrarily request a high-priority slice (like an Ultra-Reliable Low Latency slice) unless their profile explicitly supports it. The UDM provides the 'source of truth' regarding the user's entitlements within the 5G ecosystem."
+            },
+            nrf: {
+                title: "Network Repository Function (NRF)",
+                body: "The NRF acts as the central registry for all Network Functions within the 5G core. Its interaction with the NSSF is focused on 'Slice Availability'. When the NSSF selects a slice, it often needs to know which NF instances (like AMF, SMF, or UPF) are available within that specific slice and what their status is. The NSSF queries the NRF to get the latest availability data. This is vital for network scalability and resilience; if a particular slice instance is congested or down, the NRF provides that data so the NSSF can select an alternative, ensuring high availability for the user's services."
+            },
+            pcf: {
+                title: "Policy Control Function (PCF)",
+                body: "The PCF provides policy rules for slice selection, though this interaction is often optional depending on the operator's configuration. The PCF can dictate dynamic policies regarding how slices should be prioritized or what background traffic rules should apply to specific network segments. For example, if a network slice is dedicated to mission-critical public safety, the PCF might provide policies that force the NSSF to prioritize this slice over consumer-grade ones during periods of heavy congestion. It adds a layer of intelligent, rule-based logic to the static subscription data provided by the UDM."
+            }
+        };
+
+        function openNode(key) {
+            const data = techInfo[key];
+            document.getElementById('p-tag').innerText = key === 'nssf' ? "CENTRAL COORDINATOR" : "INTERACTING NF";
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            
+            gsap.to('.node', { opacity: 0.3, duration: 0.3 });
+            gsap.to(event.currentTarget, { opacity: 1, scale: 1.05, duration: 0.3 });
+        }
+
+        function closePanel() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, scale: 1, duration: 0.3 });
+        }
+
+        // Animation Logic
+        let mainTL = gsap.timeline();
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            gsap.to(t, { opacity: 1, y: -15, duration: 0.3 });
+            setTimeout(() => gsap.to(t, { opacity: 0, duration: 0.3 }), 2500);
+        }
+
+        function resetSim() {
+            mainTL.kill();
+            gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+            showToast("System Reset Complete");
+        }
+
+        function startFlow(type) {
+            resetSim();
+            mainTL = gsap.timeline();
+
+            if (type === 'query') {
+                showToast("AMF Querying NSSF for Slice selection...");
+                mainTL.to("#part-query", { visibility: "visible", duration: 0 })
+                    .to("#part-query", { motionPath: { path: "#path-amf", align: "#path-amf", alignOrigin: [0.5, 0.5] }, duration: 2, ease: "power1.inOut" })
+                    .to("#center-nssf", { stroke: "white", strokeWidth: 8, duration: 0.4, repeat: 1, yoyo: true })
+                    .call(() => showToast("NSSF Checking NRF for NF Availability..."))
+                    .to("#part-query", { motionPath: { path: "#path-nrf", align: "#path-nrf", alignOrigin: [0.5, 0.5] }, duration: 2, ease: "power1.inOut", start: 1, end: 0 })
+                    .call(() => showToast("Slice Identified and Authorized."));
+            } 
+            else if (type === 'update') {
+                showToast("Fetching Subscribed NSSAI from UDM...");
+                mainTL.to("#part-sub", { visibility: "visible", x: 500, y: 200, duration: 0 })
+                    .to("#part-sub", { motionPath: { path: "#path-udm", align: "#path-udm", alignOrigin: [0.5, 0.5] }, duration: 1.5, ease: "power1.inOut" })
+                    .call(() => showToast("Subscription Data Loaded."));
+            }
+        }
+
+        // Ambient pulse
+        gsap.to("#center-nssf", {
+            r: 78,
+            duration: 2,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+    </script>
+</body>
+</html>

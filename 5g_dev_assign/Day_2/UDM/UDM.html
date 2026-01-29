@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3GPP 5G UDM Architecture | Interactive Technical Study</title>
+    <!-- GSAP for technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem 3rem;
+            background: white;
+            border-bottom: 2px solid var(--bg1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+        .header-left h1 { font-size: 1.6rem; color: #2d353b; letter-spacing: -0.5px; }
+        .header-left p { font-size: 0.9rem; opacity: 0.7; }
+
+        .controls { display: flex; gap: 12px; }
+
+        .btn {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--fg);
+            transition: var(--transition);
+        }
+        .btn:hover { background: var(--blue); color: white; transform: translateY(-2px); border-color: var(--blue); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        #udm-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 850px;
+        }
+
+        /* Node Interactivity */
+        .node { cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .node:hover { transform: scale(1.02); }
+
+        /* Side Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: white;
+            box-shadow: -15px 0 50px rgba(0,0,0,0.12);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 8px solid var(--blue);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--bg2); letter-spacing: 2px; margin-bottom: 8px; display: block; }
+        .panel-title { font-size: 2rem; color: var(--blue); margin-bottom: 25px; line-height: 1.1; font-weight: 700; }
+        .panel-content { line-height: 1.8; font-size: 1.05rem; color: var(--fg); text-align: justify; }
+
+        /* Signature - IMPORTANT */
+        .signature {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.8;
+            border-bottom: 2px solid var(--blue);
+            pointer-events: none;
+        }
+
+        #toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d353b;
+            color: white;
+            padding: 12px 35px;
+            border-radius: 50px;
+            opacity: 0;
+            z-index: 200;
+            font-weight: 600;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>Unified Data Management (UDM)</h1>
+            <p>3GPP TS 23.501 | TS 29.503 Service-Based Architecture</p>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="animateUDM('auth')">Authentication (N13)</button>
+            <button class="btn" onclick="animateUDM('sub')">Profile Retrieval (N8/N10)</button>
+            <button class="btn" onclick="animateUDM('sidf')">Privacy (SUPI De-conceal)</button>
+            <button class="btn" style="border-color:var(--red); color:var(--red)" onclick="resetUDM()">Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing Subscriber Data Engine...</div>
+
+    <main>
+        <svg id="udm-svg" viewBox="0 0 1200 850" xmlns="http://www.w3.org/2000/svg">
+            <!-- Connection Paths -->
+            <path id="path-n8" d="M 180 250 L 500 400" stroke="var(--blue)" stroke-width="2" stroke-dasharray="10,5" fill="none" opacity="0.4"/>
+            <path id="path-n10" d="M 180 450 L 500 400" stroke="var(--green)" stroke-width="2" stroke-dasharray="10,5" fill="none" opacity="0.4"/>
+            <path id="path-n13" d="M 180 650 L 500 400" stroke="var(--purple)" stroke-width="2" stroke-dasharray="10,5" fill="none" opacity="0.4"/>
+            
+            <path id="path-nudr" d="M 700 400 L 980 400" stroke="var(--orange)" stroke-width="4" fill="none" opacity="0.4"/>
+            <path id="path-sidf" d="M 600 550 L 600 700" stroke="var(--red)" stroke-width="3" stroke-dasharray="8,4" fill="none" opacity="0.3"/>
+
+            <!-- THE UDM CORE CONTAINER -->
+            <circle cx="600" cy="400" r="120" fill="#f3ecf9" stroke="var(--blue)" stroke-width="4" />
+            <g class="node" onclick="openNode('udm')">
+                <text x="600" y="380" text-anchor="middle" font-weight="bold" fill="var(--blue)" font-size="24">UDM</text>
+                <text x="600" y="405" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="12">Unified Data Management</text>
+                <line x1="530" y1="420" x2="670" y2="420" stroke="var(--blue)" stroke-opacity="0.3" />
+                <text x="600" y="445" text-anchor="middle" fill="#5c6a72" font-size="9" font-weight="bold">SDM • UCM • ARPF</text>
+            </g>
+
+            <!-- CONSUMERS (SBI) -->
+            <g class="node" onclick="openNode('amf')">
+                <rect x="30" y="200" width="150" height="90" rx="15" fill="white" stroke="var(--blue)" stroke-width="2" />
+                <text x="105" y="240" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">AMF</text>
+                <text x="105" y="260" text-anchor="middle" fill="#5c6a72" font-size="10">N8 (Subscription)</text>
+            </g>
+
+            <g class="node" onclick="openNode('smf')">
+                <rect x="30" y="400" width="150" height="90" rx="15" fill="white" stroke="var(--green)" stroke-width="2" />
+                <text x="105" y="440" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">SMF</text>
+                <text x="105" y="460" text-anchor="middle" fill="#5c6a72" font-size="10">N10 (Session)</text>
+            </g>
+
+            <g class="node" onclick="openNode('ausf')">
+                <rect x="30" y="600" width="150" height="90" rx="15" fill="white" stroke="var(--purple)" stroke-width="2" />
+                <text x="105" y="640" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">AUSF</text>
+                <text x="105" y="660" text-anchor="middle" fill="#5c6a72" font-size="10">N13 (Auth)</text>
+            </g>
+
+            <!-- STORAGE & INTERNAL -->
+            <g class="node" onclick="openNode('udr')">
+                <rect x="980" y="340" width="180" height="120" rx="15" fill="#fdf5ea" stroke="var(--orange)" stroke-width="3" />
+                <text x="1070" y="380" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">UDR</text>
+                <text x="1070" y="405" text-anchor="middle" fill="#5c6a72" font-size="11">Unified Data Repository</text>
+                <text x="1070" y="430" text-anchor="middle" fill="var(--orange)" font-size="9" font-weight="bold">Master Storage (Nudr)</text>
+            </g>
+
+            <g class="node" onclick="openNode('sidf')">
+                <rect x="475" y="700" width="250" height="110" rx="15" fill="#fdebeb" stroke="var(--red)" stroke-width="2" />
+                <text x="600" y="740" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">SIDF / ARPF</text>
+                <text x="600" y="765" text-anchor="middle" fill="#5c6a72" font-size="10">Identifier De-concealment</text>
+                <text x="600" y="785" text-anchor="middle" fill="var(--red)" font-size="9" font-weight="bold">Security Anchor Function</text>
+            </g>
+
+            <!-- Interface Labels -->
+            <text x="350" y="310" fill="var(--blue)" font-weight="bold" font-size="12" text-anchor="middle">Nudm_SDM</text>
+            <text x="350" y="540" fill="var(--purple)" font-weight="bold" font-size="12" text-anchor="middle">Nudm_UEAU</text>
+            <text x="840" y="390" fill="var(--orange)" font-weight="bold" font-size="12" text-anchor="middle">Nudr_Data</text>
+
+            <!-- Animation Particles -->
+            <circle id="p-auth" class="particle" r="8" fill="var(--purple)" />
+            <circle id="p-sub" class="particle" r="8" fill="var(--blue)" />
+            <circle id="p-data" class="particle" r="9" fill="var(--orange)" />
+            <circle id="p-sidf" class="particle" r="7" fill="var(--red)" />
+        </svg>
+
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <div class="close-btn" onclick="closeNode()">✕</div>
+        <div class="panel-header">
+            <span id="p-tag" class="panel-tag">Network Function</span>
+            <h2 id="p-title" class="panel-title">Component Name</h2>
+        </div>
+        <div id="p-body" class="panel-content">
+            Detailed technical description will load here based on 3GPP standards.
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const udmData = {
+            udm: {
+                title: "Unified Data Management (UDM)",
+                tag: "CORE DATA HUB",
+                body: "The UDM (Unified Data Management) is the primary entity in the 5G Core responsible for managing subscriber information, as defined in 3GPP TS 23.501 and TS 29.503. It implements several crucial sub-functions: Subscription Data Management (SDM), which handles profiles for access and mobility; UE Context Management (UCM), which tracks the serving AMF/SMF nodes; and the Authentication Credential Repository and Processing Function (ARPF). The UDM provides a Service-Based Interface (Nudm) used by consumers like AMF, SMF, and AUSF. It essentially acts as the logic layer that sits above the physical storage (UDR), ensuring data consistency, subscriber privacy, and authorized service access across the global 5G network fabric."
+            },
+            amf: {
+                title: "Access & Mobility Mgmt (AMF)",
+                tag: "N8 INTERFACE CONSUMER",
+                body: "The AMF interacts with the UDM via the N8 interface (using Nudm_SDM services) to manage the subscriber's location and mobility. During the initial registration of a device, the AMF queries the UDM to retrieve the user's Access and Mobility subscription data. This profile contains information about allowed network slices (NSSAI), roaming restrictions, and priority levels. Furthermore, the AMF registers itself as the current serving node in the UDM's UCM (UE Context Management) function, ensuring the network knows exactly which AMF is currently 'anchoring' the user's signaling and location."
+            },
+            smf: {
+                title: "Session Management (SMF)",
+                tag: "N10 INTERFACE CONSUMER",
+                body: "The SMF consumes UDM services via the N10 interface to manage the user's data sessions. When a UE requests a PDU session establishment, the SMF queries the UDM for 'Session Management Subscription Data'. This data includes authorized Data Network Names (DNNs), specific Quality of Service (QoS) profiles, and whether the user is permitted to use specific network slices for data. Like the AMF, the SMF registers its serving identity in the UDM so that the system can correlate specific data sessions with the correct serving management node, enabling seamless session continuity and accurate policy enforcement."
+            },
+            ausf: {
+                title: "Authentication Server (AUSF)",
+                tag: "N13 INTERFACE CONSUMER",
+                body: "The AUSF is the security gateway that uses the N13 interface to request 'Authentication Vectors' from the UDM. This is part of the 5G-AKA (Authentication and Key Agreement) process defined in TS 33.501. The UDM, via its internal ARPF (Authentication Credential Repository and Processing Function), uses the subscriber's secret keys (K) to generate a cryptographic challenge. The AUSF receives this challenge from the UDM and passes it to the UE. The UDM is the 'Source of Truth' for security, ensuring that permanent credentials never leave the secure repository while still allowing the AUSF to verify the device's legitimacy."
+            },
+            udr: {
+                title: "Unified Data Repository (UDR)",
+                tag: "STORAGE LAYER (Nudr)",
+                body: "The UDR is the physical storage layer that actually holds the master subscriber data, as well as policy data and structured data for exposure. While the UDM handles the logic and communication with other NFs, the UDR is the 'vault' that stores the raw information. Communication between UDM and UDR happens over the Nudr interface using RESTful APIs. This separation of compute (UDM) and storage (UDR) is a key 3GPP architectural shift toward cloud-native statelessness, allowing multiple UDM instances to scale and fail-over without losing subscriber data, as the state is persisted centrally in the UDR."
+            },
+            sidf: {
+                title: "SIDF / ARPF",
+                tag: "PRIVACY & SECURITY ANCHOR",
+                body: "The SIDF (Subscription Identifier De-concealment Function) is a specialized logic within the UDM that protects user privacy. In 5G, the UE sends a concealed identity (SUCI) over the air. The SIDF is the ONLY function in the network capable of de-concealing the SUCI into the permanent identity (SUPI) using the network's private key. Alongside it, the ARPF (Authentication Credential Repository and Processing Function) stores the master security keys. These functions ensure that the user's permanent identity is never exposed over the air, fulfilling the 3GPP promise of massive privacy improvements over legacy 4G systems."
+            }
+        };
+
+        function openNode(key) {
+            const data = udmData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-tag').innerText = data.tag;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            gsap.to('.node', { opacity: 0.3, duration: 0.4 });
+        }
+
+        function closeNode() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, duration: 0.4 });
+        }
+
+        // --- Animation Engine ---
+        let tl = gsap.timeline();
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            gsap.to(t, { opacity: 1, y: -20, duration: 0.3 });
+            setTimeout(() => gsap.to(t, { opacity: 0, duration: 0.3 }), 3000);
+        }
+
+        function resetUDM() {
+            tl.kill();
+            gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+            showToast("UDM Logic State Reset.");
+        }
+
+        function animateUDM(type) {
+            resetUDM();
+            tl = gsap.timeline();
+
+            if (type === 'auth') {
+                showToast("N13 Auth: AUSF requesting Authentication Vector...");
+                tl.to("#p-auth", { visibility: "visible", x: 105, y: 640, duration: 0 })
+                  .to("#p-auth", { motionPath: { path: "#path-n13", align: "#path-n13", alignOrigin: [0.5, 0.5] }, duration: 1.5, start: 0, end: 1 })
+                  .call(() => showToast("UDM-ARPF: Generating Challenge Vector..."))
+                  .to("#p-sidf", { visibility: "visible", x: 600, y: 400, duration: 0 })
+                  .to("#p-sidf", { motionPath: { path: "#path-sidf", align: "#path-sidf", alignOrigin: [0.5, 0.5] }, duration: 1, start: 0, end: 1 })
+                  .to("#p-sidf", { motionPath: { path: "#path-sidf", align: "#path-sidf", alignOrigin: [0.5, 0.5] }, duration: 1, start: 1, end: 0 })
+                  .to("#p-auth", { motionPath: { path: "#path-n13", align: "#path-n13", alignOrigin: [0.5, 0.5] }, duration: 1.2, start: 1, end: 0 })
+                  .call(() => showToast("Authentication Challenge delivered to AUSF."));
+            } 
+            else if (type === 'sub') {
+                showToast("N8/N10: AMF/SMF retrieving Subscription Profile...");
+                tl.to("#p-sub", { visibility: "visible", x: 105, y: 240, duration: 0 })
+                  .to("#p-sub", { motionPath: { path: "#path-n8", align: "#path-n8", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                  .call(() => showToast("UDM: Accessing UDR for Master Subscriber Data..."))
+                  .to("#p-data", { visibility: "visible", x: 600, y: 400, duration: 0 })
+                  .to("#p-data", { motionPath: { path: "#path-nudr", align: "#path-nudr", alignOrigin: [0.5, 0.5] }, duration: 1.2 })
+                  .to("#p-sub", { motionPath: { path: "#path-n8", align: "#path-n8", alignOrigin: [0.5, 0.5] }, duration: 1, start: 1, end: 0 })
+                  .call(() => showToast("Profile successfully synchronized with serving node."));
+            }
+            else if (type === 'sidf') {
+                showToast("Privacy: UE sending SUCI. UDM-SIDF starting de-concealment...");
+                tl.to("#p-sidf", { visibility: "visible", x: 600, y: 400, duration: 0 })
+                  .to("#p-sidf", { motionPath: { path: "#path-sidf", align: "#path-sidf", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                  .to("#p-sidf", { scale: 3, opacity: 0, duration: 0.5 })
+                  .call(() => showToast("SUPI Identity derived. Device privacy protected."));
+            }
+        }
+
+        // Ambient pulse for UDM node
+        gsap.to("circle[stroke='var(--blue)']", {
+            strokeWidth: 6,
+            duration: 1.8,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+
+    </script>
+</body>
+</html>

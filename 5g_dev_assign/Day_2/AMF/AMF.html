@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G Core: Interactive AMF Architecture & Flows</title>
+    <!-- GSAP for robust technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-hard: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --transition-smooth: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Layout Structure */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: var(--bg1);
+            border-bottom: 2px solid var(--bg2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .flow-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: var(--bg2);
+            border: 1px solid var(--bg4);
+            color: var(--fg);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition-smooth);
+        }
+
+        .btn:hover {
+            background: var(--blue);
+            color: white;
+            border-color: var(--blue);
+        }
+
+        .btn.active-flow {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+
+        /* Diagram Area */
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        #diagram-svg {
+            max-width: 100%;
+            max-height: 90%;
+            width: 1100px;
+            height: auto;
+        }
+
+        /* Node Styling */
+        .node-group { cursor: pointer; }
+        .node-rect { transition: var(--transition-smooth); stroke-width: 2; }
+        .node-group:hover .node-rect { stroke-width: 4px; filter: brightness(0.95); }
+
+        /* Side Panel */
+        #details-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 400px;
+            height: 100%;
+            background: var(--bg0);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--blue);
+            z-index: 100;
+            padding: 40px 30px;
+            transition: right 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+        }
+
+        #details-panel.open { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--fg);
+            cursor: pointer;
+        }
+
+        .detail-header {
+            border-bottom: 2px solid var(--bg2);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-title { color: var(--blue); margin: 0; font-size: 1.6rem; }
+        .detail-type { font-size: 0.8rem; font-weight: bold; color: var(--bg4); text-transform: uppercase; }
+        .detail-content { line-height: 1.7; font-size: 1rem; color: var(--fg); text-align: justify; }
+
+        /* Status Toast for Animations */
+        #status-toast {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-hard);
+            border: 2px solid var(--blue);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            opacity: 0;
+            z-index: 5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Brush Script MT', cursive;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Flow Particles */
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h2 style="margin:0; font-size: 1.3rem;">5G Core Architecture <span style="font-weight: 300; opacity: 0.7;">| Access & Mobility</span></h2>
+        </div>
+        <div class="flow-controls">
+            <button class="btn" onclick="runFlow('registration')">Registration Flow</button>
+            <button class="btn" onclick="runFlow('session')">PDU Session Setup</button>
+            <button class="btn" onclick="runFlow('reallocation')">AMF Re-allocation</button>
+            <button class="btn" onclick="resetAll()">Reset</button>
+        </div>
+    </header>
+
+    <main>
+        <svg id="diagram-svg" viewBox="0 0 1100 800" xmlns="http://www.w3.org/2000/svg">
+            <!-- Markers -->
+            <defs>
+                <marker id="arrow-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8da101" /></marker>
+                <marker id="arrow-orange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f57d26" /></marker>
+                <marker id="arrow-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3a94c5" /></marker>
+                <marker id="arrow-purple" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#df69ba" /></marker>
+                <marker id="arrow-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f85552" /></marker>
+                <marker id="arrow-yellow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#dfa000" /></marker>
+            </defs>
+
+            <!-- CONNECTIONS -->
+            <!-- N1 -->
+            <path id="p-n1" d="M 180 400 L 530 400" stroke="#8da101" stroke-width="2" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-green)" />
+            <!-- N2 -->
+            <path id="p-n2" d="M 430 430 L 530 430" stroke="#f57d26" stroke-width="4" fill="none" marker-end="url(#arrow-orange)" />
+            <!-- N14 -->
+            <path id="p-n14" d="M 645 300 L 645 150" stroke="#3a94c5" stroke-width="3" stroke-dasharray="8,4" fill="none" marker-end="url(#arrow-blue)" />
+            
+            <!-- Service Based Interfaces -->
+            <path id="p-n8" d="M 760 380 C 850 380 850 120 930 120" stroke="#df69ba" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arrow-purple)" />
+            <path id="p-n11" d="M 760 410 C 850 410 850 320 930 320" stroke="#df69ba" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arrow-purple)" />
+            <path id="p-n12" d="M 760 440 C 850 440 850 520 930 520" stroke="#dfa000" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arrow-yellow)" />
+            <path id="p-n15" d="M 760 470 C 850 470 850 720 930 720" stroke="#f85552" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arrow-red)" />
+
+            <!-- Flow Particles -->
+            <circle id="part-reg" class="particle" r="6" fill="var(--orange)" />
+            <circle id="part-pdu" class="particle" r="6" fill="var(--blue)" />
+            <circle id="part-reall" class="particle" r="6" fill="var(--aqua)" />
+
+            <!-- NODES -->
+            <!-- UE -->
+            <g class="node-group" onclick="showDetails('ue')">
+                <rect class="node-rect" x="50" y="340" width="130" height="120" rx="15" fill="#e7f1e7" stroke="#8da101" />
+                <text x="115" y="380" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">UE</text>
+                <text x="115" y="405" text-anchor="middle" fill="#5c6a72" font-size="11">User Equipment</text>
+                <text x="115" y="430" text-anchor="middle" fill="#5c6a72" font-size="9" opacity="0.6">NAS Signaling</text>
+            </g>
+
+            <!-- gNB -->
+            <g class="node-group" onclick="showDetails('gnb')">
+                <rect class="node-rect" x="280" y="340" width="150" height="120" rx="15" fill="#fcf0e3" stroke="#f57d26" />
+                <text x="355" y="385" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">gNB</text>
+                <text x="355" y="410" text-anchor="middle" fill="#5c6a72" font-size="11">Radio Access Network</text>
+                <text x="355" y="435" text-anchor="middle" fill="#5c6a72" font-size="9" opacity="0.6">NGAP Protocol</text>
+            </g>
+
+            <!-- AMF -->
+            <g class="node-group" onclick="showDetails('amf')">
+                <rect id="amf-main-rect" class="node-rect" x="530" y="300" width="230" height="200" rx="20" fill="#d8e7ef" stroke="#3a94c5" />
+                <text x="645" y="345" text-anchor="middle" font-weight="bold" fill="#3a94c5" font-size="18">AMF</text>
+                <text x="645" y="370" text-anchor="middle" font-weight="bold" fill="#3a94c5" font-size="12">Access & Mobility Management</text>
+                <text x="550" y="410" font-size="10" fill="#5c6a72">✓ Registration & Auth</text>
+                <text x="550" y="430" font-size="10" fill="#5c6a72">✓ Connection Mgmt</text>
+                <text x="550" y="450" font-size="10" fill="#5c6a72">✓ Mobility & Handover</text>
+                <text x="550" y="470" font-size="10" fill="#5c6a72">✓ Security Context</text>
+            </g>
+
+            <!-- Other AMF -->
+            <g class="node-group" onclick="showDetails('amf_other')">
+                <rect class="node-rect" x="565" y="40" width="160" height="80" rx="10" fill="none" stroke="#3a94c5" stroke-dasharray="5,5" />
+                <text x="645" y="75" text-anchor="middle" font-weight="bold" fill="#3a94c5" font-size="14">AMF (Other)</text>
+                <text x="645" y="95" text-anchor="middle" fill="#5c6a72" font-size="10">Re-allocation Target</text>
+            </g>
+
+            <!-- UDM -->
+            <g class="node-group" onclick="showDetails('udm')">
+                <rect class="node-rect" x="930" y="70" width="140" height="100" rx="12" fill="#f8e7f5" stroke="#df69ba" />
+                <text x="1000" y="105" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">UDM</text>
+                <text x="1000" y="125" text-anchor="middle" fill="#5c6a72" font-size="10">Unified Data Mgmt</text>
+            </g>
+
+            <!-- SMF -->
+            <g class="node-group" onclick="showDetails('smf')">
+                <rect class="node-rect" x="930" y="270" width="140" height="100" rx="12" fill="#fdecf5" stroke="#df69ba" />
+                <text x="1000" y="305" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">SMF</text>
+                <text x="1000" y="325" text-anchor="middle" fill="#5c6a72" font-size="10">Session Management</text>
+            </g>
+
+            <!-- AUSF -->
+            <g class="node-group" onclick="showDetails('ausf')">
+                <rect class="node-rect" x="930" y="470" width="140" height="100" rx="12" fill="#fff5e7" stroke="#dfa000" />
+                <text x="1000" y="505" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">AUSF</text>
+                <text x="1000" y="525" text-anchor="middle" fill="#5c6a72" font-size="10">Auth Server</text>
+            </g>
+
+            <!-- PCF -->
+            <g class="node-group" onclick="showDetails('pcf')">
+                <rect class="node-rect" x="930" y="670" width="140" height="100" rx="12" fill="#fdebeb" stroke="#f85552" />
+                <text x="1000" y="705" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">PCF</text>
+                <text x="1000" y="725" text-anchor="middle" fill="#5c6a72" font-size="10">Policy Control</text>
+            </g>
+
+            <!-- Interface Labels -->
+            <g class="node-group" onclick="showDetails('n1')"><rect x="210" y="388" width="70" height="24" rx="12" fill="#8da101"/><text x="245" y="405" text-anchor="middle" fill="white" font-size="10" font-weight="bold">N1</text></g>
+            <g class="node-group" onclick="showDetails('n2')"><rect x="450" y="418" width="70" height="24" rx="12" fill="#f57d26"/><text x="485" y="435" text-anchor="middle" fill="white" font-size="10" font-weight="bold">N2</text></g>
+            <g class="node-group" onclick="showDetails('n14')"><rect x="610" y="220" width="70" height="24" rx="12" fill="#3a94c5"/><text x="645" y="237" text-anchor="middle" fill="white" font-size="10" font-weight="bold">N14</text></g>
+            
+            <g class="node-group" onclick="showDetails('n8')"><circle cx="835" cy="120" r="16" fill="#df69ba"/><text x="835" y="124" text-anchor="middle" fill="white" font-size="9" font-weight="bold">N8</text></g>
+            <g class="node-group" onclick="showDetails('n11')"><circle cx="835" cy="320" r="16" fill="#df69ba"/><text x="835" y="324" text-anchor="middle" fill="white" font-size="9" font-weight="bold">N11</text></g>
+            <g class="node-group" onclick="showDetails('n12')"><circle cx="835" cy="520" r="16" fill="#dfa000"/><text x="835" y="524" text-anchor="middle" fill="white" font-size="9" font-weight="bold">N12</text></g>
+            <g class="node-group" onclick="showDetails('n15')"><circle cx="835" cy="720" r="16" fill="#f85552"/><text x="835" y="724" text-anchor="middle" fill="white" font-size="9" font-weight="bold">N15</text></g>
+        </svg>
+
+        <div id="status-toast">Ready for flow simulation...</div>
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Details Sidebar -->
+    <div id="details-panel">
+        <button class="close-btn" onclick="closeDetails()">✕</button>
+        <div class="detail-header">
+            <span id="detail-type" class="detail-type">Functional Unit</span>
+            <h2 id="detail-title" class="detail-title">Component Name</h2>
+        </div>
+        <div id="detail-content" class="detail-content">
+            Select a component to learn about its role in the 5G Core.
+        </div>
+    </div>
+</div>
+
+<script>
+    gsap.registerPlugin(MotionPathPlugin);
+
+    const techData = {
+        ue: {
+            title: "User Equipment (UE)",
+            type: "Network Entity",
+            desc: "The User Equipment (UE) is the mobile device or IoT terminal that connects to the network. It communicates with the AMF via the N1 interface using Non-Access Stratum (NAS) signaling. This signaling is essential for managing mobility states (5GMM) and session connectivity (5GSM). The UE holds the USIM which stores the permanent identity (SUPI) and security credentials used to establish a trusted connection with the 5G Core during the initial registration phase."
+        },
+        gnb: {
+            title: "gNodeB (NG-RAN)",
+            type: "Access Network",
+            desc: "The gNodeB is the 5G base station responsible for the Radio Access Network (RAN). While it handles the high-speed wireless transmission to the UE, its control-plane role is to bridge the UE and the AMF. It encapsulates NAS messages from the UE into NGAP (Next Generation Application Part) packets and sends them over the N2 interface. The gNB also manages radio resource allocation, handover coordination, and provides the security keys required for encryption over the air interface."
+        },
+        amf: {
+            title: "Access & Mobility Management",
+            type: "Control Plane Function",
+            desc: "The AMF is the 'front door' of the 5G Core. It terminates the control plane signaling from the UE and the RAN. Its main responsibilities include UE registration management, location tracking, and mobility coordination. Crucially, the AMF coordinates authentication with the AUSF/UDM and authorizes the user's access to specific network slices. It serves as a single entry point, proxying session management requests to the SMF and enforcing access policies received from the PCF."
+        },
+        udm: {
+            title: "Unified Data Management",
+            type: "Data Repository",
+            desc: "UDM is the centralized database of the 5G system, analogous to the HSS in LTE. It stores subscriber profiles, including authorized services, mobility restrictions, and permanent security keys. The AMF queries the UDM via the N8 interface to verify subscription data during registration. The UDM also supports 'Subscription Concealed Identifier' (SUCI) de-concealment to protect user privacy, ensuring that the user's permanent identity is never sent in cleartext over the air."
+        },
+        smf: {
+            title: "Session Management Function",
+            type: "Session Control",
+            desc: "The SMF is responsible for managing PDU (Packet Data Unit) sessions. While the AMF handles 'where' the device is, the SMF handles 'what' the device is doing. It allocates IP addresses, selects the User Plane Function (UPF) to route traffic, and enforces Quality of Service (QoS). The AMF proxies session-related NAS messages from the UE to the SMF via the N11 interface, allowing the SMF to establish end-to-end data tunnels for the user."
+        },
+        ausf: {
+            title: "Authentication Server Function",
+            type: "Security Function",
+            desc: "The AUSF facilitates the authentication process for UEs attempting to join the network. It implements the 5G-AKA (Authentication and Key Agreement) protocol. Triggered by the AMF via the N12 interface, the AUSF interacts with the UDM to retrieve authentication vectors and performs the final verification of the credentials provided by the UE. This ensures that only legitimate, authenticated devices can consume network resources, preventing unauthorized access."
+        },
+        pcf: {
+            title: "Policy Control Function",
+            type: "Policy Engine",
+            desc: "The PCF provides policy rules to the control plane functions. It manages access and mobility policies for the AMF (via N15) and session-level policies for the SMF. This includes determining the allowed bitrates, priority levels, and roaming restrictions for a specific user. By centralizing policy logic, the PCF allows network operators to dynamically adjust service quality based on subscription tiers, network congestion, or specific application requirements."
+        },
+        n1: {
+            title: "N1 Interface (NAS)",
+            type: "Signaling Interface",
+            desc: "The N1 interface is a logical connection between the UE and the AMF. It carries Non-Access Stratum (NAS) signaling, which is used for mobility management (e.g., Registration, Service Request) and session management (e.g., PDU Session Establishment). N1 signaling is transparent to the RAN, meaning the gNB base station only relays these encrypted messages without interpreting their content, ensuring a secure and independent control path."
+        },
+        n2: {
+            title: "N2 Interface (NGAP)",
+            type: "Control Interface",
+            desc: "N2 is the primary control-plane interface between the Radio Access Network (gNB) and the Core Network (AMF). It uses the NGAP protocol to coordinate radio resource allocation for UEs. Key functions include establishing the UE context in the RAN, managing handovers between base stations, and delivering paging signals. It ensures that the core network can effectively control the radio connection parameters to maintain stable connectivity for the user."
+        }
+    };
+
+    function showDetails(key) {
+        const data = techData[key] || { title: key.toUpperCase(), type: "Interface / Component", desc: "Detailed technical explanation for this component is currently being updated in the knowledge base." };
+        document.getElementById('detail-title').innerText = data.title;
+        document.getElementById('detail-type').innerText = data.type;
+        document.getElementById('detail-content').innerText = data.desc;
+        document.getElementById('details-panel').classList.add('open');
+    }
+
+    function closeDetails() {
+        document.getElementById('details-panel').classList.remove('open');
+    }
+
+    // Animation Timelines
+    let masterTimeline = gsap.timeline();
+
+    function updateToast(msg, color = 'var(--blue)') {
+        const toast = document.getElementById('status-toast');
+        toast.innerText = msg;
+        toast.style.borderColor = color;
+        gsap.to(toast, { opacity: 1, duration: 0.3 });
+    }
+
+    function resetAll() {
+        masterTimeline.kill();
+        gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+        gsap.set("#amf-main-rect", { fill: "#d8e7ef" });
+        updateToast("System Reset Ready.");
+        setTimeout(() => gsap.to("#status-toast", { opacity: 0 }), 2000);
+    }
+
+    function runFlow(type) {
+        resetAll();
+        masterTimeline = gsap.timeline();
+
+        if (type === 'registration') {
+            updateToast("Flow: Initial UE Registration...");
+            
+            masterTimeline.to("#part-reg", { visibility: "visible", duration: 0 })
+                // UE to AMF (via N1)
+                .to("#part-reg", { motionPath: { path: "#p-n1", align: "#p-n1", alignOrigin: [0.5, 0.5] }, duration: 1.5, ease: "power1.inOut" })
+                .call(() => updateToast("Step: AMF initiates Authentication with AUSF (N12)"))
+                
+                // AMF to AUSF
+                .to("#part-reg", { motionPath: { path: "#p-n12", align: "#p-n12", alignOrigin: [0.5, 0.5] }, duration: 1.2 })
+                .call(() => updateToast("Step: AUSF retrieves Subscriber Data from UDM (N8)"))
+                
+                // AUSF/AMF to UDM
+                .to("#part-reg", { motionPath: { path: "#p-n8", align: "#p-n8", alignOrigin: [0.5, 0.5] }, duration: 1.2 })
+                .call(() => updateToast("Step: Registration Success. PCF pushing Access Policy (N15)"))
+                
+                // Final Policy
+                .to("#part-reg", { motionPath: { path: "#p-n15", align: "#p-n15", alignOrigin: [0.5, 0.5] }, duration: 1.2 })
+                .to("#amf-main-rect", { fill: "#e7f1e7", duration: 0.5 })
+                .call(() => updateToast("Registration Complete!", "var(--green)"));
+
+        } else if (type === 'session') {
+            updateToast("Flow: PDU Session Establishment Request...");
+            
+            masterTimeline.to("#part-pdu", { visibility: "visible", duration: 0 })
+                .to("#part-pdu", { motionPath: { path: "#p-n1", align: "#p-n1", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                .call(() => updateToast("Step: AMF proxying Session Request to SMF (N11)"))
+                .to("#part-pdu", { motionPath: { path: "#p-n11", align: "#p-n11", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                .call(() => updateToast("Data Session Established!", "var(--green)"));
+
+        } else if (type === 'reallocation') {
+            updateToast("Flow: AMF Re-allocation / Load Balancing...");
+            
+            masterTimeline.to("#part-reall", { visibility: "visible", duration: 0 })
+                .to("#part-reall", { x: 530, y: 400, duration: 0 }) // Start at AMF center
+                .call(() => updateToast("Step: Current AMF transferring UE Context via N14"))
+                .to("#part-reall", { motionPath: { path: "#p-n14", align: "#p-n14", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                .call(() => updateToast("UE Context successfully moved to Target AMF.", "var(--green)"));
+        }
+    }
+
+    // Ambient floating animation
+    gsap.to(".node-group", {
+        y: "-=5",
+        duration: 2,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        stagger: { each: 0.2, from: "random" }
+    });
+</script>
+
+</body>
+</html>

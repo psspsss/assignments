@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G CHF (Charging Function) Architecture | 3GPP Standard Study</title>
+    <!-- GSAP for technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem 3rem;
+            background: white;
+            border-bottom: 2px solid var(--bg1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+        .header-left h1 { font-size: 1.6rem; color: #2d353b; letter-spacing: -0.5px; }
+        .header-left p { font-size: 0.9rem; opacity: 0.7; }
+
+        .controls { display: flex; gap: 12px; }
+
+        .btn {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--fg);
+            transition: var(--transition);
+        }
+        .btn:hover { background: var(--purple); color: white; transform: translateY(-2px); border-color: var(--purple); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        #chf-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 850px;
+        }
+
+        /* Node Interactivity */
+        .node { cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .node:hover { transform: scale(1.02); }
+
+        /* Side Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: white;
+            box-shadow: -15px 0 50px rgba(0,0,0,0.12);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 8px solid var(--purple);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--bg2); letter-spacing: 2px; margin-bottom: 8px; display: block; }
+        .panel-title { font-size: 2rem; color: var(--purple); margin-bottom: 25px; line-height: 1.1; font-weight: 700; }
+        .panel-content { line-height: 1.8; font-size: 1.05rem; color: var(--fg); text-align: justify; }
+
+        /* Signature - CRITICAL */
+        .signature {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.8;
+            border-bottom: 2px solid var(--purple);
+            pointer-events: none;
+        }
+
+        #toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d353b;
+            color: white;
+            padding: 12px 35px;
+            border-radius: 50px;
+            opacity: 0;
+            z-index: 200;
+            font-weight: 600;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>CHF (Charging Function) Architecture</h1>
+            <p>3GPP TS 32.240 | 5G Converged Charging Service Based Architecture</p>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="animateCHF('online')">Quota Reservation (Online)</button>
+            <button class="btn" onclick="animateCHF('offline')">Event Charging (Offline)</button>
+            <button class="btn" onclick="animateCHF('billing')">CDR Generation & Billing</button>
+            <button class="btn" style="border-color:var(--red); color:var(--red)" onclick="resetCHF()">Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing Charging Engine...</div>
+
+    <main>
+        <svg id="chf-svg" viewBox="0 0 1200 850" xmlns="http://www.w3.org/2000/svg">
+            <!-- Interface Paths -->
+            <path id="path-nchf-smf" d="M 230 250 L 450 400" stroke="var(--blue)" stroke-width="3" stroke-dasharray="10,5" fill="none" opacity="0.4"/>
+            <path id="path-nchf-amf" d="M 230 400 L 450 400" stroke="var(--blue)" stroke-width="3" stroke-dasharray="10,5" fill="none" opacity="0.4"/>
+            <path id="path-nchf-pcf" d="M 230 550 L 450 400" stroke="var(--blue)" stroke-width="3" stroke-dasharray="10,5" fill="none" opacity="0.4"/>
+            
+            <!-- Internal Logical Paths -->
+            <path id="path-rating" d="M 700 400 L 950 250" stroke="var(--orange)" stroke-width="3" fill="none" opacity="0.4"/>
+            <path id="path-abmf" d="M 700 400 L 950 400" stroke="var(--green)" stroke-width="3" fill="none" opacity="0.4"/>
+            <path id="path-cgf" d="M 700 400 L 950 600" stroke="var(--red)" stroke-width="3" fill="none" opacity="0.4"/>
+            <path id="path-billing" d="M 1000 650 L 1000 780" stroke="var(--fg)" stroke-width="2" stroke-dasharray="5,5" fill="none" opacity="0.5"/>
+
+            <!-- THE CHF CORE CONTAINER -->
+            <rect x="450" y="300" width="250" height="250" rx="30" fill="#fcfcfc" stroke="var(--purple)" stroke-width="4" />
+            <g class="node" onclick="openNode('chf')">
+                <text x="575" y="360" text-anchor="middle" font-weight="bold" fill="var(--purple)" font-size="28">CHF</text>
+                <text x="575" y="390" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">Charging Function</text>
+                <text x="575" y="420" text-anchor="middle" fill="#5c6a72" font-size="10">Converged Charging</text>
+                <rect x="480" y="440" width="190" height="80" rx="10" fill="var(--purple)" fill-opacity="0.05" stroke="var(--purple)" stroke-width="1"/>
+                <text x="575" y="465" text-anchor="middle" fill="var(--fg)" font-size="9">Session Charging Logic</text>
+                <text x="575" y="485" text-anchor="middle" fill="var(--fg)" font-size="9">Quota Management</text>
+                <text x="575" y="505" text-anchor="middle" fill="var(--fg)" font-size="9">CDR Aggregation</text>
+            </g>
+
+            <!-- CONSUMERS (SBI) -->
+            <g class="node" onclick="openNode('smf')">
+                <rect x="50" y="180" width="180" height="100" rx="15" fill="#f3ecf9" stroke="var(--blue)" stroke-width="2" />
+                <text x="140" y="225" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">SMF</text>
+                <text x="140" y="250" text-anchor="middle" fill="#5c6a72" font-size="11">Session Management</text>
+                <text x="140" y="165" text-anchor="middle" fill="var(--blue)" font-size="10" font-weight="bold">Nchf Service Consumer</text>
+            </g>
+
+            <g class="node" onclick="openNode('amf')">
+                <rect x="50" y="350" width="180" height="100" rx="15" fill="#f3ecf9" stroke="var(--blue)" stroke-width="2" />
+                <text x="140" y="395" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">AMF</text>
+                <text x="140" y="420" text-anchor="middle" fill="#5c6a72" font-size="11">Access & Mobility</text>
+            </g>
+
+            <g class="node" onclick="openNode('pcf')">
+                <rect x="50" y="520" width="180" height="100" rx="15" fill="#f3ecf9" stroke="var(--blue)" stroke-width="2" />
+                <text x="140" y="565" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">PCF</text>
+                <text x="140" y="590" text-anchor="middle" fill="#5c6a72" font-size="11">Policy Control</text>
+            </g>
+
+            <!-- INTERNAL / BACKEND LOGIC -->
+            <g class="node" onclick="openNode('rf')">
+                <rect x="950" y="180" width="180" height="100" rx="15" fill="#fdf5ea" stroke="var(--orange)" stroke-width="2" />
+                <text x="1040" y="225" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">Rating Function</text>
+                <text x="1040" y="250" text-anchor="middle" fill="#5c6a72" font-size="11">Price Determination</text>
+            </g>
+
+            <g class="node" onclick="openNode('abmf')">
+                <rect x="950" y="350" width="180" height="100" rx="15" fill="#e7f8f2" stroke="var(--green)" stroke-width="2" />
+                <text x="1040" y="395" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">ABMF</text>
+                <text x="1040" y="420" text-anchor="middle" fill="#5c6a72" font-size="10">Account Balance Management</text>
+            </g>
+
+            <g class="node" onclick="openNode('cgf')">
+                <rect x="950" y="520" width="180" height="130" rx="15" fill="#fdebeb" stroke="var(--red)" stroke-width="2" />
+                <text x="1040" y="565" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">CGF</text>
+                <text x="1040" y="590" text-anchor="middle" fill="#5c6a72" font-size="11">Charging Gateway</text>
+                <text x="1040" y="615" text-anchor="middle" fill="#5c6a72" font-size="10" opacity="0.7">Gz / Ga Interface Successor</text>
+            </g>
+
+            <!-- BILLING SYSTEM -->
+            <g class="node" onclick="openNode('billing')">
+                <rect x="920" y="750" width="240" height="80" rx="10" fill="var(--bg2)" stroke="var(--fg)" stroke-width="2" stroke-dasharray="5,2" />
+                <text x="1040" y="785" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">Billing System / BS</text>
+                <text x="1040" y="805" text-anchor="middle" fill="#5c6a72" font-size="10">Post-processing & Invoicing</text>
+            </g>
+
+            <!-- INTERFACE LABELS -->
+            <text x="320" y="380" fill="var(--blue)" font-weight="bold" font-size="14" text-anchor="middle">Nchf</text>
+            <text x="820" y="300" fill="var(--orange)" font-weight="bold" font-size="12" text-anchor="middle">Rating Interface</text>
+            <text x="820" y="450" fill="var(--green)" font-weight="bold" font-size="12" text-anchor="middle">ABMF Access</text>
+            <text x="820" y="600" fill="var(--red)" font-weight="bold" font-size="12" text-anchor="middle">CDR Export</text>
+
+            <!-- Animation Particles -->
+            <circle id="part-req" class="particle" r="8" fill="var(--blue)" />
+            <circle id="part-rate" class="particle" r="6" fill="var(--orange)" />
+            <circle id="part-bal" class="particle" r="6" fill="var(--green)" />
+            <circle id="part-cdr" class="particle" r="9" fill="var(--red)" />
+        </svg>
+
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <div class="close-btn" onclick="closeNode()">✕</div>
+        <div class="panel-header">
+            <span id="p-tag" class="panel-tag">Network Function</span>
+            <h2 id="p-title" class="panel-title">Component Name</h2>
+        </div>
+        <div id="p-body" class="panel-content">
+            Detailed technical description will load here based on 3GPP TS 32.240 and related specifications.
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const chfData = {
+            chf: {
+                title: "Charging Function (CHF)",
+                tag: "CORE 5GC NF",
+                body: "The Charging Function (CHF) is the central architectural pillar of the 5G Converged Charging System (CCS) as defined in 3GPP TS 32.240. It unifies both Online and Offline charging capabilities into a single Service Based Architecture (SBA) entity. The CHF provides the Nchf service, allowing consumers like the SMF to report resource usage (volume, time, or events) and request quota for active services. Internally, it hosts the Charging Logic which determines when to trigger quota renewals, how to aggregate charging data into Charging Data Records (CDRs), and how to interact with the Account Balance and Rating functions to ensure accurate billing."
+            },
+            smf: {
+                title: "Session Management (SMF)",
+                tag: "CHARGING CONSUMER",
+                body: "The SMF is the primary Nchf Service Consumer for user plane charging. In accordance with 3GPP TS 32.255, the SMF triggers Charging Data Requests toward the CHF when a PDU session is established, modified, or terminated. For online charging (Quota management), the SMF requests a 'Quota' (e.g., 50MB) and monitors the user's consumption. Once the quota is nearly exhausted, it requests more. If the CHF denies the request (e.g., zero balance), the SMF must terminate the user's data session or redirect them to a top-up portal, ensuring the operator never provides unpaid services."
+            },
+            amf: {
+                title: "Access & Mobility (AMF)",
+                tag: "MOBILITY CHARGING",
+                body: "The AMF interacts with the CHF to handle charging related to access and mobility events. This includes charging for registration attempts, tracking area updates, and handovers. While less volume-intensive than the SMF, AMF-based charging is vital for operators offering location-based services or charging for specific network access events. It consumes the Nchf_ConvergedCharging service to report these events for offline logging or real-time balance deductions if a flat-rate mobility fee is applicable."
+            },
+            pcf: {
+                title: "Policy Control (PCF)",
+                tag: "POLICY-DRIVEN CHARGING",
+                body: "The PCF provides the Charging rules to the SMF, but it can also interact with the CHF to synchronize policy decisions with the user's financial status. For example, the PCF might receive a notification from the CHF that a user has reached a specific spending limit. The PCF can then trigger a policy update to downgrade the user's Quality of Service (QoS) or bit-rate instead of completely cutting off their data, enabling 'Graceful Degradation' policies as part of a modern subscriber management strategy."
+            },
+            rf: {
+                title: "Rating Function (RF)",
+                tag: "INTERNAL LOGIC",
+                body: "The Rating Function (RF) is a logical component that determines the 'price' or 'value' of a network resource. When the CHF receives a charging request from an SMF (e.g., 'User accessed 10MB of Video on Slice X'), it queries the RF. The RF evaluates the subscriber's plan, the time of day, and the service type to return a monetary value or a 'Cost of Service'. This allows the CHF to correctly deduct the amount from the user's account balance, making it a critical engine for complex, multi-dimensional 5G service pricing."
+            },
+            abmf: {
+                title: "Account Balance Management Function (ABMF)",
+                tag: "REAL-TIME LEDGER",
+                body: "The ABMF is the 'Wallet' of the 5G charging system. It maintains the real-time balance of the subscriber, which could be monetary, data volume, or bonus units. The CHF interacts with the ABMF to perform 'Balance Reservation' (holding funds for an active session) and 'Balance Deduction' (final charge after usage). It supports 3GPP's requirements for immediate credit control, preventing revenue leakage by ensuring users cannot exceed their prepaid limits across multiple concurrent sessions."
+            },
+            cgf: {
+                title: "Charging Gateway Function (CGF)",
+                tag: "CDR GATEWAY",
+                body: "The CGF acts as the intermediate storage and translation layer between the 5G Core and the external Billing System. It performs 'CDR Aggregation'—taking multiple charging events for a single session and combining them into a standardized Charging Data Record (CDR). It also handles CDR persistence and reliable delivery to the billing system via standardized protocols like FTP or GTP'. This ensures that even if the billing system is temporarily offline, the core charging data is preserved and eventually processed."
+            },
+            billing: {
+                title: "Billing System (BS)",
+                tag: "BUSINESS SUPPORT",
+                body: "The Billing System is the final destination for charging data. It operates in the 'Business Support System' (BSS) domain. It consumes the CDRs provided by the CGF to generate monthly invoices, manage customer taxes, and perform long-term business analytics. While external to the 3GPP 5G Core signaling, its requirements for data accuracy and completeness dictate the design of the entire charging architecture, ensuring that every byte consumed on the network is accurately reflected in the subscriber's financial statement."
+            }
+        };
+
+        function openNode(key) {
+            const data = chfData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-tag').innerText = data.tag;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            gsap.to('.node', { opacity: 0.3, duration: 0.4 });
+        }
+
+        function closeNode() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, duration: 0.4 });
+        }
+
+        // --- Animation Engine ---
+        let tl = gsap.timeline();
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            gsap.to(t, { opacity: 1, y: -20, duration: 0.3 });
+            setTimeout(() => gsap.to(t, { opacity: 0, duration: 0.3 }), 3000);
+        }
+
+        function resetCHF() {
+            tl.kill();
+            gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+            showToast("Charging System Synchronized.");
+        }
+
+        function animateCHF(type) {
+            resetCHF();
+            tl = gsap.timeline();
+
+            if (type === 'online') {
+                showToast("Online: SMF requesting Quota Reservation (Nchf)...");
+                tl.to("#part-req", { visibility: "visible", x: 140, y: 225, duration: 0 })
+                  .to("#part-req", { motionPath: { path: "#path-nchf-smf", align: "#path-nchf-smf", alignOrigin: [0.5, 0.5] }, duration: 1.5, start: 0, end: 1 })
+                  .call(() => showToast("CHF: Checking Account Balance (ABMF)..."))
+                  .to("#part-bal", { visibility: "visible", x: 575, y: 425, duration: 0 })
+                  .to("#part-bal", { motionPath: { path: "#path-abmf", align: "#path-abmf", alignOrigin: [0.5, 0.5] }, duration: 1.2 })
+                  .call(() => showToast("Quota Granted (200MB). Granting to SMF..."))
+                  .to("#part-req", { motionPath: { path: "#path-nchf-smf", align: "#path-nchf-smf", alignOrigin: [0.5, 0.5] }, duration: 1, start: 1, end: 0 });
+            } 
+            else if (type === 'offline') {
+                showToast("Offline: AMF reporting Access Event (Nchf)...");
+                tl.to("#part-req", { visibility: "visible", x: 140, y: 395, duration: 0 })
+                  .to("#part-req", { motionPath: { path: "#path-nchf-amf", align: "#path-nchf-amf", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                  .call(() => showToast("CHF: Event Logged. No real-time balance check required."))
+                  .to("#part-cdr", { visibility: "visible", x: 575, y: 425, duration: 0 })
+                  .to("#part-cdr", { motionPath: { path: "#path-cgf", align: "#path-cgf", alignOrigin: [0.5, 0.5] }, duration: 1.5 });
+            }
+            else if (type === 'billing') {
+                showToast("CGF: Consolidating CDRs for external export...");
+                tl.to("#part-cdr", { visibility: "visible", x: 575, y: 425, duration: 0 })
+                  .to("#part-cdr", { motionPath: { path: "#path-cgf", align: "#path-cgf", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                  .call(() => showToast("Exporting CDR files to Billing System..."))
+                  .to("#part-cdr", { x: 1040, y: 785, duration: 2, ease: "power2.inOut" })
+                  .to("#part-cdr", { opacity: 0, duration: 0.5 })
+                  .call(() => showToast("Billing Data Integrated."));
+            }
+        }
+
+        // Ambient heartbeat for CHF node
+        gsap.to("rect[stroke='var(--purple)']", {
+            strokeWidth: 6,
+            duration: 1.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+
+    </script>
+</body>
+</html>

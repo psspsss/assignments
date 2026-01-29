@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G UE Architecture | Interactive Technical Study</title>
+    <!-- GSAP for technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+
+            --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --card-shadow: 0 12px 30px rgba(0,0,0,0.06);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem 2.5rem;
+            background: white;
+            border-bottom: 2px solid var(--bg1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        header h1 { font-size: 1.5rem; color: #2d353b; }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--fg);
+            transition: var(--transition);
+        }
+        .btn:hover { background: var(--green); color: white; transform: translateY(-2px); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        #ue-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 1150px;
+            max-height: 800px;
+        }
+
+        /* Interactive Elements */
+        .node { cursor: pointer; transition: transform 0.3s ease; }
+        .node:hover { transform: translateY(-5px); }
+
+        /* Sidebar */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: white;
+            box-shadow: -15px 0 45px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 8px solid var(--green);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--bg2); letter-spacing: 1.5px; }
+        .panel-title { font-size: 1.8rem; color: var(--green); margin: 10px 0 20px; line-height: 1.2; }
+        .panel-content { line-height: 1.8; font-size: 1.05rem; color: var(--fg); text-align: justify; }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            color: var(--fg);
+            opacity: 0.8;
+            border-bottom: 1px solid var(--fg);
+        }
+
+        #toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d353b;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>UE (User Equipment) Architecture</h1>
+        <div class="controls">
+            <button class="btn" onclick="animateUE('registration')">Registration Flow</button>
+            <button class="btn" onclick="animateUE('radio')">RRC Connection</button>
+            <button class="btn" style="border-color:var(--red); color:var(--red)" onclick="resetUE()">Reset System</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing simulation...</div>
+
+    <main>
+        <svg id="ue-svg" viewBox="0 0 1100 800" xmlns="http://www.w3.org/2000/svg">
+            <!-- External Interfaces Paths -->
+            <path id="path-nas" d="M 550 250 L 950 250" stroke="var(--blue)" stroke-width="2" stroke-dasharray="8,5" fill="none" opacity="0.4"/>
+            <path id="path-radio" d="M 550 550 L 950 550" stroke="var(--orange)" stroke-width="4" fill="none" opacity="0.3"/>
+
+            <!-- THE UE DEVICE CONTAINER -->
+            <rect x="50" y="50" width="650" height="700" rx="40" fill="#fcfcfc" stroke="#2d353b" stroke-width="2" />
+            <text x="70" y="40" font-weight="bold" font-size="20" fill="#2d353b">5G USER EQUIPMENT (UE)</text>
+
+            <!-- Internal Components -->
+            <!-- USIM Block -->
+            <g class="node" onclick="openInfo('usim')">
+                <rect x="100" y="100" width="200" height="120" rx="15" fill="#fdecf5" stroke="var(--purple)" stroke-width="2" />
+                <text x="200" y="150" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">USIM</text>
+                <text x="200" y="175" text-anchor="middle" fill="#5c6a72" font-size="10">Subscription Identity</text>
+                <text x="200" y="190" text-anchor="middle" fill="#5c6a72" font-size="9" opacity="0.7">SUPI / K / OPc Storage</text>
+            </g>
+
+            <!-- NAS Layer Block -->
+            <g class="node" onclick="openInfo('nas')">
+                <rect x="350" y="100" width="300" height="180" rx="15" fill="#e7f1e7" stroke="var(--green)" stroke-width="2" />
+                <text x="500" y="145" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">NAS Layer</text>
+                <rect x="375" y="170" width="250" height="40" rx="5" fill="white" stroke="var(--green)" stroke-dasharray="4,2"/>
+                <text x="500" y="195" text-anchor="middle" font-size="12" fill="var(--green)" font-weight="bold">5GMM (Mobility Mgmt)</text>
+                <rect x="375" y="220" width="250" height="40" rx="5" fill="white" stroke="var(--green)" stroke-dasharray="4,2"/>
+                <text x="500" y="245" text-anchor="middle" font-size="12" fill="var(--green)" font-weight="bold">5GSM (Session Mgmt)</text>
+            </g>
+
+            <!-- AS Layer / Radio Stack -->
+            <g class="node" onclick="openInfo('as')">
+                <rect x="100" y="320" width="550" height="380" rx="20" fill="#f3ecf9" stroke="var(--purple)" stroke-width="2" />
+                <text x="375" y="360" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">Access Stratum (AS) / Radio Stack</text>
+                
+                <!-- SDAP/PDCP -->
+                <rect x="150" y="390" width="450" height="50" rx="10" fill="white" stroke="var(--purple)"/>
+                <text x="375" y="420" text-anchor="middle" font-weight="bold" font-size="14">SDAP / PDCP (Security & Headers)</text>
+                
+                <!-- RLC/MAC -->
+                <rect x="150" y="460" width="450" height="50" rx="10" fill="white" stroke="var(--purple)"/>
+                <text x="375" y="490" text-anchor="middle" font-weight="bold" font-size="14">RLC / MAC (Scheduling & Error Correction)</text>
+
+                <!-- PHY -->
+                <rect id="phy-layer" x="150" y="530" width="450" height="60" rx="10" fill="var(--orange)" fill-opacity="0.1" stroke="var(--orange)" stroke-width="2"/>
+                <text x="375" y="565" text-anchor="middle" font-weight="bold" font-size="16" fill="var(--orange)">PHY (Physical Layer - NR)</text>
+                
+                <!-- RRC -->
+                <rect x="150" y="610" width="450" height="50" rx="10" fill="white" stroke="var(--blue)"/>
+                <text x="375" y="640" text-anchor="middle" font-weight="bold" font-size="14" fill="var(--blue)">RRC (Control & States)</text>
+            </g>
+
+            <!-- External World Indicators -->
+            <g class="node" onclick="openInfo('gnb')">
+                <rect x="950" y="500" width="120" height="120" rx="15" fill="#fcf0e3" stroke="var(--orange)" stroke-width="2" />
+                <text x="1010" y="550" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">gNB</text>
+                <text x="1010" y="575" text-anchor="middle" fill="#5c6a72" font-size="10">Base Station</text>
+            </g>
+
+            <g class="node" onclick="openInfo('amf')">
+                <rect x="950" y="200" width="120" height="100" rx="15" fill="#d8e7ef" stroke="var(--blue)" stroke-width="2" />
+                <text x="1010" y="245" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">AMF</text>
+                <text x="1010" y="270" text-anchor="middle" fill="#5c6a72" font-size="10">5G Core</text>
+            </g>
+
+            <!-- Particles -->
+            <circle id="p-nas" class="particle" r="8" fill="var(--green)" />
+            <circle id="p-radio" class="particle" r="8" fill="var(--orange)" />
+        </svg>
+
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Detailed Sidebar -->
+    <div id="side-panel">
+        <div class="close-btn" onclick="closeInfo()">✕</div>
+        <div class="panel-header">
+            <span id="p-tag" class="panel-tag">UE COMPONENT</span>
+            <h2 id="p-title" class="panel-title">Component Name</h2>
+        </div>
+        <div id="p-body" class="panel-content">
+            Detailed technical description will load here...
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const ueData = {
+            usim: {
+                title: "Universal Subscriber Identity Module (USIM)",
+                body: "The USIM is the secure enclave within the UE (usually on a UICC card or eSIM) that stores the subscriber's permanent identity, the SUPI (Subscription Permanent Identifier), and secret cryptographic keys (K). It is responsible for the 'Security Anchor' functions on the terminal side. During registration, the USIM performs the UE-side of the 5G-AKA (Authentication and Key Agreement) procedure, deriving the master security keys that will be used to encrypt all NAS and AS signaling. Without a valid USIM, the UE cannot prove its identity to the 5G Core, making it a cornerstone of 5G network trust and access control."
+            },
+            nas: {
+                title: "Non-Access Stratum (NAS) Layer",
+                body: "The NAS layer is the highest signaling layer in the 5G protocol stack between the UE and the Core Network (AMF). It is logically divided into 5G Mobility Management (5GMM) and 5G Session Management (5GSM). 5GMM handles registration, tracking area updates, and identity management, ensuring the network always knows where the UE is. 5GSM handles the establishment and modification of PDU sessions (data pipes). Crucially, NAS signaling is encrypted and integrity-protected, and it is 'transparent' to the radio access network; the gNB base station simply relays these messages without interpreting their content."
+            },
+            as: {
+                title: "Access Stratum (AS) / Radio Stack",
+                body: "The Access Stratum represents the lower protocol layers that manage the physical communication over the New Radio (NR) interface between the UE and the gNB. This includes PDCP (Packet Data Convergence Protocol) for header compression and security, RLC (Radio Link Control) for segmentation and error correction, and MAC (Medium Access Control) for scheduling and mapping logical channels. The AS layer ensures that data and signaling are efficiently and reliably delivered over the air, adapting to the rapidly changing conditions of the 5G radio environment to maintain high throughput and low latency."
+            },
+            nas_states: {
+                title: "NAS Connection Management",
+                body: "The UE NAS layer maintains specific states to optimize power and connectivity. In 'RM-REGISTERED' state, the UE is known to the network. In 'CM-CONNECTED' state, a signaling connection exists over the N1 interface, allowing active communication. If there is no activity, the UE transitions to 'CM-IDLE', where it must periodically perform tracking area updates to remain reachable. These state transitions are vital for modern mobile devices, allowing them to save battery while remaining ready to receive incoming calls or data sessions via the paging mechanism."
+            },
+            as_layers: {
+                title: "Physical Layer (PHY) - NR",
+                body: "The Physical Layer (PHY) is where the actual bit-to-waveform translation happens. In 5G, this involves complex technologies like Massive MIMO, Beamforming, and high-order modulation (up to 256-QAM). The UE PHY layer is responsible for synchronizing with the base station (SSB), performing channel measurements (CSI), and executing the actual transmission and reception of Orthogonal Frequency Division Multiplexing (OFDM) symbols. It is the layer that directly manages the 5G spectrum, whether in Sub-6GHz (FR1) or Millimeter Wave (FR2) bands, to achieve the massive capacity promised by 5G."
+            },
+            rrc: {
+                title: "Radio Resource Control (RRC)",
+                body: "RRC is the control-plane protocol of the Access Stratum. Its primary job is to manage the radio connection state between the UE and the gNB. 5G introduces a new 'RRC_INACTIVE' state, which allows the UE to save power (like IDLE) while keeping the UE context stored in the gNB (like CONNECTED) for near-instant reactivation. RRC handles system information broadcasting, connection setup, handover execution, and measurement configuration. It is the layer that 'tells the radio what to do,' acting as the conductor for the complex radio stack."
+            },
+            gnb: {
+                title: "gNodeB (gNB) Interaction",
+                body: "The gNB is the primary external peer for the UE. The relationship is governed by the Uu interface. Every time the UE wants to send data, it must first synchronize with the gNB and perform a Random Access Procedure (RACH). Once connected, the gNB provides the UE with dedicated radio resources. The UE constantly measures the signal quality from its serving gNB and neighboring towers, reporting this data back via RRC so the network can make intelligent decisions about handovers and beam management."
+            },
+            amf: {
+                title: "AMF (Core) Interaction",
+                body: "While the UE talks to the gNB physically, it talks to the AMF logically. The N1 interface carries the NAS signaling between these two entities. During the Registration procedure, the AMF verifies the credentials provided by the UE's USIM. Once authorized, the AMF provides the UE with a temporary identity (5G-GUTI) and mobility rules. This 'Direct' logical connection ensures that even if the UE moves between dozens of base stations (gNBs), the core network maintains a stable management context for the subscriber."
+            }
+        };
+
+        function openInfo(key) {
+            const data = ueData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            gsap.to('.node', { opacity: 0.3, duration: 0.3 });
+        }
+
+        function closeInfo() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, duration: 0.3 });
+        }
+
+        // Animation logic
+        let tl = gsap.timeline();
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            gsap.to(t, { opacity: 1, y: -20, duration: 0.3 });
+            setTimeout(() => gsap.to(t, { opacity: 0, duration: 0.3 }), 2500);
+        }
+
+        function resetUE() {
+            tl.kill();
+            gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+            showToast("UE Logic Reset");
+        }
+
+        function animateUE(type) {
+            resetUE();
+            tl = gsap.timeline();
+
+            if (type === 'registration') {
+                showToast("UE Initial Registration: Extracting SUCI from USIM...");
+                tl.to("#p-nas", { visibility: "visible", x: 200, y: 150, duration: 0 })
+                  .to("#p-nas", { x: 500, y: 150, duration: 1, ease: "power1.inOut" })
+                  .call(() => showToast("Sending NAS Registration Request to AMF..."))
+                  .to("#p-nas", { motionPath: { path: "#path-nas", align: "#path-nas", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                  .call(() => showToast("Registration Accept received. Security active."));
+            } 
+            else if (type === 'radio') {
+                showToast("Starting RRC Connection: Random Access (RACH)...");
+                tl.to("#p-radio", { visibility: "visible", x: 375, y: 565, duration: 0 })
+                  .to("#p-radio", { motionPath: { path: "#path-radio", align: "#path-radio", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                  .to("#phy-layer", { fillOpacity: 0.6, duration: 0.3, repeat: 1, yoyo: true })
+                  .call(() => showToast("RRC_CONNECTED: Radio Resources allocated."));
+            }
+        }
+
+        // Ambient pulse for PHY layer
+        gsap.to("#phy-layer", {
+            fillOpacity: 0.3,
+            duration: 1.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+    </script>
+</body>
+</html>

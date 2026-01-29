@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCF Internal Components | Interactive Architecture</title>
+    <!-- GSAP for robust technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Theme */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            --dark-purple: #9b59b6;
+            --black-card: #080808;
+            
+            --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Outer Border Container */
+        .pcf-outer-container {
+            width: 90vw;
+            max-width: 1100px;
+            height: 85vh;
+            border: 4px solid var(--purple);
+            border-radius: 25px;
+            background-color: #f9f7f0;
+            position: relative;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.05);
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--dark-purple);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* Black Decision Engine Card */
+        .decision-engine {
+            background-color: var(--black-card);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            border: 2px solid transparent;
+        }
+        .decision-engine:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: var(--blue);
+        }
+
+        .engine-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            color: var(--purple);
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+        }
+
+        .engine-col h4 {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .engine-list {
+            list-style: none;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .engine-list li::before {
+            content: "•";
+            color: var(--purple);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        /* Middle Row Flex */
+        .middle-row {
+            display: flex;
+            gap: 30px;
+        }
+
+        .card {
+            flex: 1;
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-list {
+            list-style: none;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            flex-grow: 1;
+        }
+        .card-list li::before {
+            content: "• ";
+            font-weight: bold;
+        }
+
+        .card-footer {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            font-style: italic;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        /* SBI Container */
+        .sbi-container {
+            border: 3px solid var(--orange);
+            border-radius: 20px;
+            padding: 20px 30px;
+            background-color: #fdf5ea;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sbi-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            color: var(--orange);
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .sbi-cards {
+            display: flex;
+            gap: 20px;
+        }
+
+        .sbi-subcard {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+        .sbi-subcard:hover { transform: scale(1.03); filter: brightness(0.95); }
+
+        .sbi-subcard h5 {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .sbi-subcard p { margin-bottom: 4px; font-family: monospace; }
+
+        /* Detail Panel */
+        #side-panel {
+            position: fixed;
+            right: -500px;
+            top: 0;
+            width: 450px;
+            height: 100%;
+            background: var(--bg0);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+            border-left: 6px solid var(--purple);
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--purple); letter-spacing: 1px; }
+        .panel-title { font-size: 2rem; color: var(--dark-purple); margin: 10px 0 25px; line-height: 1.2; }
+        .panel-body { line-height: 1.8; font-size: 1.05rem; color: var(--fg); text-align: justify; }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 30px;
+            font-family: 'Brush Script MT', cursive;
+            font-size: 1.6rem;
+            color: var(--fg);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Flow Animation Particles */
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--purple);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 50;
+        }
+
+        /* Overlay for flow lines */
+        #svg-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pcf-outer-container">
+        <h1 class="main-title">PCF Internal Components</h1>
+
+        <!-- Top: Decision Engine -->
+        <div class="decision-engine" id="engine-box" onclick="showInfo('engine')">
+            <div class="engine-header">
+                <span>⚙️</span> Policy Decision Engine
+            </div>
+            <div class="engine-col">
+                <h4>Modules:</h4>
+                <ul class="engine-list">
+                    <li>QoS Decision Logic</li>
+                    <li>Charging Rule Generator</li>
+                    <li>Policy Conflict Resolver</li>
+                    <li>Network Slice Policy Handler</li>
+                </ul>
+            </div>
+            <div class="engine-col">
+                <h4>Inputs:</h4>
+                <ul class="engine-list">
+                    <li>Subscription data (UDR)</li>
+                    <li>AF requests (N5)</li>
+                    <li>Network policies (operator)</li>
+                    <li>Real-time events (congestion, roaming)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Middle: Event Handler & UDR Interface -->
+        <div class="middle-row">
+            <div class="card" id="event-card" style="border-color: var(--aqua);" onclick="showInfo('event')">
+                <div class="card-header" style="color: var(--aqua);">📡 Event Handler</div>
+                <ul class="card-list">
+                    <li>UDR Event Subscription</li>
+                    <li>SMF Notification Processing</li>
+                    <li>Dynamic Policy Update Trigger</li>
+                </ul>
+                <div class="card-footer">Reacts to subscriber changes, network events</div>
+            </div>
+
+            <div class="card" id="udr-card" style="border-color: var(--purple);" onclick="showInfo('udr')">
+                <div class="card-header" style="color: var(--purple);">📊 UDR Interface (Nudr)</div>
+                <ul class="card-list">
+                    <li>PolicyData retrieval</li>
+                    <li>Subscription profile access</li>
+                    <li>Event notification subscription</li>
+                </ul>
+                <div class="card-footer">HTTP/2 REST API for data queries</div>
+            </div>
+        </div>
+
+        <!-- Bottom: SBI APIs -->
+        <div class="sbi-container" id="sbi-box" onclick="showInfo('sbi')">
+            <div class="sbi-header">🔌 Service-Based Interface (SBI) APIs</div>
+            <div class="sbi-cards">
+                <div class="sbi-subcard" style="background-color: #eef7f0; border-color: var(--aqua); color: var(--fg);" onclick="event.stopPropagation(); showInfo('sbi_sm')">
+                    <h5 style="color: var(--aqua);">Npcf_SMPolicyControl</h5>
+                    <p>• POST /sm-policies</p>
+                    <p>• PATCH /sm-policies/{id}</p>
+                    <p style="font-weight: bold; margin-top: 5px;">Port: 29507 (N7)</p>
+                </div>
+                <div class="sbi-subcard" style="background-color: #fdf5ea; border-color: var(--orange); color: var(--fg);" onclick="event.stopPropagation(); showInfo('sbi_auth')">
+                    <h5 style="color: var(--orange);">Npcf_PolicyAuthorization</h5>
+                    <p>• POST /app-sessions</p>
+                    <p>• PATCH /app-sessions/{id}</p>
+                    <p style="font-weight: bold; margin-top: 5px;">Port: 29514 (N5)</p>
+                </div>
+                <div class="sbi-subcard" style="background-color: #eff5f9; border-color: var(--blue); color: var(--fg);" onclick="event.stopPropagation(); showInfo('sbi_am')">
+                    <h5 style="color: var(--blue);">Npcf_AMPolicyControl</h5>
+                    <p>• POST /am-policies</p>
+                    <p>• PUT /am-policies/{id}</p>
+                    <p style="font-weight: bold; margin-top: 5px;">Port: 29507 (N15)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SVG Layer for flows -->
+        <svg id="svg-layer">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#5c6a72" />
+                </marker>
+            </defs>
+            <!-- Logical Flow Lines -->
+            <path id="flow1" d="" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+        </svg>
+
+        <div class="signature">Vinayak Majhi</div>
+    </div>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <div class="close-btn" onclick="closePanel()">✕</div>
+        <div id="panel-content">
+            <span class="panel-tag" id="p-tag">Component</span>
+            <h2 class="panel-title" id="p-title">Policy Decision Engine</h2>
+            <div class="panel-body" id="p-body">
+                Technical explanation will load here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const content = {
+            engine: {
+                tag: "CORE BRAIN",
+                title: "Policy Decision Engine",
+                body: "The Policy Decision Engine acts as the central intelligence of the Policy Control Function (PCF) in the 5G Core. It performs complex logic by synthesizing multiple inputs: subscription profiles from the UDR, application-specific requirements via N5, and real-time network conditions such as congestion or roaming status. Its internal modules, like the QoS Decision Logic and Charging Rule Generator, derive the actual policy rules (PCC rules) that govern how traffic is treated. This engine ensures that service quality meets SLA requirements while simultaneously resolving any conflicts between different policy sets, providing a unified enforcement strategy for the network."
+            },
+            event: {
+                tag: "DYNAMIC TRIGGERS",
+                title: "Event Handler",
+                body: "The Event Handler is the proactive component of the PCF that monitors changes across the 5G system. It subscribes to specific events within the UDR, such as changes in a user's data plan or mobility status. When a notification arrives from the SMF or UDR, the Event Handler processes these updates to determine if a dynamic policy re-evaluation is necessary. By acting as the bridge between system changes and policy logic, it enables 'Session Continuity' and 'Adaptive QoS'—ensuring that the user experience remains stable even if the underlying network topology or user permissions shift suddenly."
+            },
+            udr: {
+                tag: "DATA GATEWAY",
+                title: "UDR Interface (Nudr)",
+                body: "The UDR Interface (Nudr) provides a standardized, REST-based gateway to the Unified Data Repository. This component is responsible for retrieving permanent subscription data and policy-related profiles required by the Decision Engine. It uses HTTP/2 for efficient, high-performance communication. Beyond simple retrieval, it manages event notification subscriptions, allowing the PCF to stay 'in sync' with the master database. Its importance lies in maintaining the data integrity of the PCF, ensuring that every policy decision is based on the most current and authoritative user information available in the core network."
+            },
+            sbi: {
+                tag: "API LAYER",
+                title: "Service-Based Interface APIs",
+                body: "The Service-Based Interface (SBI) APIs represent the external 'personality' of the PCF, allowing it to interact with other Network Functions (NFs) in the 5G Service-Based Architecture. These APIs (Npcf_*) facilitate the request/response and subscribe/notify patterns that define 5G control. By exposing these standardized ports, the PCF can receive session management requests from the SMF (N7), application authorizations from the AF (N5), and mobility management rules from the AMF (N15). This layer translates high-level internal logic into standardized RESTful messages that the rest of the 5G core can consume and act upon."
+            },
+            sbi_sm: {
+                tag: "SESSION CONTROL",
+                title: "Npcf_SMPolicyControl",
+                body: "This specific SBI handles the N7 interface, connecting the PCF directly to the Session Management Function (SMF). Its primary purpose is to provide session-level policy control (PCC rules). When a PDU session is established or modified, the SMF uses POST or PATCH requests to obtain the necessary QoS and charging parameters. It allows the network to dynamically control the bandwidth and priority of a specific user session based on the service type and the user's subscription tier, acting as the fundamental mechanism for per-session data management."
+            },
+            sbi_auth: {
+                tag: "APPLICATION LAYER",
+                title: "Npcf_PolicyAuthorization",
+                body: "The Policy Authorization SBI facilitates the N5 interface, allowing external Application Functions (AFs) to influence policy decisions. This is crucial for services that require dedicated resources, like low-latency gaming or high-definition video conferencing. The AF uses this interface to request specific QoS requirements for an application session. The PCF then evaluates this request against the user's subscription and operator rules to decide whether to authorize the additional resources, enabling a tighter integration between 5G connectivity and modern software applications."
+            },
+            sbi_am: {
+                tag: "MOBILITY CONTROL",
+                title: "Npcf_AMPolicyControl",
+                body: "Operating over the N15 interface, this SBI interacts with the Access and Mobility Management Function (AMF). It provides 'Access and Mobility' policies which govern where a user can move and what network slices they can access. For example, it can enforce roaming restrictions or limit a UE to specific Tracking Areas. By managing these parameters, the Npcf_AMPolicyControl ensures that mobility behavior adheres to the operator's business logic and network constraints, providing a top-down control of the UE's footprint across the radio access network."
+            }
+        };
+
+        function showInfo(key) {
+            const data = content[key];
+            document.getElementById('p-tag').innerText = data.tag;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            
+            // Visual highlight
+            gsap.to(".pcf-outer-container > div", { opacity: 0.4, duration: 0.3 });
+            gsap.to(`#${key}-box, #${key}-card`, { opacity: 1, scale: 1.02, duration: 0.3 });
+
+            // Trigger data flow animation
+            animateFlow(key);
+        }
+
+        function closePanel() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to(".pcf-outer-container > div", { opacity: 1, scale: 1, duration: 0.3 });
+        }
+
+        function animateFlow(key) {
+            // Simple particle flow logic
+            const engine = document.getElementById('engine-box').getBoundingClientRect();
+            let start, end;
+
+            if (key === 'udr') {
+                start = document.getElementById('udr-card').getBoundingClientRect();
+                end = engine;
+            } else if (key === 'event') {
+                start = document.getElementById('event-card').getBoundingClientRect();
+                end = engine;
+            } else if (key === 'sbi') {
+                start = engine;
+                end = document.getElementById('sbi-box').getBoundingClientRect();
+            } else {
+                return;
+            }
+
+            for(let i=0; i<3; i++) {
+                createParticle(start, end, i*0.2);
+            }
+        }
+
+        function createParticle(startRect, endRect, delay) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            document.body.appendChild(p);
+
+            const startX = startRect.left + startRect.width/2;
+            const startY = startRect.top + startRect.height/2;
+            const endX = endRect.left + endRect.width/2;
+            const endY = endRect.top + endRect.height/2;
+
+            gsap.fromTo(p, 
+                { left: startX, top: startY, opacity: 0, scale: 0 },
+                { 
+                    left: endX, 
+                    top: endY, 
+                    opacity: 1, 
+                    scale: 1.5, 
+                    duration: 1, 
+                    delay: delay,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        gsap.to(p, { opacity: 0, scale: 0, duration: 0.3, onComplete: () => p.remove() });
+                    }
+                }
+            );
+        }
+
+        // Ambient animations
+        gsap.to(".engine-header span", { rotation: 360, duration: 8, repeat: -1, ease: "none" });
+        gsap.to(".decision-engine", { boxShadow: "0 0 20px var(--purple)", duration: 2, repeat: -1, yoyo: true });
+
+    </script>
+</body>
+</html>

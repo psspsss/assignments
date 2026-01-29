@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPF Interface Architecture | Interactive Technical Study</title>
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Color Palette */
+            --bg-dim: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg3: #d3cea3;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.2rem 2.5rem;
+            background: var(--bg1);
+            border-bottom: 2px solid var(--bg2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+
+        .header-title h1 {
+            font-size: 1.4rem;
+            color: #2d353b;
+            letter-spacing: -0.5px;
+        }
+
+        .flow-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--bg2);
+            border: 1px solid var(--bg3);
+            color: var(--fg);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .btn:hover { background: var(--blue); color: white; border-color: var(--blue); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        #canvas-svg {
+            max-width: 1100px;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 15px 35px rgba(0,0,0,0.05));
+        }
+
+        /* Node Styling */
+        .node { cursor: pointer; transition: transform 0.3s; }
+        .node:hover { transform: translateY(-5px); }
+        .node rect { transition: stroke-width 0.2s; }
+        .node:hover rect { stroke-width: 4px; }
+
+        /* Sidebar Info Panel */
+        #info-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: var(--bg0);
+            border-left: 6px solid var(--blue);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+        }
+
+        #info-panel.visible { right: 0; }
+
+        .close-panel {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--bg3);
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .panel-title { font-size: 1.8rem; color: var(--blue); margin-bottom: 20px; line-height: 1.2; }
+        .panel-desc { line-height: 1.8; font-size: 1.05rem; text-align: justify; margin-bottom: 25px; }
+
+        .status-toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg1);
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: 2px solid var(--blue);
+            font-weight: bold;
+            font-size: 0.95rem;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            color: var(--fg);
+            opacity: 0.7;
+            pointer-events: none;
+            border-bottom: 1px solid var(--fg);
+        }
+
+        .particle { visibility: hidden; pointer-events: none; filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>UPF Interface Architecture: <span style="color:var(--blue); font-weight:300;">Packet Processing Engine</span></h1>
+        </div>
+        <div class="flow-selector">
+            <span style="font-size: 0.8rem; font-weight: bold; color: var(--bg3)">SIMULATIONS:</span>
+            <button class="btn" onclick="startFlow('control')">Control Provisioning</button>
+            <button class="btn" onclick="startFlow('uplink')">Data Uplink Flow</button>
+            <button class="btn" onclick="startFlow('mobility')">MEC Mobility (N9)</button>
+            <button class="btn" style="background:var(--red); color:white; border:none" onclick="resetSim()">Reset</button>
+        </div>
+    </header>
+
+    <div id="status-msg" class="status-toast">Initializing simulation...</div>
+
+    <main>
+        <svg id="canvas-svg" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-orange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f57d26"/></marker>
+                <marker id="arr-purple" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#df69ba"/></marker>
+                <marker id="arr-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#35a77c"/></marker>
+                <marker id="arr-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f85552"/></marker>
+            </defs>
+
+            <!-- CONNECTIONS (Paths for particles) -->
+            <!-- N3: gNB -> UPF -->
+            <path id="path-n3" d="M 230 400 L 440 400" stroke="#f57d26" stroke-width="4" stroke-dasharray="8,6" fill="none" marker-end="url(#arr-orange)"/>
+            <!-- N4: SMF -> UPF -->
+            <path id="path-n4" d="M 585 220 L 585 360" stroke="#df69ba" stroke-width="4" stroke-dasharray="8,6" fill="none" marker-end="url(#arr-purple)"/>
+            <!-- N6: UPF -> DN -->
+            <path id="path-n6" d="M 730 400 L 930 400" stroke="#35a77c" stroke-width="4" stroke-dasharray="8,6" fill="none" marker-end="url(#arr-green)"/>
+            <!-- N9: UPF -> Intermediate UPF -->
+            <path id="path-n9" d="M 585 540 L 585 680" stroke="#f85552" stroke-width="4" stroke-dasharray="8,6" fill="none" marker-end="url(#arr-red)"/>
+
+            <!-- INTERFACE LABELS -->
+            <g class="node" onclick="openNode('n3')">
+                <rect x="290" y="375" width="90" height="30" rx="15" fill="#f57d26"/>
+                <text x="335" y="394" text-anchor="middle" fill="white" font-size="11" font-weight="bold">N3 (GTP-U)</text>
+                <text x="335" y="355" text-anchor="middle" fill="#f57d26" font-size="10" font-weight="bold">User Data Tunnel</text>
+            </g>
+
+            <g class="node" onclick="openNode('n4')">
+                <rect x="540" y="305" width="90" height="35" rx="17" fill="#df69ba"/>
+                <text x="585" y="327" text-anchor="middle" fill="white" font-size="11" font-weight="bold">N4 (PFCP)</text>
+                <text x="650" y="322" fill="#df69ba" font-size="10" font-weight="bold">Control Interface</text>
+            </g>
+
+            <g class="node" onclick="openNode('n6')">
+                <rect x="805" y="375" width="75" height="30" rx="15" fill="#35a77c"/>
+                <text x="842" y="394" text-anchor="middle" fill="white" font-size="11" font-weight="bold">N6 (IP)</text>
+                <text x="842" y="355" text-anchor="middle" fill="#35a77c" font-size="10" font-weight="bold">No Tunneling</text>
+            </g>
+
+            <g class="node" onclick="openNode('n9')">
+                <rect x="540" y="695" width="90" height="30" rx="15" fill="#f85552"/>
+                <text x="585" y="714" text-anchor="middle" fill="white" font-size="11" font-weight="bold">N9 (GTP-U)</text>
+                <text x="650" y="710" fill="#f85552" font-size="10" font-weight="bold">Inter-UPF</text>
+            </g>
+
+            <!-- PARTICLES -->
+            <circle id="p-ctrl" class="particle" r="8" fill="var(--purple)"/>
+            <circle id="p-data" class="particle" r="9" fill="var(--orange)"/>
+            <circle id="p-mob" class="particle" r="8" fill="var(--red)"/>
+
+            <!-- NODES -->
+            <!-- SMF (Top) -->
+            <g class="node" onclick="openNode('smf')">
+                <rect x="475" y="100" width="220" height="120" rx="15" fill="#f9f4ff" stroke="#df69ba" stroke-width="2" />
+                <text x="585" y="140" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">SMF</text>
+                <text x="585" y="165" text-anchor="middle" fill="#5c6a72" font-size="11">Session Management Function</text>
+                <text x="585" y="185" text-anchor="middle" fill="#5c6a72" font-size="9" opacity="0.7">PFCP Controller • Rules Provisioning</text>
+            </g>
+
+            <!-- UPF (Center) -->
+            <g class="node" onclick="openNode('upf')">
+                <rect x="440" y="360" width="290" height="230" rx="20" fill="#d8e7ef" stroke="#3a94c5" stroke-width="4" />
+                <text x="585" y="405" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="18">UPF</text>
+                <text x="585" y="440" text-anchor="middle" font-weight="bold" fill="#3a94c5" font-size="14">User Plane Function</text>
+                <text x="585" y="465" text-anchor="middle" fill="#5c6a72" font-size="11">Packet Processing Engine</text>
+                <g font-size="10" fill="#5c6a72">
+                    <text x="465" y="505">✓ Packet Forwarding</text>
+                    <text x="465" y="525">✓ QoS Enforcement</text>
+                    <text x="465" y="545">✓ Traffic Measurement</text>
+                    <text x="465" y="565">✓ Buffering & Paging</text>
+                </g>
+            </g>
+
+            <!-- gNB (Left) -->
+            <g class="node" onclick="openNode('gnb')">
+                <rect x="80" y="400" width="160" height="150" rx="15" fill="#fcf0e3" stroke="#f57d26" stroke-width="2" />
+                <text x="160" y="450" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">gNB</text>
+                <text x="160" y="475" text-anchor="middle" fill="#5c6a72" font-size="12">5G Base Station</text>
+                <text x="160" y="505" text-anchor="middle" fill="#5c6a72" font-size="10" opacity="0.7">User Data Tunneling</text>
+                <text x="160" y="520" text-anchor="middle" fill="#5c6a72" font-size="10" opacity="0.7">GTP-U Encapsulation</text>
+            </g>
+
+            <!-- DN (Right) -->
+            <g class="node" onclick="openNode('dn')">
+                <rect x="930" y="400" width="160" height="150" rx="15" fill="#e7f8f2" stroke="#35a77c" stroke-width="2" />
+                <text x="1010" y="450" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">DN</text>
+                <text x="1010" y="475" text-anchor="middle" fill="#5c6a72" font-size="12">Data Network</text>
+                <text x="1010" y="505" text-anchor="middle" fill="#5c6a72" font-size="10" opacity="0.7">Internet / IMS</text>
+                <text x="1010" y="520" text-anchor="middle" fill="#5c6a72" font-size="10" opacity="0.7">Pure IP Routing</text>
+            </g>
+
+            <!-- Anchor UPF (Bottom) -->
+            <g class="node" onclick="openNode('i_upf')">
+                <rect x="475" y="740" width="220" height="140" rx="15" fill="none" stroke="#df69ba" stroke-width="3" stroke-dasharray="8,6" />
+                <text x="585" y="785" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="15">UPF (I-UPF / PSA)</text>
+                <text x="585" y="810" text-anchor="middle" fill="#5c6a72" font-size="11">Intermediate / Anchor UPF</text>
+                <text x="585" y="835" text-anchor="middle" fill="#5c6a72" font-size="9" opacity="0.7">For Mobility / MEC</text>
+                <text x="585" y="850" text-anchor="middle" fill="#5c6a72" font-size="9" opacity="0.7">UL CL / Branching Point</text>
+            </g>
+        </svg>
+
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <div id="info-panel">
+        <div class="close-panel" onclick="closeNode()">✕</div>
+        <span class="panel-tag" id="p-tag">Network Function</span>
+        <h2 class="panel-title" id="p-title">Component Name</h2>
+        <div class="panel-desc" id="p-body">Technical explanation will appear here...</div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techData = {
+            upf: {
+                tag: "CORE USER PLANE",
+                title: "User Plane Function (UPF)",
+                body: "The User Plane Function (UPF) is the primary workhorse of the 5G Core, responsible for high-performance packet processing, routing, and forwarding. Acting as an anchor point for Intra- and Inter-RAT mobility, it handles the GTP-U encapsulation/decapsulation from the RAN and translates it to pure IP for the Data Network. Crucially, the UPF is controlled by the SMF via the N4 interface, which provides it with Packet Detection Rules (PDRs) and Forwarding Action Rules (FARs). This CUPS (Control and User Plane Separation) architecture allows the UPF to be deployed closer to the network edge, enabling low-latency MEC (Multi-access Edge Computing) services."
+            },
+            smf: {
+                tag: "CORE CONTROL PLANE",
+                title: "Session Management Function (SMF)",
+                body: "The SMF is the 'brain' that controls the data flow. It manages PDU session establishment, modification, and release. In this architecture, it acts as the PFCP (Packet Forwarding Control Protocol) Controller. Via the N4 interface, the SMF provisions the UPF with rules that dictate how packets should be identified, which QoS parameters should be applied, and where traffic should be forwarded. It ensures that the user's data session adheres to the subscription parameters and policy rules provided by the rest of the 5G Core."
+            },
+            gnb: {
+                tag: "RADIO ACCESS NETWORK",
+                title: "Next Generation NodeB (gNB)",
+                body: "The gNB is the 5G base station providing radio communication to the user equipment (UE). Its primary responsibility in the user plane is to manage the N3 GTP-U tunnel. When the gNB receives packets over the air interface, it encapsulates them into GTP tunnels and sends them to the UPF. Conversely, it decapsulates incoming GTP packets from the UPF and schedules them for transmission to the UE. It works in tight coordination with the AMF and SMF to ensure seamless handovers and stable radio links."
+            },
+            dn: {
+                tag: "EXTERNAL NETWORK",
+                title: "Data Network (DN)",
+                body: "The Data Network (DN) represents the ultimate destination of the user traffic—whether it is the public Internet, an operator's internal IMS for voice services, or a private corporate network. The N6 interface links the UPF to the DN. Unlike the N3 or N9 interfaces, N6 does not use GTP tunneling; instead, it relies on standard IP routing. The UPF acts as the gateway to this network, performing Network Address Translation (NAT) or firewalling as instructed by the control plane."
+            },
+            i_upf: {
+                tag: "MOBILITY & EDGE",
+                title: "Intermediate / Anchor UPF",
+                body: "In complex mobility or edge computing scenarios, multiple UPFs may be linked together via the N9 interface. An Intermediate UPF (I-UPF) can act as a local branching point (Uplink Classifier - UL CL) to route traffic locally for low latency while keeping the connection to the central Data Network through a PDU Session Anchor (PSA). This chaining mechanism is vital for ensuring session continuity as a user moves between different geographic areas, allowing the network to dynamically switch the anchor points without breaking the user's active data session."
+            },
+            n3: {
+                tag: "INTERFACE",
+                title: "N3 Interface (RAN-to-Core)",
+                body: "The N3 interface is the critical tunnel between the Radio Access Network (gNB) and the 5G Core (UPF). It uses the GTP-U (GPRS Tunnelling Protocol for User Plane) over UDP/IP. Every PDU session has a specific tunnel endpoint identifier (TEID) on this interface. This tunneling allows the 5G Core to maintain a stable logical connection to the user's data session even as the physical radio path changes during movement."
+            },
+            n4: {
+                tag: "INTERFACE",
+                title: "N4 Interface (Control/User Split)",
+                body: "N4 is the most significant interface in the 5G architecture's CUPS (Control and User Plane Separation) design. It uses the PFCP protocol to allow the SMF to control the UPF. Through N4, the control plane can push rules for packet detection, buffering, forwarding, and usage reporting. This separation allows operators to scale the packet-processing capacity (UPF) independently from the session-management logic (SMF)."
+            },
+            n6: {
+                tag: "INTERFACE",
+                title: "N6 Interface (Core-to-External)",
+                body: "The N6 interface connects the 5G Core to the outside world. It is a standard IP-based interface where the UPF presents itself as the entry point to the 5G network. There is no GTP encapsulation here; packets are routed based on standard IP headers. The N6 interface is where policies like NAT, port forwarding, and external billing integration often occur."
+            },
+            n9: {
+                tag: "INTERFACE",
+                title: "N9 Interface (Inter-UPF)",
+                body: "The N9 interface is used to connect two UPFs together, typically an Intermediate UPF and a PDU Session Anchor. Like N3, it uses GTP-U tunneling. This interface enables sophisticated traffic steering techniques, such as local breakout for edge computing or keeping a session alive during high-speed mobility when the user's serving gNB changes drastically."
+            }
+        };
+
+        function openNode(key) {
+            const data = techData[key];
+            document.getElementById('p-tag').innerText = data.tag;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('info-panel').classList.add('visible');
+            gsap.to('.node', { opacity: 0.3, duration: 0.4 });
+        }
+
+        function closeNode() {
+            document.getElementById('info-panel').classList.remove('visible');
+            gsap.to('.node', { opacity: 1, duration: 0.4 });
+        }
+
+        // SIMULATION LOGIC
+        let mainTL = gsap.timeline();
+
+        function showToast(msg) {
+            const toast = document.getElementById('status-msg');
+            toast.innerText = msg;
+            gsap.to(toast, { opacity: 1, y: -20, duration: 0.3 });
+        }
+
+        function resetSim() {
+            mainTL.kill();
+            gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+            gsap.to("#status-msg", { opacity: 0, duration: 0.3 });
+        }
+
+        function startFlow(type) {
+            resetSim();
+            mainTL = gsap.timeline();
+
+            if(type === 'control') {
+                showToast("Step: SMF provisioning rules via N4 (PFCP)...");
+                mainTL.to("#p-ctrl", { visibility: "visible", duration: 0 })
+                      .to("#p-ctrl", { motionPath: { path: "#path-n4", align: "#path-n4", alignOrigin: [0.5, 0.5] }, duration: 1.5, ease: "power1.inOut" })
+                      .call(() => showToast("UPF Rules Updated. Data Path Ready."));
+            } 
+            else if (type === 'uplink') {
+                showToast("Uplink: gNB encapsulating traffic into N3 Tunnel...");
+                mainTL.to("#p-data", { visibility: "visible", duration: 0 })
+                      .to("#p-data", { motionPath: { path: "#path-n3", align: "#path-n3", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                      .call(() => showToast("UPF processing headers & routing to N6..."))
+                      .to("#p-data", { motionPath: { path: "#path-n6", align: "#path-n6", alignOrigin: [0.5, 0.5] }, duration: 1.5 })
+                      .to("#p-data", { opacity: 0, scale: 2, duration: 0.4 })
+                      .call(() => showToast("Packet reached Data Network successfully."));
+            }
+            else if (type === 'mobility') {
+                showToast("Mobility: Traffic steering via N9 Intermediate UPF...");
+                mainTL.to("#p-mob", { visibility: "visible", x: 585, y: 400, duration: 0 })
+                      .to("#p-mob", { motionPath: { path: "#path-n9", align: "#path-n9", alignOrigin: [0.5, 0.5] }, duration: 1.8 })
+                      .call(() => showToast("Traffic anchored to PSA for session continuity."));
+            }
+        }
+
+        // Ambient pulse for UPF
+        gsap.to("rect[stroke='#3a94c5']", {
+            strokeWidth: 6,
+            duration: 1.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+
+    </script>
+</body>
+</html>
