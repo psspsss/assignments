@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1100" width="1200" height="1100">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00695c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#00897b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#26a69a;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ueBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#42a5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1565c0;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="gnbBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#66bb6a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2e7d32;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="amfBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffa726;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ef6c00;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="msgGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bbdefb;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="msgGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e8f5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c8e6c9;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="msgGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fff3e0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffe0b2;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="timelineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#90caf9;stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:#a5d6a7;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#ffcc80;stop-opacity:0.3" />
+    </linearGradient>
+    
+    <!-- Filters -->
+    <filter id="shadow3" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+    
+    <filter id="msgShadow">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+    
+    <!-- Arrow Markers -->
+    <marker id="arrowRight" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L0,12 L12,6 z" fill="#1565c0"/>
+    </marker>
+    
+    <marker id="arrowLeft" markerWidth="12" markerHeight="12" refX="2" refY="6" orient="auto">
+      <path d="M12,0 L12,12 L0,6 z" fill="#2e7d32"/>
+    </marker>
+    
+    <marker id="arrowRightGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L0,12 L12,6 z" fill="#2e7d32"/>
+    </marker>
+    
+    <marker id="arrowLeftBlue" markerWidth="12" markerHeight="12" refX="2" refY="6" orient="auto">
+      <path d="M12,0 L12,12 L0,6 z" fill="#1565c0"/>
+    </marker>
+    
+    <marker id="arrowRightOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L0,12 L12,6 z" fill="#ef6c00"/>
+    </marker>
+    
+    <marker id="arrowLeftOrange" markerWidth="12" markerHeight="12" refX="2" refY="6" orient="auto">
+      <path d="M12,0 L12,12 L0,6 z" fill="#ef6c00"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="1100" fill="#fafbfc"/>
+  
+  <!-- Title Banner -->
+  <rect x="0" y="0" width="1200" height="80" fill="url(#headerGrad3)"/>
+  <text x="600" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="white">5G NR RRC Connection Setup &amp; Initial Registration</text>
+  <text x="600" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#b2dfdb">Message Sequence Chart (MSC) - 3GPP TS 38.331 / TS 24.501</text>
+  
+  <!-- Entity Headers -->
+  <g filter="url(#shadow3)">
+    <rect x="100" y="100" width="150" height="60" rx="10" fill="url(#ueBoxGrad)"/>
+    <text x="175" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">UE</text>
+    <text x="175" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e3f2fd">User Equipment</text>
+  </g>
+  
+  <g filter="url(#shadow3)">
+    <rect x="500" y="100" width="150" height="60" rx="10" fill="url(#gnbBoxGrad)"/>
+    <text x="575" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">gNB</text>
+    <text x="575" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e8f5e9">Next Gen NodeB</text>
+  </g>
+  
+  <g filter="url(#shadow3)">
+    <rect x="900" y="100" width="150" height="60" rx="10" fill="url(#amfBoxGrad)"/>
+    <text x="975" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">AMF</text>
+    <text x="975" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fff3e0">5G Core Network</text>
+  </g>
+  
+  <!-- Timeline Lines -->
+  <rect x="170" y="170" width="10" height="870" rx="5" fill="url(#timelineGrad)" opacity="0.5"/>
+  <line x1="175" y1="170" x2="175" y2="1040" stroke="#1565c0" stroke-width="3" stroke-dasharray="8,4"/>
+  
+  <rect x="570" y="170" width="10" height="870" rx="5" fill="url(#timelineGrad)" opacity="0.5"/>
+  <line x1="575" y1="170" x2="575" y2="1040" stroke="#2e7d32" stroke-width="3" stroke-dasharray="8,4"/>
+  
+  <rect x="970" y="170" width="10" height="870" rx="5" fill="url(#timelineGrad)" opacity="0.5"/>
+  <line x1="975" y1="170" x2="975" y2="1040" stroke="#ef6c00" stroke-width="3" stroke-dasharray="8,4"/>
+  
+  <!-- Phase Labels -->
+  <!-- Phase 1: Random Access -->
+  <rect x="20" y="185" width="60" height="130" rx="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="50" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0d47a1" transform="rotate(-90, 50, 230)">RACH</text>
+  
+  <!-- Message 1: Msg1 - PRACH Preamble -->
+  <rect x="190" y="195" width="370" height="35" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="210" x2="560" y2="210" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <text x="375" y="217" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">Msg1: PRACH Preamble</text>
+  <text x="90" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">1</text>
+  <circle cx="90" cy="210" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Message 2: Msg2 - RAR -->
+  <rect x="190" y="240" width="370" height="45" rx="5" fill="url(#msgGrad2)" stroke="#388e3c" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="560" y1="260" x2="180" y2="260" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="375" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1b5e20">Msg2: Random Access Response (RAR)</text>
+  <text x="375" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">TC-RNTI, Timing Advance, UL Grant</text>
+  <text x="90" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">2</text>
+  <circle cx="90" cy="260" r="12" fill="none" stroke="#2e7d32" stroke-width="2"/>
+  
+  <!-- Phase 2: RRC Setup -->
+  <rect x="20" y="320" width="60" height="200" rx="5" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="50" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1b5e20" transform="rotate(-90, 50, 400)">RRC Setup</text>
+  
+  <!-- Message 3: Msg3 - RRCSetupRequest -->
+  <rect x="190" y="300" width="370" height="50" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="320" x2="560" y2="320" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <text x="375" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">Msg3: RRCSetupRequest</text>
+  <text x="375" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565c0">ue-Identity (ng-5G-S-TMSI or randomValue)</text>
+  <text x="375" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565c0">establishmentCause (mo-Signalling, emergency...)</text>
+  <text x="90" y="325" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">3</text>
+  <circle cx="90" cy="320" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Message 4: Msg4 - RRCSetup -->
+  <rect x="190" y="365" width="370" height="65" rx="5" fill="url(#msgGrad2)" stroke="#388e3c" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="560" y1="390" x2="180" y2="390" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="375" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1b5e20">Msg4: RRCSetup</text>
+  <text x="375" y="398" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">masterCellGroup (MCG configuration)</text>
+  <text x="375" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">radioBearerConfig (SRB1 configuration)</text>
+  <text x="375" y="422" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">→ UE: RRC_CONNECTED state</text>
+  <text x="90" y="395" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">4</text>
+  <circle cx="90" cy="390" r="12" fill="none" stroke="#2e7d32" stroke-width="2"/>
+  
+  <!-- Message 5: RRCSetupComplete + NAS Registration Request -->
+  <rect x="190" y="440" width="770" height="65" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="470" x2="560" y2="470" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <line x1="590" y1="470" x2="960" y2="470" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowRightOrange)"/>
+  <text x="375" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">RRCSetupComplete</text>
+  <text x="775" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e65100">Initial UE Message (NGAP)</text>
+  <text x="480" y="480" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565c0">dedicatedNAS-Message: Registration Request (5GMM)</text>
+  <text x="480" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565c0">selectedPLMN-Identity, registeredAMF</text>
+  <text x="90" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">5</text>
+  <circle cx="90" cy="470" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Phase 3: NAS Registration & Security -->
+  <rect x="20" y="530" width="60" height="280" rx="5" fill="#fff3e0" stroke="#ef6c00" stroke-width="2"/>
+  <text x="50" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#e65100" transform="rotate(-90, 50, 650)">NAS Authentication</text>
+  
+  <!-- Message 6: Authentication Request -->
+  <rect x="190" y="520" width="770" height="45" rx="5" fill="url(#msgGrad3)" stroke="#ef6c00" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="960" y1="545" x2="590" y2="545" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowLeftOrange)"/>
+  <line x1="560" y1="545" x2="180" y2="545" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="775" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e65100">DL NAS Transport</text>
+  <text x="375" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1b5e20">DLInformationTransfer</text>
+  <text x="575" y="558" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e65100">NAS: Authentication Request (RAND, AUTN)</text>
+  <text x="90" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">6</text>
+  <circle cx="90" cy="545" r="12" fill="none" stroke="#ef6c00" stroke-width="2"/>
+  
+  <!-- Message 7: Authentication Response -->
+  <rect x="190" y="580" width="770" height="45" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="605" x2="560" y2="605" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <line x1="590" y1="605" x2="960" y2="605" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowRightOrange)"/>
+  <text x="375" y="600" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">ULInformationTransfer</text>
+  <text x="775" y="600" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e65100">UL NAS Transport</text>
+  <text x="575" y="618" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565c0">NAS: Authentication Response (RES*)</text>
+  <text x="90" y="610" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">7</text>
+  <circle cx="90" cy="605" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Message 8: Security Mode Command (NAS) -->
+  <rect x="190" y="640" width="770" height="45" rx="5" fill="url(#msgGrad3)" stroke="#ef6c00" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="960" y1="665" x2="590" y2="665" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowLeftOrange)"/>
+  <line x1="560" y1="665" x2="180" y2="665" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="575" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e65100">NAS: Security Mode Command</text>
+  <text x="575" y="678" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#e65100">Selected NAS algorithms (5G-EA, 5G-IA)</text>
+  <text x="90" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">8</text>
+  <circle cx="90" cy="665" r="12" fill="none" stroke="#ef6c00" stroke-width="2"/>
+  
+  <!-- Message 9: Security Mode Complete (NAS) -->
+  <rect x="190" y="700" width="770" height="40" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="720" x2="560" y2="720" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <line x1="590" y1="720" x2="960" y2="720" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowRightOrange)"/>
+  <text x="575" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">NAS: Security Mode Complete</text>
+  <text x="90" y="725" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">9</text>
+  <circle cx="90" cy="720" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Phase 4: AS Security -->
+  <rect x="20" y="760" width="60" height="100" rx="5" fill="#fce4ec" stroke="#c2185b" stroke-width="2"/>
+  <text x="50" y="800" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#880e4f" transform="rotate(-90, 50, 800)">AS Security</text>
+  
+  <!-- Message 10: SecurityModeCommand (RRC) -->
+  <rect x="190" y="755" width="370" height="50" rx="5" fill="url(#msgGrad2)" stroke="#388e3c" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="560" y1="780" x2="180" y2="780" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="375" y="772" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1b5e20">RRC: SecurityModeCommand</text>
+  <text x="375" y="790" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">securityConfigSMC (cipheringAlgorithm, integrityProtAlgorithm)</text>
+  <text x="90" y="785" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">10</text>
+  <circle cx="90" cy="780" r="12" fill="none" stroke="#2e7d32" stroke-width="2"/>
+  
+  <!-- Message 11: SecurityModeComplete (RRC) -->
+  <rect x="190" y="815" width="370" height="40" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="835" x2="560" y2="835" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <text x="375" y="835" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">RRC: SecurityModeComplete</text>
+  <text x="90" y="840" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">11</text>
+  <circle cx="90" cy="835" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Phase 5: Reconfiguration -->
+  <rect x="20" y="870" width="60" height="160" rx="5" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2"/>
+  <text x="50" y="940" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1a237e" transform="rotate(-90, 50, 940)">Reconfiguration</text>
+  
+  <!-- Message 12: RRCReconfiguration -->
+  <rect x="190" y="870" width="770" height="60" rx="5" fill="url(#msgGrad2)" stroke="#388e3c" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="960" y1="900" x2="590" y2="900" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowLeftOrange)"/>
+  <line x1="560" y1="900" x2="180" y2="900" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="775" y="888" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#e65100">InitialContextSetupRequest</text>
+  <text x="375" y="888" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1b5e20">RRCReconfiguration</text>
+  <text x="375" y="908" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">radioBearerConfig (DRB setup, SRB2)</text>
+  <text x="375" y="922" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">masterCellGroup, measConfig (optional)</text>
+  <text x="90" y="905" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">12</text>
+  <circle cx="90" cy="900" r="12" fill="none" stroke="#2e7d32" stroke-width="2"/>
+  
+  <!-- Message 13: RRCReconfigurationComplete + Registration Accept -->
+  <rect x="190" y="940" width="770" height="55" rx="5" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1" filter="url(#msgShadow)"/>
+  <line x1="180" y1="965" x2="560" y2="965" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <line x1="590" y1="965" x2="960" y2="965" stroke="#ef6c00" stroke-width="2" marker-end="url(#arrowRightOrange)"/>
+  <text x="375" y="958" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0d47a1">RRCReconfigurationComplete</text>
+  <text x="775" y="958" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e65100">InitialContextSetupResponse</text>
+  <text x="575" y="978" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1565c0">NAS: Registration Accept (5G-GUTI)</text>
+  <text x="575" y="990" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#388e3c">✓ UE Fully Registered</text>
+  <text x="90" y="970" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#546e7a">13</text>
+  <circle cx="90" cy="965" r="12" fill="none" stroke="#1565c0" stroke-width="2"/>
+  
+  <!-- Final State Indicators -->
+  <rect x="100" y="1010" width="150" height="25" rx="5" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="175" y="1027" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1b5e20">RRC_CONNECTED</text>
+  
+  <rect x="500" y="1010" width="150" height="25" rx="5" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="575" y="1027" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1b5e20">UE Context Active</text>
+  
+  <rect x="900" y="1010" width="150" height="25" rx="5" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="975" y="1027" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1b5e20">5GMM-REGISTERED</text>
+  
+  <!-- Legend -->
+  <rect x="1030" y="180" width="160" height="200" rx="8" fill="white" stroke="#78909c" stroke-width="1" filter="url(#shadow3)"/>
+  <text x="1110" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#37474f">Legend</text>
+  
+  <line x1="1045" y1="225" x2="1095" y2="225" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowRight)"/>
+  <text x="1105" y="230" font-family="Arial, sans-serif" font-size="10" fill="#37474f">UE→gNB</text>
+  
+  <line x1="1095" y1="250" x2="1045" y2="250" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowLeft)"/>
+  <text x="1105" y="255" font-family="Arial, sans-serif" font-size="10" fill="#37474f">gNB→UE</text>
+  
+  <line x1="1045" y1="275" x2="1095" y2="275" stroke="#ef6c00" stroke-width="2"/>
+  <text x="1105" y="280" font-family="Arial, sans-serif" font-size="10" fill="#37474f">NGAP</text>
+  
+  <rect x="1045" y="295" width="40" height="15" rx="3" fill="url(#msgGrad1)" stroke="#1976d2" stroke-width="1"/>
+  <text x="1105" y="307" font-family="Arial, sans-serif" font-size="10" fill="#37474f">RRC UL</text>
+  
+  <rect x="1045" y="320" width="40" height="15" rx="3" fill="url(#msgGrad2)" stroke="#388e3c" stroke-width="1"/>
+  <text x="1105" y="332" font-family="Arial, sans-serif" font-size="10" fill="#37474f">RRC DL</text>
+  
+  <rect x="1045" y="345" width="40" height="15" rx="3" fill="url(#msgGrad3)" stroke="#ef6c00" stroke-width="1"/>
+  <text x="1105" y="357" font-family="Arial, sans-serif" font-size="10" fill="#37474f">NAS</text>
+  
+  <!-- Footer -->
+  <text x="600" y="1085" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#78909c">© CafeTele Telecom Training | www.cafetele.com | 5G NR RRC Connection Setup Procedure</text>
+</svg>

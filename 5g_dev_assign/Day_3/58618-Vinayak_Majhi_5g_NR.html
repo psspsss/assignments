@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR Architecture & Protocol Stack | Everforest Deep-Dive</title>
+    <!-- GSAP for technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-dim: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --user-plane: var(--aqua);
+            --control-plane: var(--blue);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        /* --- Header --- */
+        header {
+            background: var(--bg1);
+            padding: 2.5rem 1rem;
+            text-align: center;
+            border-bottom: 2px solid var(--bg2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: var(--fg);
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .badge {
+            background: var(--bg2);
+            color: var(--fg);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            border: 1px solid var(--bg4);
+        }
+
+        /* --- Controls --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            color: var(--fg);
+            padding: 10px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn:hover { border-color: var(--blue); transform: translateY(-2px); background: white; }
+        .btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+        .btn-up.active { background: var(--aqua); color: white; border-color: var(--aqua); }
+        .btn-cp.active { background: var(--purple); color: white; border-color: var(--purple); }
+
+        /* --- Architecture Grid --- */
+        .arch-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+            position: relative;
+            align-items: center;
+        }
+
+        .node-box {
+            background: white;
+            border: 2px solid var(--bg2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .node-box:hover {
+            border-color: var(--orange);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .node-label {
+            font-weight: 800;
+            display: block;
+            margin-bottom: 12px;
+            color: var(--blue);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .gnb-split { display: grid; gap: 8px; }
+
+        .split-module {
+            background: var(--bg0);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed var(--bg4);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .split-module:hover { background: white; border-style: solid; border-color: var(--blue); }
+
+        /* --- Lines & Tags --- */
+        .interface-line {
+            position: absolute;
+            height: 2px;
+            background: var(--bg2);
+            z-index: 1;
+        }
+
+        .if-uu { width: 10%; left: 16%; top: 50%; }
+        .if-ng { width: 10%; right: 16%; top: 50%; }
+
+        .if-tag {
+            background: var(--bg1);
+            padding: 2px 8px;
+            border: 1px solid var(--bg2);
+            border-radius: 4px;
+            font-size: 0.65rem;
+            color: var(--fg);
+            font-weight: bold;
+        }
+
+        /* --- Protocol Stacks --- */
+        .stack-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .stack-header {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .layer {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: var(--transition);
+            border: 1px solid var(--bg2);
+            position: relative;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .layer:hover { transform: scale(1.02); filter: brightness(0.98); border-color: var(--orange); }
+
+        .up-layer { border-left: 6px solid var(--aqua); color: var(--aqua); }
+        .cp-layer { border-left: 6px solid var(--blue); color: var(--blue); }
+
+        /* --- Info Panel --- */
+        .info-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 2px solid var(--bg2);
+            min-height: 240px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .info-panel h2 { color: var(--dark-fg); margin-bottom: 12px; border-bottom: 2px solid var(--bg1); padding-bottom: 10px; }
+        .info-list { margin-left: 20px; margin-top: 15px; list-style-type: square; }
+        .info-list li { margin-bottom: 8px; }
+
+        .highlight-box {
+            background: var(--bg1);
+            border-left: 4px solid var(--orange);
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* --- Comparison Table --- */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--bg2);
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--bg1);
+        }
+
+        .comparison-table th { background: var(--bg1); color: var(--fg); font-weight: 800; }
+
+        /* --- Signature --- */
+        .signature {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--fg);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 1000;
+            border-bottom: 1px solid var(--fg);
+        }
+
+        /* --- Animation Particle --- */
+        #packet {
+            width: 12px;
+            height: 12px;
+            background: var(--orange);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 100;
+            visibility: hidden;
+            box-shadow: 0 0 10px var(--orange);
+        }
+
+        @media (max-width: 900px) {
+            .arch-grid { grid-template-columns: 1fr; }
+            .stack-container { grid-template-columns: 1fr; }
+            .interface-line { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span class="badge">3GPP Release 16 Standards</span>
+    <h1>5G NR Architecture & Protocol Masterclass</h1>
+    <p>Professional Control Plane & User Plane Analysis</p>
+</header>
+
+<div class="container">
+    
+    <!-- Controls -->
+    <div class="controls">
+        <button class="btn active" id="btn-all" onclick="setView('all')">Full Architecture</button>
+        <button class="btn btn-up" id="btn-up" onclick="setView('up')">User Plane Path</button>
+        <button class="btn btn-cp" id="btn-cp" onclick="setView('cp')">Control Plane Path</button>
+        <button class="btn" style="color: var(--orange); border-color: var(--orange);" onclick="runSimulation()">Simulate Data Burst</button>
+    </div>
+
+    <!-- Architecture Visual -->
+    <div class="arch-grid" id="architecture-diagram">
+        <div id="packet"></div>
+        
+        <!-- UE -->
+        <div class="node-box" id="node-ue">
+            <span class="node-label" style="color: var(--green)">Terminal (UE)</span>
+            <div style="font-size: 2.5rem;">📱</div>
+            <div style="font-size: 0.7rem; color: var(--fg); font-weight: bold; margin-top: 5px;">User Equipment</div>
+        </div>
+
+        <div class="interface-line if-uu"></div>
+
+        <!-- gNB -->
+        <div class="node-box" id="node-gnb">
+            <span class="node-label" style="color: var(--orange)">NG-RAN (gNB)</span>
+            <div class="gnb-split">
+                <div class="split-module" onclick="showDetail('CU')">
+                    <strong>CU</strong> (Centralized Unit)
+                    <div style="font-size:0.65rem; opacity: 0.8;">RRC | SDAP | PDCP</div>
+                </div>
+                <div class="split-module" onclick="showDetail('DU')">
+                    <strong>DU</strong> (Distributed Unit)
+                    <div style="font-size:0.65rem; opacity: 0.8;">RLC | MAC | High-PHY</div>
+                </div>
+                <div class="split-module" onclick="showDetail('RU')">
+                    <strong>RU</strong> (Radio Unit)
+                    <div style="font-size:0.65rem; opacity: 0.8;">Low-PHY | RF Front-end</div>
+                </div>
+            </div>
+            <div style="position:absolute; right: -50px; top: 30%;" class="if-tag cp-node">N2 (CP)</div>
+            <div style="position:absolute; right: -50px; top: 60%;" class="if-tag up-node">N3 (UP)</div>
+        </div>
+
+        <div class="interface-line if-ng"></div>
+
+        <!-- 5GC -->
+        <div class="node-box" id="node-core">
+            <span class="node-label" style="color: var(--purple)">5G Core (5GC)</span>
+            <div class="gnb-split">
+                <div class="split-module cp-node" style="border-color: var(--blue); background: white;">
+                    <strong>AMF / SMF</strong>
+                    <div style="font-size:0.65rem">Signaling & Session</div>
+                </div>
+                <div class="split-module up-node" style="border-color: var(--aqua); background: white;">
+                    <strong>UPF</strong>
+                    <div style="font-size:0.65rem">User Plane Gateway</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Protocol Stacks -->
+    <div class="stack-container">
+        <!-- User Plane -->
+        <div id="up-stack">
+            <div class="stack-header" style="color: var(--aqua)">User Plane (Data)</div>
+            <div class="layer up-layer" onclick="showLayer('SDAP')">SDAP (New in 5G)</div>
+            <div class="layer up-layer" onclick="showLayer('PDCP')">PDCP</div>
+            <div class="layer up-layer" onclick="showLayer('RLC')">RLC</div>
+            <div class="layer up-layer" onclick="showLayer('MAC')">MAC</div>
+            <div class="layer up-layer" onclick="showLayer('PHY')">Physical (NR)</div>
+        </div>
+
+        <!-- Control Plane -->
+        <div id="cp-stack">
+            <div class="stack-header" style="color: var(--blue)">Control Plane (Signaling)</div>
+            <div class="layer cp-layer" onclick="showLayer('NAS')">NAS</div>
+            <div class="layer cp-layer" onclick="showLayer('RRC')">RRC</div>
+            <div class="layer cp-layer" onclick="showLayer('NGAP')">NGAP (N2)</div>
+            <div class="layer cp-layer" onclick="showLayer('HTTP2')">HTTP/2 (SBA)</div>
+            <div class="layer cp-layer" onclick="showLayer('SCTP')">SCTP / IP</div>
+        </div>
+    </div>
+
+    <!-- Dynamic Info Panel -->
+    <div class="info-panel" id="detail-panel">
+        <div style="text-align: center; color: var(--fg); padding-top: 40px;">
+            <h3 style="color: var(--blue)">Interactive Protocol Explorer</h3>
+            <p>Click on a protocol layer above or a network module to view detailed technical specifications.</p>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <h2 style="margin-top: 60px; color: var(--fg); font-size: 1.5rem;">Deployment Strategy Comparison</h2>
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Standalone (SA)</th>
+                <th>Non-Standalone (NSA)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Core Connection</strong></td>
+                <td>Connects to 5GC</td>
+                <td>Connects to 4G EPC / 5GC</td>
+            </tr>
+            <tr>
+                <td><strong>NR Interface</strong></td>
+                <td>Option 2</td>
+                <td>Option 3/3a/3x or 7/4</td>
+            </tr>
+            <tr>
+                <td><strong>Protocol Complexity</strong></td>
+                <td>Higher (Full 5G stack)</td>
+                <td>Dual Connectivity (EN-DC)</td>
+            </tr>
+            <tr>
+                <td><strong>Use Case</strong></td>
+                <td>Slicing, URLLC, Private Networks</td>
+                <td>eMBB (Enhanced Speed only)</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<!-- Signature -->
+<div class="signature">Vinayak Majhi</div>
+
+<script>
+    const protocolDetails = {
+        'SDAP': {
+            title: 'SDAP: Service Data Adaptation Protocol',
+            role: 'Mapping between QoS Flows and Data Radio Bearers (DRB).',
+            list: [
+                'Function: New protocol layer introduced in 5G NR.',
+                'QoS Flow ID: Handles marking of QFI in both DL and UL packets.',
+                'Multi-Mapping: Maps multiple QoS flows to a single DRB.',
+                'Reflective QoS: Supports reflective QoS on the UE side.'
+            ],
+            tip: 'Essential for Network Slicing and granular traffic management.'
+        },
+        'PDCP': {
+            title: 'PDCP: Packet Data Convergence Protocol',
+            role: 'Header compression and Security processing.',
+            list: [
+                'Encryption: Performs ciphering and integrity protection.',
+                'Compression: IP Header Compression using ROHC.',
+                'Maintenance: Sequence numbering and duplicate detection.',
+                'Handover: Ensures lossless handover via reordering.'
+            ],
+            tip: 'The PDCP layer is the anchor point for Dual Connectivity (DC).'
+        },
+        'RLC': {
+            title: 'RLC: Radio Link Control',
+            role: 'Error correction and segmentation.',
+            list: [
+                'Modes: Supports AM (Acknowledged), UM (Unacknowledged), and TM (Transparent).',
+                'ARQ: Provides Automatic Repeat Request for reliable delivery.',
+                'Fragmentation: Segments PDCP SDUs based on MAC layer grants.',
+                'Architecture: Resides in the DU (Distributed Unit).'
+            ],
+            tip: 'RLC ensures packets fit exactly into the dynamically scheduled MAC blocks.'
+        },
+        'MAC': {
+            title: 'MAC: Medium Access Control',
+            role: 'Dynamic scheduling and hardware-level retransmission.',
+            list: [
+                'Scheduling: Allocates radio resources to UEs every TTI.',
+                'HARQ: Hybrid ARQ for extremely fast error recovery.',
+                'Multiplexing: Combines multiple logical channels into one transport channel.',
+                'RACH: Manages the Random Access procedure for UE connection.'
+            ],
+            tip: 'The heart of gNB efficiency; makes decisions in sub-millisecond cycles.'
+        },
+        'PHY': {
+            title: 'PHY: Physical Layer',
+            role: 'Bit-to-Waveform conversion over the air.',
+            list: [
+                'Numerology: Supports flexible subcarrier spacing (15, 30, 60, 120 kHz).',
+                'Coding: LDPC for data channels, Polar coding for control.',
+                'Antenna: Handles Massive MIMO and advanced beamforming.',
+                'Modulation: Up to 256-QAM for ultra-high throughput.'
+            ],
+            tip: 'PHY enables the high-frequency Millimeter Wave (FR2) operations.'
+        },
+        'NAS': {
+            title: 'NAS: Non-Access Stratum',
+            role: 'UE-to-Core signaling link.',
+            list: [
+                'Identity: Handles UE registration and authentication.',
+                'Mobility: Manages Tracking Area Updates (TAU).',
+                'Session: Triggers PDU session establishment for data flows.',
+                'Interface: Operates over the N1 logical interface.'
+            ],
+            tip: 'NAS messages are transparent to the gNB; it just relays them.'
+        },
+        'RRC': {
+            title: 'RRC: Radio Resource Control',
+            role: 'The conductor of the radio interface stack.',
+            list: [
+                'Config: Configures all lower layers (PHY/MAC/RLC/PDCP).',
+                'States: Introduces RRC_INACTIVE state for power saving.',
+                'Measurement: Configures UE reporting for handover decisions.',
+                'Broadcast: Handles MIB and SIB system information delivery.'
+            ],
+            tip: 'RRC is the "brain" of the gNB-CU Control Plane.'
+        },
+        'NGAP': {
+            title: 'NGAP: NG Application Protocol',
+            role: 'Control signaling between gNB and 5G Core.',
+            list: [
+                'Transport: Runs over SCTP for guaranteed reliability.',
+                'Paging: Delivers core-initiated paging to the RAN.',
+                'Context: Transfers UE security and slice context to gNB.',
+                'Slicing: Provides slice-specific management for control plane.'
+            ],
+            tip: 'NGAP is the 5G successor to LTE\'s S1-AP.'
+        },
+        'HTTP2': {
+            title: 'HTTP/2 (SBI Architecture)',
+            role: 'Modern RESTful communication in the 5GC.',
+            list: [
+                'Pattern: Request/Response and Subscribe/Notify mechanisms.',
+                'Format: Uses JSON for lightweight data exchange.',
+                'Connectivity: Replaces legacy Diameter protocols.',
+                'Agility: Enables cloud-native Network Function (NF) scaling.'
+            ],
+            tip: 'This is why 5G is often called "Cloud Native" by engineers.'
+        }
+    };
+
+    function showLayer(layerId) {
+        const data = protocolDetails[layerId] || {title: layerId, role: 'Protocol Layer', list: ['Details coming soon.'], tip: ''};
+        const panel = document.getElementById('detail-panel');
+        let listHtml = data.list.map(item => `<li>${item}</li>`).join('');
+
+        panel.innerHTML = `
+            <div style="animation: slideIn 0.4s ease;">
+                <h2 style="color: var(--orange)">${data.title}</h2>
+                <p><strong>Primary Function:</strong> ${data.role}</p>
+                <ul class="info-list">${listHtml}</ul>
+                <div class="highlight-box">
+                    <strong>Expert Note:</strong> ${data.tip}
+                </div>
+            </div>
+        `;
+    }
+
+    function setView(mode) {
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        const upNodes = document.querySelectorAll('.up-node');
+        const cpNodes = document.querySelectorAll('.cp-node');
+        const upStack = document.getElementById('up-stack');
+        const cpStack = document.getElementById('cp-stack');
+
+        if (mode === 'up') {
+            document.getElementById('btn-up').classList.add('active');
+            upNodes.forEach(n => n.style.opacity = '1');
+            cpNodes.forEach(n => n.style.opacity = '0.2');
+            upStack.style.opacity = '1'; cpStack.style.opacity = '0.2';
+        } else if (mode === 'cp') {
+            document.getElementById('btn-cp').classList.add('active');
+            upNodes.forEach(n => n.style.opacity = '0.2');
+            cpNodes.forEach(n => n.style.opacity = '1');
+            upStack.style.opacity = '0.2'; cpStack.style.opacity = '1';
+        } else {
+            document.getElementById('btn-all').classList.add('active');
+            upNodes.forEach(n => n.style.opacity = '1');
+            cpNodes.forEach(n => n.style.opacity = '1');
+            upStack.style.opacity = '1'; cpStack.style.opacity = '1';
+        }
+    }
+
+    function showDetail(module) {
+        const panel = document.getElementById('detail-panel');
+        const content = {
+            'CU': '<h3>Centralized Unit (CU)</h3><p>Handles the SDAP, PDCP, and RRC layers. It manages high-level logic and is often virtualized in regional data centers.</p>',
+            'DU': '<h3>Distributed Unit (DU)</h3><p>Controls RLC, MAC, and High-PHY. It performs critical scheduling and timing functions at the edge.</p>',
+            'RU': '<h3>Radio Unit (RU)</h3><p>The physical radio head. Converts baseband bits to RF waveforms. Manages beamforming and MIMO antenna arrays.</p>'
+        };
+        panel.innerHTML = `<div style="animation: slideIn 0.3s ease">${content[module]}</div>`;
+    }
+
+    function runSimulation() {
+        const p = document.getElementById('packet');
+        p.style.visibility = 'visible';
+        
+        // GSAP Simulation
+        const tl = gsap.timeline({ repeat: 1, repeatDelay: 1 });
+        
+        tl.fromTo(p, 
+            { x: 50, y: 410, opacity: 0 }, 
+            { x: 300, y: 410, opacity: 1, duration: 1, ease: "power1.inOut" }
+        )
+        .to(p, { x: 550, y: 380, duration: 1 }) // Enter gNB
+        .to(p, { x: 1050, y: 480, duration: 1 }) // Enter Core
+        .to(p, { opacity: 0, scale: 2, duration: 0.5 });
+
+        const panel = document.getElementById('detail-panel');
+        panel.innerHTML = `
+            <div style="text-align: center; color: var(--orange);">
+                <h3>Live Simulation: Data Packet Flow</h3>
+                <p>Observing packet traversing Uu → RU/DU/CU → N3 → UPF Gateway.</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">The packet marks the end-to-end user plane latency.</p>
+            </div>
+        `;
+    }
+
+    window.onload = () => showLayer('SDAP');
+</script>
+
+<style>
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>
+
+</body>
+</html>

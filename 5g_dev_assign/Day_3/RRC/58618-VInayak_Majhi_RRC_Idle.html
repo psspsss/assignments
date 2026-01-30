@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR RRC_IDLE | Interactive Technical Masterclass</title>
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-dim: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --dark-fg: #2d353b;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--dark-fg);
+            color: #d3c6aa;
+            padding: 1.2rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .header-title h1 { font-size: 1.5rem; letter-spacing: -0.5px; }
+        .header-title p { font-size: 0.85rem; opacity: 0.7; }
+
+        .controls { display: flex; gap: 12px; align-items: center;}
+
+        .btn {
+            background: var(--bg4);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-idle { background: var(--blue); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(var(--bg2) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        svg {
+            width: 100%;
+            height: 90%;
+            max-width: 1150px;
+            overflow: visible;
+        }
+
+        /* Node Styling */
+        .node { cursor: pointer; transition: 0.3s; }
+        .node:hover { transform: translateY(-5px); }
+
+        /* Animation Overlays */
+        #toast {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-fg);
+            color: white;
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            opacity: 0;
+            z-index: 500;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 2px solid var(--blue);
+        }
+
+        /* Detail Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: var(--bg0);
+            border-left: 8px solid var(--blue);
+            box-shadow: -15px 0 50px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 50px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn { position: absolute; top: 25px; right: 25px; font-size: 1.5rem; cursor: pointer; color: var(--fg); background: none; border: none; }
+        .panel-title { font-size: 2rem; color: var(--dark-fg); margin-bottom: 10px; border-bottom: 2px solid var(--bg2); padding-bottom: 15px; }
+        .panel-subtitle { font-size: 0.8rem; font-weight: 800; color: var(--blue); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1.5px; }
+        .panel-body { line-height: 1.8; font-size: 1.05rem; text-align: justify; }
+
+        .audio-pulse {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 20px;
+            color: var(--blue);
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.7;
+            pointer-events: none;
+            border-bottom: 2px solid var(--blue);
+        }
+
+        /* Particles */
+        .particle { visibility: hidden; pointer-events: none; }
+        .ue-icon { transition: opacity 0.5s; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>5G NR RRC_IDLE Deep-Dive</h1>
+            <p>Cell Selection | Paging Monitoring | System Information Reading</p>
+        </div>
+        <div class="controls">
+            <span style="font-size: 0.7rem; font-weight: bold; color: #d3c6aa;">WALKTHROUGH:</span>
+            <button class="btn btn-idle" onclick="runIdleSimulation()">▶ Simulate IDLE Behavior</button>
+            <button class="btn" onclick="resetAll()">↺ Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing IDLE procedures...</div>
+
+    <main>
+        <svg id="idle-svg" viewBox="0 0 1100 800" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3a94c5"/></marker>
+                <marker id="arr-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8da101"/></marker>
+            </defs>
+
+            <!-- EXTERNAL COMPONENTS -->
+            <!-- AMF -->
+            <g class="node" onclick="openInfo('amf')">
+                <rect x="450" y="20" width="200" height="100" rx="15" fill="#edf2ff" stroke="var(--blue)" stroke-width="2" />
+                <text x="550" y="65" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="18">AMF</text>
+                <text x="550" y="85" text-anchor="middle" fill="var(--fg)" font-size="10">Core Network Paging</text>
+            </g>
+
+            <!-- gNB Tower 1 -->
+            <g class="node" id="tower-1" onclick="openInfo('gnb')">
+                <path d="M 300 250 L 270 450 L 330 450 Z" fill="var(--bg2)" stroke="var(--fg)" />
+                <circle cx="300" cy="250" r="15" fill="var(--orange)" />
+                <text x="300" y="480" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="14">Serving Cell (gNB)</text>
+            </g>
+
+            <!-- gNB Tower 2 (Reselection Target) -->
+            <g class="node" id="tower-2" onclick="openInfo('reselection')">
+                <path d="M 800 250 L 770 450 L 830 450 Z" fill="var(--bg2)" stroke="var(--fg)" opacity="0.5" />
+                <circle cx="800" cy="250" r="15" fill="var(--bg4)" />
+                <text x="800" y="480" text-anchor="middle" font-weight="bold" fill="var(--fg)" font-size="12" opacity="0.6">Neighbor Cell</text>
+            </g>
+
+            <!-- RRC_IDLE MAIN NODE -->
+            <g class="node" id="node-idle" onclick="openInfo('idle')">
+                <circle cx="550" cy="400" r="130" fill="var(--blue)" fill-opacity="0.05" stroke="var(--blue)" stroke-width="5" stroke-dasharray="10,5" />
+                <text x="550" y="390" text-anchor="middle" font-weight="bold" fill="var(--blue)" font-size="24">RRC_IDLE</text>
+                <text x="550" y="415" text-anchor="middle" fill="var(--fg)" font-size="12">UE Protocol State</text>
+            </g>
+
+            <!-- UE ICON -->
+            <g id="ue-group" transform="translate(550, 650)">
+                <rect x="-20" y="-35" width="40" height="70" rx="8" fill="var(--dark-fg)" />
+                <rect x="-16" y="-28" width="32" height="45" rx="3" fill="white" />
+                <circle id="ue-screen-pulse" cx="0" cy="28" r="3" fill="var(--blue)" />
+                <text y="55" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="12">UE (Terminal)</text>
+            </g>
+
+            <!-- PATHS -->
+            <path id="path-paging" d="M 550 120 L 550 200 L 300 250 L 500 650" stroke="var(--blue)" stroke-width="2" stroke-dasharray="5,5" fill="none" opacity="0" />
+            <path id="path-si" d="M 300 250 Q 400 500 500 650" stroke="var(--orange)" stroke-width="2" stroke-dasharray="8,4" fill="none" opacity="0" />
+            <path id="path-reselect" d="M 550 650 C 700 700 900 600 800 250" stroke="var(--green)" stroke-width="2" stroke-dasharray="5,5" fill="none" opacity="0" />
+
+            <!-- PARTICLES -->
+            <circle id="p-blue" class="particle" r="8" fill="var(--blue)" />
+            <circle id="p-orange" class="particle" r="6" fill="var(--orange)" />
+
+        </svg>
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <button class="close-btn" onclick="closeInfo()">✕</button>
+        <span id="p-subtitle" class="panel-subtitle">State Logic</span>
+        <h2 id="p-title" class="panel-title">Component</h2>
+        <div id="p-body" class="panel-body">Details...</div>
+        <div class="audio-pulse">
+            <span>🔊 Technical narration active...</span>
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techData = {
+            idle: {
+                title: "RRC_IDLE State",
+                subtitle: "The Power-Optimization Core",
+                body: "In RRC_IDLE, the User Equipment (UE) has no established signaling connection with the Access Stratum (gNodeB). This state is the pinnacle of power management in 5G. The base station retains no record of the device. The UE identifies its serving network (PLMN) and camps on the highest quality cell. Its primary tasks are: 1) Monitoring the paging channel during DRX cycles to detect MT (Mobile Terminated) calls, 2) Reading vital System Information (SI) broadcast by the cell, and 3) Performing autonomous cell reselection to maintain the best possible link quality as the user moves.",
+                audio: "User equipment in RRC Idle state is in a deep sleep mode. The base station has no context for the device. The UE wakes up only periodically to check for incoming calls and read network broadcast information."
+            },
+            amf: {
+                title: "CN-Based Paging",
+                subtitle: "Tracking Area Management",
+                body: "Since the gNodeB does not track UEs in IDLE, the responsibility falls to the AMF (Access & Mobility Management Function) in the Core Network. The AMF tracks the UE at the 'Tracking Area' level. When data arrives for an IDLE UE, the AMF sends a Paging message to all gNodeBs within the relevant Tracking Area. Those gNodeBs then broadcast the paging identity over the air. The UE wakes up during its specific paging occasion to listen for its identity, triggering the RRC Setup process if a match is found.",
+                audio: "The AMF manages tracking areas. When an incoming call arrives, the AMF triggers a paging command to all base stations where the terminal might be located. This is known as Core Network based paging."
+            },
+            gnb: {
+                title: "Serving Cell Ops",
+                subtitle: "Broadcast & Synchronization",
+                body: "The gNodeB (gNB) serves as the radio beacon for the IDLE UE. It continuously broadcasts System Information Blocks (SIBs), specifically SIB1 and Other SI. SIB1 contains essential cell access parameters, such as whether the cell is barred and the scheduling for other SIBs. For the IDLE UE, the gNB is merely a data source and a potential entry point. The UE synchronizes with the gNB's Primary and Secondary Synchronization Signals (PSS/SSS) to maintain timing, even though it doesn't have an active connection.",
+                audio: "The serving base station broadcasts system information blocks. The terminal reads these blocks to understand cell access rules and network configurations while remaining in power-saving mode."
+            },
+            reselection: {
+                title: "Cell Reselection",
+                subtitle: "Autonomous Mobility",
+                body: "In IDLE mode, mobility is not controlled by the network via handovers; it is autonomous. The UE constantly performs measurements on neighbor cells. If a neighbor cell's signal quality exceeds the serving cell's quality by a specific threshold (as defined by S-criteria and R-criteria), the UE will 'reselect' the new cell. This ensures the UE is always camping on the strongest signal, allowing for the highest probability of successful paging reception and faster transition to the CONNECTED state when needed.",
+                audio: "Cell reselection is handled by the terminal itself. It constantly measures neighboring signals and switches to a stronger cell automatically to ensure it always has the best possible connection."
+            }
+        };
+
+        const synth = window.speechSynthesis;
+
+        function speak(text) {
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.pitch = 1;
+            utter.rate = 1;
+            synth.speak(utter);
+        }
+
+        function openInfo(key) {
+            const data = techData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-subtitle').innerText = data.subtitle;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            
+            gsap.to('.node', { opacity: 0.3 });
+            gsap.to(event.currentTarget, { opacity: 1, scale: 1.05 });
+            speak(data.audio);
+        }
+
+        function closeInfo() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, scale: 1 });
+            synth.cancel();
+        }
+
+        function resetAll() {
+            gsap.killTweensOf("*");
+            synth.cancel();
+            gsap.set(".particle", { visibility: "hidden" });
+            gsap.set("#ue-group", { x: 550, y: 650 });
+            gsap.to("#toast", { opacity: 0 });
+        }
+
+        async function runIdleSimulation() {
+            resetAll();
+            const toast = document.getElementById('toast');
+
+            // 1. Initial State: Camping
+            updateToast("Step 1: UE Camps on Cell (Reading MIB/SIB1)", "var(--orange)");
+            gsap.to("#ue-screen-pulse", { fill: "var(--orange)", duration: 0.5 });
+            speak("Simulation started. The terminal is now in idle mode, reading broadcast information from the primary base station tower.");
+            await animateParticle("#path-si", "#p-orange", 2);
+            await wait(4000);
+
+            // 2. DRX / Sleep cycle
+            updateToast("Step 2: Entering DRX Cycle (Saving Power)", "var(--blue)");
+            gsap.to("#ue-group", { opacity: 0.4, duration: 1 });
+            speak("The terminal enters the Discontinuous Reception cycle. It powers down its radio components to save battery, waking up only for millisecond windows.");
+            await wait(5000);
+
+            // 3. Paging Flow
+            updateToast("Step 3: Incoming Call - Core Paging UE", "var(--blue)");
+            gsap.to("#ue-group", { opacity: 1, duration: 0.5 });
+            speak("An incoming call is detected. The Core network triggers a tracking area paging command. The terminal wakes up and detects its identity.");
+            await animateParticle("#path-paging", "#p-blue", 3);
+            await wait(5000);
+
+            // 4. Reselection Mobility
+            updateToast("Step 4: Signal Degrading. Starting Reselection...", "var(--green)");
+            speak("The terminal is moving. As the current signal weakens, the terminal autonomously re-measures and selects a stronger neighboring cell.");
+            await animateReselect();
+            
+            updateToast("Procedure Complete. UE Camped on Neighbor.", "var(--green)");
+            speak("Procedure complete. The device is now securely camped on the neighbor cell, remaining in idle mode to conserve energy.");
+        }
+
+        function updateToast(msg, color) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.borderColor = color || "var(--blue)";
+            gsap.to(toast, { opacity: 1, duration: 0.3 });
+        }
+
+        function animateParticle(pathId, partId, dur) {
+            return new Promise(resolve => {
+                const p = document.querySelector(partId);
+                gsap.set(p, { visibility: "visible", opacity: 1 });
+                gsap.to(p, {
+                    duration: dur,
+                    ease: "power1.inOut",
+                    motionPath: { path: pathId, align: pathId, alignOrigin: [0.5, 0.5] },
+                    onComplete: () => {
+                        gsap.set(p, { visibility: "hidden" });
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        function animateReselect() {
+            return new Promise(resolve => {
+                gsap.to("#ue-group", {
+                    duration: 4,
+                    ease: "power2.inOut",
+                    motionPath: { path: "#path-reselect", align: "#path-reselect", alignOrigin: [0.5, 0.5] },
+                    onComplete: resolve
+                });
+            });
+        }
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // Ambient pulse for RRC_IDLE circle
+        gsap.to("#node-idle circle", {
+            strokeDashoffset: 100,
+            duration: 15,
+            repeat: -1,
+            ease: "none"
+        });
+    </script>
+</body>
+</html>

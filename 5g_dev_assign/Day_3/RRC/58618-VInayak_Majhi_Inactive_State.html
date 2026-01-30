@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR RRC INACTIVE Lifecycle | Technical Study</title>
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-dim: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --dark-fg: #2d353b;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--dark-fg);
+            color: #d3c6aa;
+            padding: 1.2rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .header-title h1 { font-size: 1.5rem; letter-spacing: -0.5px; }
+        .header-title p { font-size: 0.85rem; opacity: 0.7; }
+
+        .controls { display: flex; gap: 12px; align-items: center;}
+
+        .btn {
+            background: var(--bg4);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-play { background: var(--orange); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(var(--bg2) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        svg {
+            width: 100%;
+            height: 90%;
+            max-width: 1100px;
+            overflow: visible;
+        }
+
+        /* Interactive Elements */
+        .node { cursor: pointer; transition: 0.3s; }
+        .node:hover { transform: scale(1.03); }
+        .active-state { filter: drop-shadow(0 0 15px var(--orange)); }
+
+        /* Animation Overlays */
+        #toast {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-fg);
+            color: white;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            opacity: 0;
+            z-index: 500;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Detail Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: var(--bg0);
+            border-left: 6px solid var(--orange);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 50px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn { position: absolute; top: 25px; right: 25px; font-size: 1.5rem; cursor: pointer; color: var(--fg); background: none; border: none; }
+        .panel-title { font-size: 2rem; color: var(--dark-fg); margin-bottom: 10px; border-bottom: 2px solid var(--bg2); padding-bottom: 15px; }
+        .panel-subtitle { font-size: 0.8rem; font-weight: 800; color: var(--aqua); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1.5px; }
+        .panel-body { line-height: 1.8; font-size: 1.05rem; text-align: justify; }
+
+        .audio-wave {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 15px;
+            color: var(--orange);
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.7;
+            pointer-events: none;
+            border-bottom: 2px solid var(--orange);
+        }
+
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>5G NR RRC_INACTIVE Lifecycle Masterclass</h1>
+            <p>Interactive State Machine Walkthrough & 3GPP Analysis</p>
+        </div>
+        <div class="controls">
+            <span style="font-size: 0.7rem; font-weight: bold; color: #d3c6aa;">SIMULATION:</span>
+            <button class="btn btn-play" onclick="startLifecycleAnimation()">▶ Play INACTIVE lifecycle</button>
+            <button class="btn" onclick="resetSim()">↺ Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Step initialized...</div>
+
+    <main>
+        <svg id="main-svg" viewBox="0 0 1100 750" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8da101"/></marker>
+                <marker id="arr-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3a94c5"/></marker>
+                <marker id="arr-orange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f57d26"/></marker>
+            </defs>
+
+            <!-- PATHS -->
+            <path id="path-suspend" d="M 580 500 C 720 450 720 250 620 180" stroke="#cbd5e1" stroke-width="3" fill="none" marker-end="url(#arr-orange)" />
+            <path id="path-resume" d="M 540 250 C 480 350 480 450 540 500" stroke="#cbd5e1" stroke-width="3" fill="none" marker-end="url(#arr-green)" />
+            <path id="path-fail" d="M 450 150 C 300 150 200 220 180 280" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arr-blue)" />
+
+            <!-- NODES -->
+            <!-- IDLE -->
+            <g class="node" onclick="openInfo('idle')">
+                <circle cx="200" cy="350" r="110" fill="var(--blue)" fill-opacity="0.05" stroke="var(--blue)" stroke-width="4" stroke-dasharray="8,4" />
+                <text x="200" y="340" text-anchor="middle" font-weight="bold" fill="var(--blue)" font-size="20">RRC_IDLE</text>
+                <text x="200" y="365" text-anchor="middle" fill="var(--fg)" font-size="12">Power Saving</text>
+            </g>
+
+            <!-- INACTIVE -->
+            <g class="node" id="node-inactive" onclick="openInfo('inactive')">
+                <circle id="circ-inactive" cx="580" cy="160" r="120" fill="var(--orange)" fill-opacity="0.1" stroke="var(--orange)" stroke-width="4" stroke-dasharray="10,5" />
+                <text x="580" y="150" text-anchor="middle" font-weight="bold" fill="var(--orange)" font-size="22">RRC_INACTIVE</text>
+                <text x="580" y="175" text-anchor="middle" fill="var(--fg)" font-size="12">UE Context Stored</text>
+                <text x="580" y="195" text-anchor="middle" fill="var(--fg)" font-size="10" font-weight="bold">Fast Connection Resume</text>
+            </g>
+
+            <!-- CONNECTED -->
+            <g class="node" id="node-connected" onclick="openInfo('connected')">
+                <circle id="circ-connected" cx="580" cy="540" r="110" fill="var(--green)" fill-opacity="0.1" stroke="var(--green)" stroke-width="4" stroke-dasharray="2,2" />
+                <text x="580" y="530" text-anchor="middle" font-weight="bold" fill="var(--green)" font-size="20">RRC_CONNECTED</text>
+                <text x="580" y="555" text-anchor="middle" fill="var(--fg)" font-size="12">Active Data Flow</text>
+            </g>
+
+            <!-- TRANSITION BOXES -->
+            <g class="node" id="box-suspend" onclick="openInfo('suspend')">
+                <rect x="680" y="350" width="160" height="55" rx="10" fill="white" stroke="var(--orange)" stroke-width="2" />
+                <text x="760" y="375" text-anchor="middle" font-weight="bold" fill="var(--orange)" font-size="11">RRC Suspend</text>
+                <text x="760" y="390" text-anchor="middle" fill="#888" font-size="9">RRCRelease + suspendConfig</text>
+            </g>
+
+            <g class="node" id="box-resume" onclick="openInfo('resume')">
+                <rect x="380" y="330" width="150" height="55" rx="10" fill="white" stroke="var(--green)" stroke-width="2" />
+                <text x="455" y="355" text-anchor="middle" font-weight="bold" fill="var(--green)" font-size="11">RRC Resume</text>
+                <text x="455" y="370" text-anchor="middle" fill="#888" font-size="9">RRCResumeRequest</text>
+            </g>
+
+            <!-- PARTICLES -->
+            <circle id="p-ue" class="particle" r="10" fill="var(--orange)" />
+
+        </svg>
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <button class="close-btn" onclick="closeInfo()">✕</button>
+        <span id="p-subtitle" class="panel-subtitle">3GPP State Analysis</span>
+        <h2 id="p-title" class="panel-title">Component</h2>
+        <div id="p-body" class="panel-body">Details...</div>
+        <div class="audio-wave">
+            <span>🔊 Narrating technical analysis...</span>
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techData = {
+            inactive: {
+                title: "RRC_INACTIVE",
+                subtitle: "The 5G Fast-Access State",
+                body: "RRC_INACTIVE is a state introduced in 5G NR to address the signaling overhead of modern smartphone traffic. In this state, the UE remains 'known' to the core network but releases its radio resources. The critical advantage is that the gNodeB and the UE both store the Access Stratum (AS) context, including security keys and bearer configurations. This allows the UE to transition to the connected state in milliseconds using a simplified resume procedure, significantly reducing latency and battery consumption compared to the traditional RRC Setup from Idle mode.",
+                audio: "Welcome to the RRC Inactive state analysis. This state is the core optimization for 5G, allowing terminals to save battery while keeping their security context in the base station. This ensures that any new data burst can be sent almost instantly without a full reconnection handshake."
+            },
+            suspend: {
+                title: "RRC Suspend",
+                subtitle: "CONNECTED → INACTIVE",
+                body: "When data activity ceases, the network triggers a Suspend procedure by sending an RRCRelease message containing a 'suspendConfig'. This configuration provides the UE with its I-RNTI (for identification) and the RAN-based Notification Area (RNA) boundaries. The UE preserves its security context and moves to Inactive mode. This process is essential for maintaining session continuity without keeping the radio transmitter constantly active, preserving system capacity and device power.",
+                audio: "The Suspend procedure is triggered when the terminal stops sending data. The network tells the device to enter inactive mode but provides a suspend configuration. This saves the current configuration in the device's memory for later use."
+            },
+            resume: {
+                title: "RRC Resume",
+                subtitle: "INACTIVE → CONNECTED",
+                body: "To return to data transmission, the UE performs the RRC Resume procedure. It sends an RRCResumeRequest containing its I-RNTI and a security token. Since the gNB already has the UE's profile stored, it can quickly re-activate the radio bearers with a single RRCResume message. This 'Shortcut' bypasses the heavy authentication and core network signaling required in 4G LTE, making 5G feel significantly more responsive for intermittent applications like social media or web browsing.",
+                audio: "The Resume procedure is the shortcut back to active data. Instead of starting from scratch, the terminal identifies itself and verifies its security token. The network then immediately reactivates the connection."
+            },
+            connected: {
+                title: "RRC_CONNECTED",
+                subtitle: "The Active Data State",
+                body: "In RRC_CONNECTED, the UE has a dedicated radio connection and a full signaling link to the core network. It can transmit and receive unicast data at high speeds. The network maintains total control over the UE's mobility through handovers. While performance is peak, power consumption is highest, requiring the terminal to manage its radio activity through connected-mode Discontinuous Reception (DRX) cycles.",
+                audio: "RRC Connected is the active data state. Here, throughput is maximized and the base station manages every aspect of the device's behavior, including handovers."
+            },
+            idle: {
+                title: "RRC_IDLE",
+                subtitle: "The Deep Sleep State",
+                body: "In RRC_IDLE, there is no signaling connection. The gNB has no record of the device. The UE tracks its location via Core Network Tracking Areas and wakes up periodically to check for CN-initiated paging. Transitioning from here to Connected requires a full 3-way RRC Setup handshake, which is signaling-intensive and relatively slow.",
+                audio: "RRC Idle is the resting state. The device is invisible to the base station and only checks for calls from the core network occasionally."
+            }
+        };
+
+        const synth = window.speechSynthesis;
+
+        function speak(text) {
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.pitch = 1;
+            utter.rate = 1;
+            synth.speak(utter);
+        }
+
+        function openInfo(key) {
+            const data = techData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-subtitle').innerText = data.subtitle;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            
+            gsap.to('.node', { opacity: 0.3 });
+            gsap.to(event.currentTarget, { opacity: 1, scale: 1.05 });
+
+            speak(data.audio);
+        }
+
+        function closeInfo() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, scale: 1 });
+            synth.cancel();
+        }
+
+        function resetSim() {
+            gsap.killTweensOf("*");
+            synth.cancel();
+            gsap.set(".particle", { visibility: "hidden" });
+            gsap.set("#circ-inactive, #circ-connected", { fillOpacity: 0.1, stroke: "#cbd5e1", filter: "none" });
+            gsap.to("#toast", { opacity: 0 });
+        }
+
+        async function startLifecycleAnimation() {
+            resetSim();
+            const toast = document.getElementById('toast');
+
+            // 1. Initial State: Connected
+            updateToast("Step 1: UE is RRC_CONNECTED (Active Data Flow)", "var(--green)");
+            gsap.to("#circ-connected", { fillOpacity: 0.4, stroke: "var(--green)", duration: 0.5 });
+            speak("We start in the Connected state. The user is actively downloading data. The radio is fully engaged.");
+            await wait(6000);
+
+            // 2. Suspend Flow
+            updateToast("Step 2: Inactivity Detected. Triggering RRC Suspend...", "var(--orange)");
+            speak("Activity stops. The network sends a Suspend command, telling the device to save its context and sleep.");
+            await animateUE("#path-suspend");
+            
+            // 3. Inactive State
+            updateToast("Step 3: RRC_INACTIVE (Context Stored in gNB)", "var(--orange)");
+            gsap.to("#circ-connected", { fillOpacity: 0.1, stroke: "#cbd5e1", duration: 0.5 });
+            gsap.to("#circ-inactive", { fillOpacity: 0.4, stroke: "var(--orange)", filter: "drop-shadow(0 0 10px var(--orange))", duration: 0.5 });
+            speak("Now in Inactive mode. The base station still knows who we are. Notice how we use battery power like an idle device, but stay ready like a connected one.");
+            await wait(7000);
+
+            // 4. Resume Flow
+            updateToast("Step 4: New Data Arrival. Fast Connection Resume...", "var(--green)");
+            speak("A new message arrives. The terminal uses its stored shortcut to jump back into connected mode instantly.");
+            await animateUE("#path-resume");
+
+            // 5. Back to Connected
+            updateToast("Step 5: Connection Resumed! Data path active.", "var(--green)");
+            gsap.to("#circ-inactive", { fillOpacity: 0.1, stroke: "#cbd5e1", filter: "none", duration: 0.5 });
+            gsap.to("#circ-connected", { fillOpacity: 0.4, stroke: "var(--green)", duration: 0.5 });
+            speak("Success. The connection is resumed without full core network signaling. This is the efficiency of 5G.");
+            await wait(5000);
+
+            updateToast("Technical Lifecycle Complete.");
+        }
+
+        function updateToast(msg, color) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.borderColor = color || "var(--blue)";
+            gsap.to(toast, { opacity: 1, duration: 0.3 });
+        }
+
+        function animateUE(pathId) {
+            return new Promise(resolve => {
+                const p = document.getElementById('p-ue');
+                gsap.set(p, { visibility: "visible" });
+                gsap.to(p, {
+                    duration: 3,
+                    ease: "power1.inOut",
+                    motionPath: { path: pathId, align: pathId, alignOrigin: [0.5, 0.5] },
+                    onComplete: () => {
+                        gsap.set(p, { visibility: "hidden" });
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+    </script>
+</body>
+</html>

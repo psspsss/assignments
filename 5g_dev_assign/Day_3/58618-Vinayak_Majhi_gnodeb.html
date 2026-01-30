@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR gNodeB Split Architecture | 3GPP Technical Study</title>
+    <!-- GSAP for technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Theme Palette */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            background: white;
+            border-bottom: 2px solid var(--bg1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
+        .header-info h1 { font-size: 1.4rem; color: #2d353b; letter-spacing: -0.5px; }
+        .header-info p { font-size: 0.85rem; opacity: 0.7; }
+
+        .sim-controls { display: flex; gap: 10px; }
+
+        .btn {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--fg);
+            transition: var(--transition);
+        }
+        .btn:hover { background: var(--blue); color: white; border-color: var(--blue); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        #diagram-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 850px;
+        }
+
+        /* Interactive Nodes */
+        .node { cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .node:hover { transform: scale(1.02); }
+        .node-rect { transition: stroke-width 0.2s; }
+        .node:hover .node-rect { stroke-width: 4px; }
+
+        /* Sidebar Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: white;
+            box-shadow: -15px 0 50px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 8px solid var(--orange);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--fg);
+        }
+
+        .panel-tag { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--bg4); letter-spacing: 2px; margin-bottom: 8px; display: block; }
+        .panel-title { font-size: 1.8rem; color: var(--orange); margin-bottom: 20px; line-height: 1.1; font-weight: 700; }
+        .panel-content { line-height: 1.8; font-size: 1rem; color: var(--fg); text-align: justify; }
+
+        /* Signature Area */
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            color: var(--fg);
+            opacity: 0.8;
+            border-bottom: 2px solid var(--orange);
+            pointer-events: none;
+        }
+
+        #toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d353b;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            opacity: 0;
+            z-index: 200;
+            font-weight: 600;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .particle { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-info">
+            <h1>gNodeB (gNB) Protocol Architecture</h1>
+            <p>CU-CP / CU-UP / DU / RU Split Architecture (3GPP Rel-15+)</p>
+        </div>
+        <div class="sim-controls">
+            <button class="btn" onclick="runFlow('control')">Simulate Control Plane (N2)</button>
+            <button class="btn" onclick="runFlow('user')">Simulate User Plane (N3)</button>
+            <button class="btn" onclick="runFlow('e1')">E1 Interface Logic</button>
+            <button class="btn" style="border-color:var(--red); color:var(--red)" onclick="resetDiagram()">Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing simulation...</div>
+
+    <main>
+        <svg id="diagram-svg" viewBox="0 0 1200 850" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3a94c5"/></marker>
+                <marker id="arr-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8da101"/></marker>
+                <marker id="arr-orange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f57d26"/></marker>
+                <marker id="arr-purple" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#df69ba"/></marker>
+            </defs>
+
+            <!-- EXTERNAL INTERFACE PATHS -->
+            <path id="path-n2" d="M 1000 150 L 800 150" stroke="var(--blue)" stroke-width="2" stroke-dasharray="8,5" fill="none" marker-end="url(#arr-blue)" />
+            <path id="path-n3" d="M 1000 700 L 800 700" stroke="var(--green)" stroke-width="2" fill="none" marker-end="url(#arr-green)" />
+            <path id="path-uu" d="M 150 425 L 250 425" stroke="var(--orange)" stroke-width="4" fill="none" marker-end="url(#arr-orange)" />
+
+            <!-- INTERNAL INTERFACE PATHS -->
+            <!-- F1-C -->
+            <path id="path-f1c" d="M 500 425 C 500 200 650 150 700 150" stroke="var(--blue)" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arr-blue)" />
+            <!-- F1-U -->
+            <path id="path-f1u" d="M 500 425 C 500 650 650 700 700 700" stroke="var(--green)" stroke-width="3" fill="none" marker-end="url(#arr-green)" />
+            <!-- E1 (CP to UP) -->
+            <path id="path-e1" d="M 750 210 L 750 640" stroke="var(--purple)" stroke-width="3" stroke-dasharray="10,4" fill="none" marker-end="url(#arr-purple)" />
+            <!-- RU to DU (Fronthaul) -->
+            <path id="path-fh" d="M 370 425 L 430 425" stroke="var(--orange)" stroke-width="4" fill="none" marker-end="url(#arr-orange)" />
+
+            <!-- NODES -->
+            
+            <!-- UE -->
+            <g class="node" onclick="openNode('ue')">
+                <rect class="node-rect" x="30" y="375" width="120" height="100" rx="15" fill="#e7f1e7" stroke="var(--green)" stroke-width="2" />
+                <text x="90" y="420" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">UE</text>
+                <text x="90" y="440" text-anchor="middle" fill="#5c6a72" font-size="10">User Equipment</text>
+            </g>
+
+            <!-- RU (Radio Unit) -->
+            <g class="node" onclick="openNode('ru')">
+                <rect class="node-rect" x="250" y="350" width="120" height="150" rx="10" fill="#fcf0e3" stroke="var(--orange)" stroke-width="2" />
+                <text x="310" y="380" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">gNB-RU</text>
+                <line x1="260" y1="390" x2="360" y2="390" stroke="var(--orange)" stroke-opacity="0.3"/>
+                <text x="265" y="415" fill="#5c6a72" font-size="9">Low-PHY</text>
+                <text x="265" y="435" fill="#5c6a72" font-size="9">RF Processing</text>
+                <text x="265" y="455" fill="#5c6a72" font-size="9">Beamforming</text>
+                <text x="310" y="485" text-anchor="middle" fill="var(--orange)" font-weight="bold" font-size="11">Radio Unit</text>
+            </g>
+
+            <!-- DU (Distributed Unit) -->
+            <g class="node" onclick="openNode('du')">
+                <rect class="node-rect" x="430" y="300" width="150" height="250" rx="15" fill="#e7f8f2" stroke="var(--aqua)" stroke-width="2" />
+                <text x="505" y="335" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="15">gNB-DU</text>
+                <rect x="445" y="355" width="120" height="140" rx="8" fill="white" stroke="var(--aqua)" stroke-dasharray="4,2"/>
+                <text x="505" y="380" text-anchor="middle" font-weight="bold" fill="var(--fg)" font-size="12">High-PHY</text>
+                <text x="505" y="410" text-anchor="middle" font-weight="bold" fill="var(--fg)" font-size="12">MAC</text>
+                <text x="505" y="440" text-anchor="middle" font-weight="bold" fill="var(--fg)" font-size="12">RLC</text>
+                <text x="505" y="475" text-anchor="middle" font-weight="bold" fill="var(--aqua)" font-size="11">Distributed Unit</text>
+            </g>
+
+            <!-- CU-CP (Central Unit Control Plane) -->
+            <g class="node" onclick="openNode('cucp')">
+                <rect class="node-rect" x="700" y="80" width="180" height="150" rx="20" fill="#edf2ff" stroke="var(--blue)" stroke-width="3" />
+                <text x="790" y="115" text-anchor="middle" font-weight="bold" fill="var(--blue)" font-size="16">gNB-CU-CP</text>
+                <rect x="720" y="135" width="140" height="60" rx="10" fill="white" stroke="var(--blue)"/>
+                <text x="790" y="160" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">RRC</text>
+                <text x="790" y="180" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">PDCP-C</text>
+                <text x="790" y="215" text-anchor="middle" fill="var(--blue)" font-weight="bold" font-size="10">Control Plane</text>
+            </g>
+
+            <!-- CU-UP (Central Unit User Plane) -->
+            <g class="node" onclick="openNode('cuup')">
+                <rect class="node-rect" x="700" y="620" width="180" height="150" rx="20" fill="#fdf5f9" stroke="var(--purple)" stroke-width="3" />
+                <text x="790" y="655" text-anchor="middle" font-weight="bold" fill="var(--purple)" font-size="16">gNB-CU-UP</text>
+                <rect x="720" y="675" width="140" height="60" rx="10" fill="white" stroke="var(--purple)"/>
+                <text x="790" y="700" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">SDAP</text>
+                <text x="790" y="720" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="14">PDCP-U</text>
+                <text x="790" y="755" text-anchor="middle" fill="var(--purple)" font-weight="bold" font-size="10">User Plane</text>
+            </g>
+
+            <!-- CORE NODES -->
+            <g class="node" onclick="openNode('amf')">
+                <rect class="node-rect" x="1000" y="100" width="130" height="100" rx="15" fill="#d8e7ef" stroke="var(--blue)" stroke-width="2" />
+                <text x="1065" y="145" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">AMF</text>
+                <text x="1065" y="165" text-anchor="middle" fill="#5c6a72" font-size="10">5G Core (CP)</text>
+            </g>
+
+            <g class="node" onclick="openNode('upf')">
+                <rect class="node-rect" x="1000" y="650" width="130" height="100" rx="15" fill="#e7f8f2" stroke="var(--green)" stroke-width="2" />
+                <text x="1065" y="695" text-anchor="middle" font-weight="bold" fill="#5c6a72" font-size="16">UPF</text>
+                <text x="1065" y="715" text-anchor="middle" fill="#5c6a72" font-size="10">5G Core (UP)</text>
+            </g>
+
+            <!-- INTERFACE TEXT LABELS -->
+            <text x="1050" y="80" fill="var(--blue)" font-weight="bold" font-size="12" text-anchor="middle">N2 (NGAP)</text>
+            <text x="1050" y="640" fill="var(--green)" font-weight="bold" font-size="12" text-anchor="middle">N3 (GTP-U)</text>
+            <text x="590" y="240" fill="var(--blue)" font-weight="bold" font-size="13">F1-C</text>
+            <text x="590" y="610" fill="var(--green)" font-weight="bold" font-size="13">F1-U</text>
+            <text x="790" y="425" text-anchor="middle" fill="var(--purple)" font-weight="bold" font-size="14">E1 Interface</text>
+            <text x="200" y="415" text-anchor="middle" fill="var(--orange)" font-weight="bold" font-size="14">Uu</text>
+
+            <!-- PARTICLES -->
+            <circle id="p-ctrl" class="particle" r="8" fill="var(--blue)" />
+            <circle id="p-user" class="particle" r="9" fill="var(--green)" />
+            <circle id="p-e1" class="particle" r="7" fill="var(--purple)" />
+        </svg>
+
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Detailed Information Panel -->
+    <div id="side-panel">
+        <div class="close-btn" onclick="closeNode()">✕</div>
+        <div class="panel-header">
+            <span id="p-tag" class="panel-tag">Architecture Component</span>
+            <h2 id="p-title" class="panel-title">Component Name</h2>
+        </div>
+        <div id="p-body" class="panel-content">
+            Detailed technical description will load here based on your selection.
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techData = {
+            ue: {
+                title: "User Equipment (UE)",
+                tag: "Terminal Device",
+                body: "The User Equipment (UE) represents the end-user device interacting with the 5G Network. In the context of the gNodeB architecture, the UE maintains the lower-layer protocol stack (PHY, MAC, RLC, PDCP, SDAP) to mirror the functions of the base station. It communicates with the Radio Unit (RU) over the Uu air interface using the New Radio (NR) physical layer. The UE also maintains the RRC (Radio Resource Control) connection with the gNB-CU-CP to manage mobility, measurements, and state transitions, and sends/receives user plane traffic which is processed by the gNB-CU-UP."
+            },
+            ru: {
+                title: "gNB Radio Unit (RU)",
+                tag: "Physical Layer / Antenna",
+                body: "The Radio Unit (RU) is the physical hardware that performs the Low-Physical (Low-PHY) functions and RF front-end processing. Its primary role is the conversion between digital baseband data and radio frequency waves. In modern Open-RAN (O-RAN) architectures, the RU handles FFT/iFFT, CP insertion, and beamforming. It communicates with the Distributed Unit (DU) via the Open Fronthaul (7-2x split). By offloading the RF complexity to the RU, operators can place the more compute-heavy DU and CU components in centralized data centers for better resource pooling and lower operational costs."
+            },
+            du: {
+                title: "gNB Distributed Unit (DU)",
+                tag: "Lower-Stack Controller",
+                body: "The gNB-DU is the logical node hosting the High-PHY, MAC, and RLC protocol layers. It is responsible for the time-critical operations of the radio access network. Key functions include Hybrid ARQ (Error correction), dynamic scheduling (allocating radio blocks to UEs every millisecond), and multiplexing of logical channels into transport channels. The DU communicates with the Central Unit (CU) via the F1 interface (F1-C for control and F1-U for data). Because it handles the MAC layer, the DU is usually located relatively close to the RU to maintain strict latency requirements for radio resource management."
+            },
+            cucp: {
+                title: "gNB Central Unit - Control Plane (CU-CP)",
+                tag: "Upper-Stack Signaling",
+                body: "The gNB-CU-CP is the control brain of the base station, hosting the RRC (Radio Resource Control) and PDCP-C (Packet Data Convergence Protocol - Control) layers. It manages all control-plane signaling between the gNB and the 5G Core (AMF via N2) and between the gNB and the UE. Its responsibilities include UE context management, handover coordination, radio bearer setup, and security key management. In a split architecture, the CU-CP also manages the CU-UP through the E1 interface, ensuring that the control plane can configure the user plane data paths independently and dynamically."
+            },
+            cuup: {
+                title: "gNB Central Unit - User Plane (CU-UP)",
+                tag: "Upper-Stack Data Processing",
+                body: "The gNB-CU-UP hosts the SDAP (Service Data Adaptation Protocol) and PDCP-U (Packet Data Convergence Protocol - User) layers. Its primary purpose is the efficient processing of user data packets. SDAP is a 5G-specific protocol that maps Quality of Service (QoS) flows from the core network to specific radio bearers. PDCP-U handles header compression (ROHC), ciphering, and integrity protection for user data. The CU-UP terminates the N3 GTP-U tunnel from the UPF and the F1-U tunnel from the DU. By separating the CU-UP from the CU-CP (CUPS architecture), operators can scale data capacity horizontally to meet high-throughput demands."
+            },
+            amf: {
+                title: "Access & Mobility Mgmt (AMF)",
+                tag: "Core Control Plane",
+                body: "The AMF is the entry point to the 5G Core control plane. It interacts with the gNB-CU-CP via the N2 (NGAP) interface. The AMF manages UE registration, authentication, mobility, and reachability. When the AMF needs to establish a signaling connection with a UE, it sends the request to the gNB-CU-CP, which then configures the necessary RRC resources. The AMF acts as the master coordinator for the UE's footprint across the entire mobile network, ensuring that the gNB always has the correct security context and mobility rules for the active subscriber."
+            },
+            upf: {
+                title: "User Plane Function (UPF)",
+                tag: "Core User Plane",
+                body: "The UPF is the 5G Core anchor for user data. It communicates with the gNB-CU-UP via the N3 (GTP-U) interface. The UPF routes and forwards data packets between the external Data Network (DN) and the radio access network. It performs packet inspection, traffic steering, and QoS enforcement as directed by the session management logic. In the gNB architecture, the UPF provides the source/sink for the GTP-U tunnels that transport user payloads through the core network to the base station's user-plane unit."
+            }
+        };
+
+        function openNode(key) {
+            const data = techData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-tag').innerText = data.tag;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            gsap.to('.node', { opacity: 0.3, duration: 0.4 });
+        }
+
+        function closeNode() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, duration: 0.4 });
+        }
+
+        // --- Animation Logic ---
+        let mainTL = gsap.timeline();
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            gsap.to(t, { opacity: 1, y: -20, duration: 0.3 });
+            setTimeout(() => gsap.to(t, { opacity: 0, duration: 0.3 }), 3000);
+        }
+
+        function resetDiagram() {
+            mainTL.kill();
+            gsap.set(".particle", { visibility: "hidden", x: 0, y: 0, opacity: 1 });
+            showToast("System Protocol States Reset.");
+        }
+
+        function runFlow(type) {
+            resetDiagram();
+            mainTL = gsap.timeline();
+
+            if (type === 'control') {
+                showToast("Control Flow: AMF -> CU-CP -> DU -> RU -> UE");
+                mainTL.to("#p-ctrl", { visibility: "visible", x: 1065, y: 145, duration: 0 })
+                  .to("#p-ctrl", { motionPath: { path: "#path-n2", align: "#path-n2", alignOrigin: [0.5, 0.5] }, duration: 1.5, start: 1, end: 0 })
+                  .call(() => showToast("CU-CP: Processing RRC Signaling..."))
+                  .to("#p-ctrl", { motionPath: { path: "#path-f1c", align: "#path-f1c", alignOrigin: [0.5, 0.5] }, duration: 1.5, start: 1, end: 0 })
+                  .call(() => showToast("DU: Scheduling Radio Control Message..."))
+                  .to("#p-ctrl", { motionPath: { path: "#path-fh", align: "#path-fh", alignOrigin: [0.5, 0.5] }, duration: 1 })
+                  .to("#p-ctrl", { motionPath: { path: "#path-uu", align: "#path-uu", alignOrigin: [0.5, 0.5] }, duration: 1 })
+                  .call(() => showToast("Control Plane Signaling Successful."));
+            } 
+            else if (type === 'user') {
+                showToast("User Plane: UPF -> CU-UP -> DU -> RU -> UE");
+                mainTL.to("#p-user", { visibility: "visible", x: 1065, y: 695, duration: 0 })
+                  .to("#p-user", { motionPath: { path: "#path-n3", align: "#path-n3", alignOrigin: [0.5, 0.5] }, duration: 1.5, start: 1, end: 0 })
+                  .call(() => showToast("CU-UP: Applying SDAP/PDCP Processing..."))
+                  .to("#p-user", { motionPath: { path: "#path-f1u", align: "#path-f1u", alignOrigin: [0.5, 0.5] }, duration: 1.5, start: 1, end: 0 })
+                  .call(() => showToast("DU/RU: Air interface transmission..."))
+                  .to("#p-user", { motionPath: { path: "#path-fh", align: "#path-fh", alignOrigin: [0.5, 0.5] }, duration: 0.8 })
+                  .to("#p-user", { motionPath: { path: "#path-uu", align: "#path-uu", alignOrigin: [0.5, 0.5] }, duration: 0.8 })
+                  .call(() => showToast("Data Packet Delivered Successfully."));
+            }
+            else if (type === 'e1') {
+                showToast("E1 Interface: CU-CP Provisioning CU-UP...");
+                mainTL.to("#p-e1", { visibility: "visible", x: 790, y: 155, duration: 0 })
+                  .to("#p-e1", { motionPath: { path: "#path-e1", align: "#path-e1", alignOrigin: [0.5, 0.5] }, duration: 2 })
+                  .to("#cuup rect", { strokeWidth: 8, duration: 0.5, repeat: 1, yoyo: true })
+                  .call(() => showToast("CU-UP User Plane Context Established."));
+            }
+        }
+
+        // Ambient pulse for active units
+        gsap.to(".node-rect", {
+            strokeWidth: 4,
+            duration: 1.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            stagger: 0.2
+        });
+
+    </script>
+</body>
+</html>

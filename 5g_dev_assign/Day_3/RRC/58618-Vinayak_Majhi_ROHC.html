@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR ROHC Animation - Everforest Theme</title>
+    <style>
+        /* EVERFOREST DARK THEME VARIABLES */
+        :root {
+            --bg-hard: #272e33;
+            --bg: #2b3339;
+            --bg-light: #323c41;
+            --fg: #d3c6aa;
+            --red: #e67e80;
+            --orange: #e69875;
+            --yellow: #dbbc7f;
+            --green: #a7c080;
+            --aqua: #83c092;
+            --blue: #7fbbb3;
+            --purple: #d699b6;
+            --gray: #859289;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-hard);
+            color: var(--fg);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--green);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        /* MAIN LAYOUT */
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* NAVIGATION & CONTROLS */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--bg-light);
+            color: var(--fg);
+            border: 2px solid var(--blue);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: var(--blue);
+            color: var(--bg-hard);
+        }
+
+        button.active {
+            background-color: var(--green);
+            border-color: var(--green);
+            color: var(--bg-hard);
+        }
+
+        /* DIAGRAM STAGE */
+        .stage-container {
+            background-color: var(--bg);
+            border: 2px solid var(--bg-light);
+            border-radius: 12px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 50px;
+        }
+
+        /* ENTITIES (UE and gNB) */
+        .entity {
+            width: 120px;
+            height: 200px;
+            background-color: var(--bg-light);
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 20px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .entity-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .entity-label {
+            font-weight: bold;
+            color: var(--blue);
+        }
+
+        .context-db {
+            width: 80%;
+            height: 80px;
+            background-color: var(--bg-hard);
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 0.6rem;
+            padding: 5px;
+            overflow: hidden;
+            border: 1px dashed var(--gray);
+            color: var(--gray);
+        }
+
+        .context-db.active {
+            border-color: var(--yellow);
+            color: var(--yellow);
+            box-shadow: 0 0 10px rgba(219, 188, 127, 0.2);
+        }
+
+        /* PACKET STYLING */
+        .packet-wrapper {
+            position: absolute;
+            left: 170px; /* Start pos */
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            opacity: 0; 
+            z-index: 5;
+        }
+
+        .packet {
+            display: flex;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .header-ipv6 {
+            background-color: var(--red);
+            color: #2b3339;
+            padding: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .header-rohc {
+            background-color: var(--orange);
+            color: #2b3339;
+            padding: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+        }
+
+        .payload {
+            background-color: var(--green);
+            color: #2b3339;
+            padding: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* INFO PANEL */
+        .info-panel {
+            background-color: var(--bg-light);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--blue);
+        }
+
+        .info-title {
+            color: var(--yellow);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .info-desc {
+            line-height: 1.6;
+        }
+
+        .state-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background-color: var(--bg-hard);
+            color: var(--purple);
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            border: 1px solid var(--purple);
+        }
+
+        /* ANIMATION KEYFRAMES */
+        @keyframes moveRight {
+            0% { left: 170px; opacity: 1; }
+            100% { left: calc(100% - 290px); opacity: 1; }
+        }
+        
+        @keyframes configShake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* SPECIFIC CLASSES FOR JS MANIPULATION */
+        .animating-move {
+            animation: moveRight 3s forwards;
+        }
+        
+        .shaking {
+            animation: configShake 0.5s ease-in-out infinite;
+        }
+
+        .ghost-packet {
+            position: absolute;
+            right: 170px;
+            top: 30%;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>5G NR ROHC Architecture</h1>
+    <div class="subtitle">Robust Header Compression Flow • WhatsApp Example</div>
+
+    <div class="container">
+        
+        <!-- Step Navigation -->
+        <div class="controls">
+            <button onclick="setStep(1)" id="btn1">1. Config</button>
+            <button onclick="setStep(2)" id="btn2">2. IR State (Init)</button>
+            <button onclick="setStep(3)" id="btn3">3. FO State (Trans)</button>
+            <button onclick="setStep(4)" id="btn4">4. SO State (Comp)</button>
+            <button onclick="setStep(5)" id="btn5">5. Decompression</button>
+            <button onclick="playAnimation()" style="border-color: var(--red);">▶ Replay Animation</button>
+        </div>
+
+        <!-- Animation Stage -->
+        <div class="stage-container">
+            <!-- Left Entity: UE -->
+            <div class="entity" id="ue">
+                <div class="entity-icon">📱</div>
+                <div class="entity-label">UE (WhatsApp)</div>
+                <div class="context-db" id="ue-db">
+                    <strong>ROHC Context</strong><br>
+                    <span id="ue-ctx-text">Empty</span>
+                </div>
+            </div>
+
+            <!-- The Moving Packet -->
+            <div class="packet-wrapper" id="packetObj">
+                <div class="packet">
+                    <!-- Full Header -->
+                    <div class="header-ipv6" id="p-head-full">
+                        IP/UDP<br><span style="font-size:0.6em">60 Bytes</span>
+                    </div>
+                    <!-- Compressed Header -->
+                    <div class="header-rohc" id="p-head-rohc">
+                        CID<br><span style="font-size:0.6em">3B</span>
+                    </div>
+                    <!-- Payload -->
+                    <div class="payload" id="p-payload">
+                        Msg: "Hi"
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Entity: gNB -->
+            <div class="entity" id="gnb">
+                <div class="entity-icon">📡</div>
+                <div class="entity-label">gNB (Network)</div>
+                <div class="context-db" id="gnb-db">
+                    <strong>ROHC Context</strong><br>
+                    <span id="gnb-ctx-text">Empty</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Text -->
+        <div class="info-panel">
+            <div class="state-badge" id="state-badge">STATE: NULL</div>
+            <div class="info-title" id="info-title">Select a Step</div>
+            <div class="info-desc" id="info-desc">
+                Click the buttons above to visualize the Robust Header Compression lifecycle for a WhatsApp message.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const packetWrapper = document.getElementById('packetObj');
+        const headerFull = document.getElementById('p-head-full');
+        const headerRohc = document.getElementById('p-head-rohc');
+        const payload = document.getElementById('p-payload');
+        
+        const ueDb = document.getElementById('ue-db');
+        const gnbDb = document.getElementById('gnb-db');
+        const ueCtx = document.getElementById('ue-ctx-text');
+        const gnbCtx = document.getElementById('gnb-ctx-text');
+
+        // Step Content Data
+        const steps = {
+            1: {
+                title: "Step 1: Configuration (RRC)",
+                state: "RRC CONFIG",
+                desc: "Before sending data, the UE and Network negotiate ROHC profiles. They agree to compress IP/UDP headers used by WhatsApp. <br><br><strong>Action:</strong> Parameter setup. No data transmission yet.",
+                payload: "...",
+                setup: () => {
+                    resetVisuals();
+                    document.getElementById('ue').classList.add('shaking');
+                    document.getElementById('gnb').classList.add('shaking');
+                    ueCtx.innerHTML = "Negotiating...";
+                    gnbCtx.innerHTML = "Negotiating...";
+                    setTimeout(() => {
+                        document.getElementById('ue').classList.remove('shaking');
+                        document.getElementById('gnb').classList.remove('shaking');
+                        ueCtx.innerHTML = "Profile: 0x0002<br>MaxCID: 15";
+                        gnbCtx.innerHTML = "Profile: 0x0002<br>MaxCID: 15";
+                        ueDb.classList.add('active');
+                        gnbDb.classList.add('active');
+                    }, 1000);
+                }
+            },
+            2: {
+                title: "Step 2: Initialization (IR State)",
+                state: "IR STATE",
+                desc: "<strong>First WhatsApp Message: 'Hello'</strong>. <br>The Compressor sends the <strong>Full Header</strong> plus a Context ID (CID). The receiver learns the static info (IP addresses, Ports).<br><br><strong>Overhead:</strong> High (~60 Bytes header).",
+                payload: "Msg: Hello",
+                setup: () => {
+                    resetVisuals();
+                    // Ensure context exists
+                    ueCtx.innerHTML = "Profile: 0x0002";
+                    gnbCtx.innerHTML = "Learning...";
+                    ueDb.classList.add('active');
+                    
+                    // Show Full Header
+                    headerFull.style.display = "flex";
+                    headerRohc.style.display = "none";
+                    
+                    animatePacket(false, () => {
+                        gnbCtx.innerHTML = "CID: 1<br>IP: 10.0.0.1<br>SN: 100";
+                        gnbDb.classList.add('active');
+                    });
+                }
+            },
+            3: {
+                title: "Step 3: First Order (FO State)",
+                state: "FO STATE",
+                desc: "<strong>Second Message: 'How are you?'</strong><br>The compressor notices most fields (IPs) are static. It sends a partial update (Sequence Number changes). <br><br><strong>Overhead:</strong> Medium. The flow is transitioning to full compression.",
+                payload: "Msg: Hru?",
+                setup: () => {
+                    resetVisuals();
+                    ueCtx.innerHTML = "CID: 1 [Active]";
+                    gnbCtx.innerHTML = "CID: 1 [Stored]";
+                    ueDb.classList.add('active');
+                    gnbDb.classList.add('active');
+
+                    // Show Semi-Compressed (Visually distinct - maybe just full header shrinking)
+                    // For simplicitly, we stick to Full but assume internal logic changes
+                    headerFull.style.display = "flex"; 
+                    headerFull.innerHTML = "Dyn. Upd.<br><small>15 Bytes</small>";
+                    headerFull.style.width = "60px";
+                    headerFull.style.backgroundColor = "var(--purple)";
+                    headerRohc.style.display = "none";
+
+                    animatePacket(false, () => {
+                        gnbCtx.innerHTML = "CID: 1<br>Update SN: 101";
+                    });
+                }
+            },
+            4: {
+                title: "Step 4: Second Order (SO State)",
+                state: "SO STATE (Optimized)",
+                desc: "<strong>Third Message: 'Good!'</strong><br>We are in the steady state. The header is stripped. Only the compressed Sequence Number and CRC are sent. <br><br><strong>Overhead:</strong> Tiny (1-3 Bytes). Massive bandwidth saving!",
+                payload: "Msg: Good!",
+                setup: () => {
+                    resetVisuals();
+                    ueCtx.innerHTML = "CID: 1 [Compr]";
+                    gnbCtx.innerHTML = "CID: 1 [Ready]";
+                    ueDb.classList.add('active');
+                    gnbDb.classList.add('active');
+
+                    // Show Compressed Header
+                    headerFull.style.display = "none";
+                    headerRohc.style.display = "flex";
+                    
+                    animatePacket(false, () => {
+                        gnbCtx.innerHTML = "CID: 1<br>Delta SN: +1";
+                    });
+                }
+            },
+            5: {
+                title: "Step 5: Decompression Logic",
+                state: "RECONSTRUCTION",
+                desc: "<strong>At the Receiver (gNB):</strong><br>The gNB receives the tiny compressed packet. It looks up CID 1, takes the stored IP header, adds the received Delta SN, and rebuilds the full IPv6 packet to send to the core network.",
+                payload: "Msg: Good!",
+                setup: () => {
+                    resetVisuals();
+                    ueCtx.innerHTML = "CID: 1";
+                    gnbCtx.innerHTML = "CID: 1 <br>Rebuilding...";
+                    ueDb.classList.add('active');
+                    gnbDb.classList.add('active');
+
+                    // Show Compressed Header moving
+                    headerFull.style.display = "none";
+                    headerRohc.style.display = "flex";
+
+                    // Animate packet
+                    packetWrapper.classList.remove('animating-move');
+                    void packetWrapper.offsetWidth; // Trigger reflow
+                    
+                    // Custom Animation for Decompression
+                    packetWrapper.style.transition = "left 2s linear";
+                    packetWrapper.style.left = "calc(100% - 290px)";
+                    packetWrapper.style.opacity = "1";
+
+                    setTimeout(() => {
+                        // Expansion effect at destination
+                        headerRohc.style.display = "none";
+                        headerFull.style.display = "flex";
+                        headerFull.innerHTML = "IP/UDP<br>Rebuilt";
+                        headerFull.style.backgroundColor = "var(--blue)";
+                        gnbCtx.innerHTML = "Packet Rebuilt<br>Success";
+                        gnbDb.style.borderColor = "var(--green)";
+                    }, 2000);
+                }
+            }
+        };
+
+        function resetVisuals() {
+            // Stop animations
+            packetWrapper.classList.remove('animating-move');
+            packetWrapper.style.transition = "none";
+            packetWrapper.style.left = "170px";
+            packetWrapper.style.opacity = "0";
+            
+            // Reset styles
+            headerFull.innerHTML = "IP/UDP<br><span style='font-size:0.6em'>60 Bytes</span>";
+            headerFull.style.width = "100px";
+            headerFull.style.backgroundColor = "var(--red)";
+            gnbDb.style.borderColor = "var(--gray)";
+        }
+
+        function animatePacket(isPartial, callback) {
+            packetWrapper.classList.remove('animating-move');
+            void packetWrapper.offsetWidth; // Force reflow
+            packetWrapper.classList.add('animating-move');
+            
+            setTimeout(() => {
+                if(callback) callback();
+            }, 3000);
+        }
+
+        function setStep(n) {
+            currentStep = n;
+            
+            // Update UI Buttons
+            for(let i=1; i<=5; i++) {
+                document.getElementById(`btn${i}`).classList.remove('active');
+            }
+            document.getElementById(`btn${n}`).classList.add('active');
+
+            // Update Info Text
+            const data = steps[n];
+            document.getElementById('info-title').innerText = data.title;
+            document.getElementById('info-desc').innerHTML = data.desc;
+            document.getElementById('state-badge').innerText = data.state;
+            
+            // Set Payload Text
+            payload.innerText = data.payload;
+
+            // Run Logic
+            data.setup();
+        }
+
+        function playAnimation() {
+            setStep(currentStep);
+        }
+
+        // Initialize
+        setStep(1);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDCP Header Compression (ROHC) | Technical Deep-Dive</title>
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-dim: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --dark-fg: #2d353b;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --panel-shadow: -10px 0 30px rgba(0,0,0,0.05);
+            --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.2rem 2.5rem;
+            background: var(--bg1);
+            border-bottom: 2px solid var(--bg2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.02);
+            z-index: 100;
+        }
+
+        .header-title h1 { font-size: 1.5rem; color: var(--dark-fg); letter-spacing: -0.5px; }
+        .header-title p { font-size: 0.85rem; opacity: 0.8; }
+
+        .controls { display: flex; gap: 12px; }
+        .btn {
+            background: var(--bg2);
+            border: 1px solid var(--bg3);
+            color: var(--fg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+        .btn:hover { background: var(--blue); color: white; border-color: var(--blue); transform: translateY(-2px); }
+        .btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background-image: radial-gradient(var(--bg2) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        #diagram-svg {
+            max-width: 1100px;
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+        }
+
+        /* SVG Component Styling */
+        .component-rect { fill: white; stroke: var(--bg4); stroke-width: 1.5; transition: var(--transition); }
+        .interactive-node { cursor: pointer; }
+        .interactive-node:hover .component-rect { stroke: var(--blue); stroke-width: 3; fill: var(--bg1); }
+
+        /* Detail Panel */
+        #detail-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: var(--bg0);
+            border-left: 6px solid var(--orange);
+            box-shadow: var(--panel-shadow);
+            z-index: 1000;
+            padding: 50px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+        }
+        #detail-panel.active { right: 0; }
+
+        .close-btn { position: absolute; top: 25px; right: 25px; font-size: 1.5rem; cursor: pointer; color: var(--fg); background: none; border: none; }
+        .panel-tag { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--bg4); letter-spacing: 2px; margin-bottom: 8px; display: block; }
+        .panel-title { font-size: 2rem; color: var(--orange); margin-bottom: 25px; line-height: 1.1; font-weight: 700; }
+        .panel-body { line-height: 1.8; font-size: 1.05rem; color: var(--fg); text-align: justify; }
+
+        #toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-fg);
+            color: white;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            opacity: 0;
+            z-index: 500;
+            pointer-events: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.7;
+            pointer-events: none;
+            border-bottom: 2px solid var(--orange);
+        }
+
+        .packet-pdu { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>PDCP Header Compression (ROHC)</h1>
+            <p>Protocol Efficiency Stage: TS 38.323 & RFC 3095 Implementation</p>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="simulateCompression('ir')">Full Header (IR State)</button>
+            <button class="btn" onclick="simulateCompression('so')">Compressed (SO State)</button>
+            <button class="btn" onclick="resetSim()" style="border-color: var(--red); color: var(--red);">Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing Context...</div>
+
+    <main>
+        <svg id="diagram-svg" viewBox="0 0 1100 700" xmlns="http://www.w3.org/2000/svg">
+            <!-- Markers -->
+            <defs>
+                <marker id="arr-orange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--orange)"/></marker>
+                <marker id="arr-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--blue)"/></marker>
+            </defs>
+
+            <!-- TRANSMITTER SIDE -->
+            <text x="200" y="40" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="16">PDCP Transmitting Entity</text>
+            <rect x="50" y="70" width="300" height="550" rx="15" fill="#f9f9f9" stroke="#ccc" />
+
+            <!-- Input IP Packet -->
+            <g class="interactive-node" onclick="openPanel('ip_packet')">
+                <rect x="80" y="100" width="240" height="60" rx="10" class="component-rect" />
+                <text x="200" y="130" text-anchor="middle" font-weight="bold" fill="var(--fg)">Input: IP/UDP/RTP Packet</text>
+                <text x="200" y="145" text-anchor="middle" font-size="10" fill="var(--bg4)">Size: ~40-60 Bytes</text>
+            </g>
+
+            <!-- ROHC State Machine -->
+            <g class="interactive-node" onclick="openPanel('rohc_machine')">
+                <rect x="80" y="200" width="240" height="280" rx="15" fill="var(--bg1)" stroke="var(--bg4)" stroke-dasharray="5,5" />
+                <text x="200" y="230" text-anchor="middle" font-weight="bold" fill="var(--fg)">ROHC Compressor</text>
+                
+                <!-- States -->
+                <g id="state-ir" class="interactive-node" onclick="event.stopPropagation(); openPanel('state_ir')">
+                    <rect x="110" y="250" width="180" height="40" rx="5" class="component-rect" />
+                    <text x="200" y="275" text-anchor="middle" font-weight="bold" font-size="12">IR: Initialization & Refresh</text>
+                </g>
+                <g id="state-fo" class="interactive-node" onclick="event.stopPropagation(); openPanel('state_fo')">
+                    <rect x="110" y="310" width="180" height="40" rx="5" class="component-rect" />
+                    <text x="200" y="335" text-anchor="middle" font-weight="bold" font-size="12">FO: First Order</text>
+                </g>
+                <g id="state-so" class="interactive-node" onclick="event.stopPropagation(); openPanel('state_so')">
+                    <rect x="110" y="370" width="180" height="40" rx="5" class="component-rect" />
+                    <text x="200" y="395" text-anchor="middle" font-weight="bold" font-size="12">SO: Second Order</text>
+                </g>
+
+                <text x="200" y="440" text-anchor="middle" font-size="10" fill="var(--orange)" font-weight="bold">Context ID (CID) Mapping</text>
+            </g>
+
+            <!-- PDCP SDU (Compressed) -->
+            <g class="interactive-node" onclick="openPanel('pdcp_sdu')">
+                <rect x="80" y="530" width="240" height="60" rx="10" class="component-rect" />
+                <text x="200" y="560" text-anchor="middle" font-weight="bold" fill="var(--fg)">Compressed PDCP SDU</text>
+                <text x="200" y="575" text-anchor="middle" font-size="10" id="size-label" fill="var(--green)">Optimized Size</text>
+            </g>
+
+            <!-- PHYSICAL INTERFACE -->
+            <rect x="350" y="640" width="400" height="40" rx="5" fill="var(--dark-fg)" />
+            <text x="550" y="665" text-anchor="middle" fill="white" font-weight="bold" font-size="14">Radio Air Interface (Uu)</text>
+
+            <!-- RECEIVER SIDE -->
+            <text x="800" y="40" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="16">PDCP Receiving Entity</text>
+            <rect x="650" y="70" width="300" height="550" rx="15" fill="#f9f9f9" stroke="#ccc" />
+
+            <!-- Decompressor -->
+            <g class="interactive-node" onclick="openPanel('rohc_decompressor')">
+                <rect x="680" y="200" width="240" height="280" rx="15" fill="var(--bg1)" stroke="var(--bg4)" stroke-dasharray="5,5" />
+                <text x="800" y="235" text-anchor="middle" font-weight="bold" fill="var(--fg)">ROHC Decompressor</text>
+                
+                <rect x="710" y="270" width="180" height="100" rx="8" fill="white" stroke="var(--blue)" />
+                <text x="800" y="300" text-anchor="middle" font-weight="bold" fill="var(--blue)" font-size="12">Context Storage</text>
+                <text x="725" y="330" font-size="9" fill="var(--fg)">• CID Lookup</text>
+                <text x="725" y="345" font-size="9" fill="var(--fg)">• Static Header Table</text>
+                <text x="725" y="360" font-size="9" fill="var(--fg)">• Dynamic Param Sync</text>
+            </g>
+
+            <!-- Reconstructed IP Packet -->
+            <g class="interactive-node" onclick="openPanel('reconstructed')">
+                <rect x="680" y="100" width="240" height="60" rx="10" class="component-rect" />
+                <text x="800" y="135" text-anchor="middle" font-weight="bold" fill="var(--fg)">Reconstructed Packet</text>
+            </g>
+
+            <!-- FEEDBACK PATH -->
+            <path id="path-feedback" d="M 680 440 L 350 440" stroke="var(--purple)" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arr-blue)" />
+            <text x="515" y="430" text-anchor="middle" fill="var(--purple)" font-weight="bold" font-size="10">ROHC Feedback (Ack/Nack)</text>
+
+            <!-- ANIMATION PARTICLES -->
+            <rect id="pkt-full" class="packet-pdu" x="0" y="0" width="40" height="25" rx="3" fill="var(--red)" />
+            <rect id="pkt-comp" class="packet-pdu" x="0" y="0" width="15" height="25" rx="3" fill="var(--green)" />
+
+            <!-- ANIMATION PATHS (Invisible) -->
+            <path id="path-tx" d="M 200 100 L 200 550" fill="none" />
+            <path id="path-air" d="M 200 590 L 200 660 L 800 660 L 800 590" fill="none" />
+            <path id="path-rx" d="M 800 590 L 800 150" fill="none" />
+
+        </svg>
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Panel -->
+    <div id="detail-panel">
+        <button class="close-btn" onclick="closePanel()">✕</button>
+        <span id="p-tag" class="panel-tag">Protocol logic</span>
+        <h2 id="p-title" class="panel-title">Component</h2>
+        <div id="p-body" class="panel-body">Details...</div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techSpecs = {
+            ip_packet: {
+                title: "Original IP Packet",
+                tag: "Upper Layer Input",
+                body: "An IP packet arriving from the SDAP or IP layer contains significant overhead. For an IPv4/UDP/RTP stream (common in VoIP/VoNR), the combined headers total 40 bytes. For IPv6, this jumps to 60 bytes. In the context of a 20-byte voice payload, the overhead is over 200%. ROHC's primary mission is to eliminate this redundancy by identifying fields that don't change (static) and those that change predictably (dynamic)."
+            },
+            rohc_machine: {
+                title: "ROHC State Machine",
+                tag: "Compressor Logic",
+                body: "ROHC (Robust Header Compression) operates using a three-state machine at the compressor: IR, FO, and SO. The compressor starts in the lowest efficiency state (IR) to establish context at the receiver and moves to higher efficiency states (FO/SO) once it is confident the receiver has synchronized. This robustness ensures that even if some compressed packets are lost over the air, the decompression context remains valid or can be quickly recovered via feedback."
+            },
+            state_ir: {
+                title: "IR: Initialization & Refresh",
+                tag: "Context Establishment",
+                body: "The IR state is the entry point. The compressor sends 'Full Headers' to the receiver. This packet contains all static information (IP addresses, Ports, SSRC) and dynamic info (Sequence Numbers). It is used to initialize the 'ROHC Context' at the decompressor. No actual compression efficiency is gained here, but it is the critical foundation for all subsequent compressed packets. It is revisited periodically or when context damage is detected."
+            },
+            state_fo: {
+                title: "FO: First Order",
+                tag: "Predictive Compression",
+                body: "In the FO state, the compressor assumes the static fields are known at the receiver. It only sends information about the 'change patterns' of the dynamic fields. This is used when the dynamic fields (like the RTP Timestamp or IP-ID) do not follow a simple linear pattern. The header size is reduced significantly (typically to 10-15 bytes), but it is not yet at maximum efficiency. It acts as a bridge between full headers and fully compressed headers."
+            },
+            state_so: {
+                title: "SO: Second Order",
+                tag: "Maximum Efficiency",
+                body: "The SO state represents peak 5G performance. Here, the compressor assumes both static fields and change patterns are perfectly synchronized at the receiver. It only sends a small sequence number or checksum. This reduces a 40-60 byte header down to just 1 or 2 bytes. This is the 'steady-state' for stable data streams like video or voice, allowing the radio network to carry significantly more users per cell."
+            },
+            rohc_decompressor: {
+                title: "ROHC Decompressor",
+                tag: "Payload Restoration",
+                body: "The decompressor is the mirror of the compressor. It maintains a 'Context' identified by the CID. When a compressed packet arrives, it performs a lookup in its Context Storage. Using the stored static values and the delta information in the compressed packet, it mathematically reconstructs the original header bit-for-bit. If the CRC check fails, it indicates context damage and triggers a NACK feedback to the transmitter."
+            },
+            pdcp_sdu: {
+                title: "Compressed PDCP SDU",
+                tag: "Lower Layer Delivery",
+                body: "The resulting PDCP SDU is the output of the compression stage. It is now ready for security processing (ciphering/integrity). Because the header is now just a few bytes, the subsequent encryption process is faster and consumes less processing power. This compressed unit is what travels over the air interface, maximizing the usage of the allocated Physical Resource Blocks (PRBs)."
+            },
+            reconstructed: {
+                title: "Bit-Exact Reconstruction",
+                tag: "Transparency Promise",
+                body: "One of the most important requirements of ROHC is transparency. The packet delivered to the upper layers at the receiver must be exactly identical to the packet that entered at the transmitter. ROHC uses a 3-bit or 8-bit CRC within the compressed header to verify this bit-level accuracy. If reconstruction is successful, the upper layers are completely unaware that compression ever occurred, maintaining standard IP compatibility."
+            }
+        };
+
+        function openPanel(key) {
+            const data = techSpecs[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-tag').innerText = data.tag;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('detail-panel').classList.add('active');
+            gsap.to('.component-rect', { opacity: 0.3 });
+            // Highlight target logic...
+        }
+
+        function closePanel() {
+            document.getElementById('detail-panel').classList.remove('active');
+            gsap.to('.component-rect', { opacity: 1 });
+        }
+
+        function showToast(msg, color) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.borderColor = color || "var(--blue)";
+            gsap.to(t, { opacity: 1, y: -20, duration: 0.3 });
+            setTimeout(() => gsap.to(t, { opacity: 0, duration: 0.3 }), 4000);
+        }
+
+        function resetSim() {
+            gsap.killTweensOf("*");
+            gsap.set(".packet-pdu", { visibility: "hidden" });
+            gsap.set("#size-label", { textContent: "Optimized Size", color: "var(--green)" });
+            gsap.set(".component-rect", { fill: "white" });
+        }
+
+        async function simulateCompression(mode) {
+            resetSim();
+            const txPkt = mode === 'ir' ? "#pkt-full" : "#pkt-comp";
+            const color = mode === 'ir' ? "var(--red)" : "var(--green)";
+            const label = mode === 'ir' ? "State: IR (40 Bytes)" : "State: SO (2 Bytes)";
+            
+            showToast(`Simulating ${mode.toUpperCase()} State Compression...`, color);
+            
+            // 1. Tx path
+            gsap.set(txPkt, { visibility: "visible", x: 180, y: 100 });
+            await gsap.to(txPkt, {
+                duration: 2,
+                ease: "power1.inOut",
+                motionPath: { path: "#path-tx", align: "#path-tx", alignOrigin: [0.5, 0.5] }
+            });
+
+            // 2. Air path
+            await gsap.to(txPkt, {
+                duration: 2.5,
+                ease: "none",
+                motionPath: { path: "#path-air", align: "#path-air", alignOrigin: [0.5, 0.5] }
+            });
+
+            // 3. Rx path
+            await gsap.to(txPkt, {
+                duration: 2,
+                ease: "power1.inOut",
+                motionPath: { path: "#path-rx", align: "#path-rx", alignOrigin: [0.5, 0.5] }
+            });
+
+            // Final state
+            gsap.set("#pkt-full", { visibility: "visible", x: 780, y: 100, scale: 1 });
+            showToast("Header Reconstructed successfully at Receiver.", "var(--blue)");
+        }
+
+        // Ambient pulse for compressor
+        gsap.to("#state-so rect", {
+            strokeWidth: 4,
+            duration: 1.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+    </script>
+</body>
+</html>

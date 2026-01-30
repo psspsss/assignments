@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" width="1200" height="1000">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#b71c1c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#c62828;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d32f2f;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ieGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bbdefb;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ieGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8f5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c8e6c9;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ieGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff3e0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffe0b2;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ieGrad4" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fce4ec;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8bbd0;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ieGrad5" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8eaf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c5cae9;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ieGrad6" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f3e5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e1bee7;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="msgBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffebee;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffcdd2;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="srbGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1565c0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#42a5f5;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="drbGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2e7d32;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#66bb6a;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Filters -->
+    <filter id="shadow4" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.2"/>
+    </filter>
+    
+    <filter id="boxGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Patterns -->
+    <pattern id="dotPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#e0e0e0"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="1000" fill="#fafafa"/>
+  <rect width="1200" height="1000" fill="url(#dotPattern)"/>
+  
+  <!-- Title Banner -->
+  <rect x="0" y="0" width="1200" height="80" fill="url(#headerGrad4)"/>
+  <text x="600" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="white">5G NR RRC Message Structure &amp; Information Elements</text>
+  <text x="600" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#ffcdd2">ASN.1 Encoded Messages - 3GPP TS 38.331</text>
+  
+  <!-- Section 1: RRC Message Categories -->
+  <rect x="30" y="95" width="560" height="395" rx="10" fill="white" stroke="#c62828" stroke-width="2" filter="url(#shadow4)"/>
+  <rect x="30" y="95" width="560" height="40" rx="10" fill="#c62828"/>
+  <rect x="30" y="125" width="560" height="10" fill="#c62828"/>
+  <text x="310" y="122" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">RRC Message Categories</text>
+  
+  <!-- DL-CCCH Messages -->
+  <rect x="45" y="145" width="255" height="155" rx="8" fill="url(#ieGrad1)" stroke="#1565c0" stroke-width="2"/>
+  <text x="172" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#0d47a1">DL-CCCH Messages</text>
+  <text x="172" y="183" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1976d2">(SRB0 - Before Security)</text>
+  <line x1="55" y1="192" x2="290" y2="192" stroke="#90caf9" stroke-width="1"/>
+  <text x="60" y="210" font-family="Consolas, monospace" font-size="11" fill="#1565c0">• RRCReject</text>
+  <text x="60" y="228" font-family="Consolas, monospace" font-size="11" fill="#1565c0">• RRCSetup</text>
+  <text x="60" y="246" font-family="Consolas, monospace" font-size="11" fill="#1565c0">• RRCReestablishment</text>
+  <text x="60" y="264" font-family="Consolas, monospace" font-size="11" fill="#1565c0">• RRCReestablishmentReject</text>
+  <text x="60" y="282" font-family="Consolas, monospace" font-size="11" fill="#1565c0">• spare1..spare3</text>
+  
+  <!-- UL-CCCH Messages -->
+  <rect x="310" y="145" width="265" height="155" rx="8" fill="url(#ieGrad2)" stroke="#2e7d32" stroke-width="2"/>
+  <text x="442" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#1b5e20">UL-CCCH Messages</text>
+  <text x="442" y="183" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#388e3c">(SRB0 - Before Security)</text>
+  <line x1="320" y1="192" x2="565" y2="192" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="325" y="210" font-family="Consolas, monospace" font-size="11" fill="#2e7d32">• RRCSetupRequest</text>
+  <text x="325" y="228" font-family="Consolas, monospace" font-size="11" fill="#2e7d32">• RRCResumeRequest</text>
+  <text x="325" y="246" font-family="Consolas, monospace" font-size="11" fill="#2e7d32">• RRCReestablishmentRequest</text>
+  <text x="325" y="264" font-family="Consolas, monospace" font-size="11" fill="#2e7d32">• RRCSystemInfoRequest</text>
+  <text x="325" y="282" font-family="Consolas, monospace" font-size="11" fill="#2e7d32">• spare1..spare3</text>
+  
+  <!-- DL-DCCH Messages -->
+  <rect x="45" y="310" width="255" height="170" rx="8" fill="url(#ieGrad3)" stroke="#ef6c00" stroke-width="2"/>
+  <text x="172" y="333" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#e65100">DL-DCCH Messages</text>
+  <text x="172" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#f57c00">(SRB1/SRB2 - After Security)</text>
+  <line x1="55" y1="357" x2="290" y2="357" stroke="#ffcc80" stroke-width="1"/>
+  <text x="60" y="375" font-family="Consolas, monospace" font-size="11" fill="#e65100">• RRCReconfiguration</text>
+  <text x="60" y="393" font-family="Consolas, monospace" font-size="11" fill="#e65100">• RRCResume</text>
+  <text x="60" y="411" font-family="Consolas, monospace" font-size="11" fill="#e65100">• RRCRelease</text>
+  <text x="60" y="429" font-family="Consolas, monospace" font-size="11" fill="#e65100">• SecurityModeCommand</text>
+  <text x="60" y="447" font-family="Consolas, monospace" font-size="11" fill="#e65100">• DLInformationTransfer</text>
+  <text x="60" y="465" font-family="Consolas, monospace" font-size="11" fill="#e65100">• CounterCheck, MobilityFromNRCmd</text>
+  
+  <!-- UL-DCCH Messages -->
+  <rect x="310" y="310" width="265" height="170" rx="8" fill="url(#ieGrad4)" stroke="#c2185b" stroke-width="2"/>
+  <text x="442" y="333" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#880e4f">UL-DCCH Messages</text>
+  <text x="442" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ad1457">(SRB1/SRB2 - After Security)</text>
+  <line x1="320" y1="357" x2="565" y2="357" stroke="#f48fb1" stroke-width="1"/>
+  <text x="325" y="375" font-family="Consolas, monospace" font-size="11" fill="#c2185b">• RRCSetupComplete</text>
+  <text x="325" y="393" font-family="Consolas, monospace" font-size="11" fill="#c2185b">• RRCReconfigurationComplete</text>
+  <text x="325" y="411" font-family="Consolas, monospace" font-size="11" fill="#c2185b">• RRCResumeComplete</text>
+  <text x="325" y="429" font-family="Consolas, monospace" font-size="11" fill="#c2185b">• SecurityModeComplete/Failure</text>
+  <text x="325" y="447" font-family="Consolas, monospace" font-size="11" fill="#c2185b">• ULInformationTransfer</text>
+  <text x="325" y="465" font-family="Consolas, monospace" font-size="11" fill="#c2185b">• MeasurementReport</text>
+  
+  <!-- Section 2: RRCReconfiguration IE Structure -->
+  <rect x="610" y="95" width="560" height="395" rx="10" fill="white" stroke="#7b1fa2" stroke-width="2" filter="url(#shadow4)"/>
+  <rect x="610" y="95" width="560" height="40" rx="10" fill="#7b1fa2"/>
+  <rect x="610" y="125" width="560" height="10" fill="#7b1fa2"/>
+  <text x="890" y="122" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">RRCReconfiguration - Key Information Elements</text>
+  
+  <!-- Main RRCReconfiguration Box -->
+  <rect x="625" y="145" width="530" height="335" rx="8" fill="url(#ieGrad6)" stroke="#9c27b0" stroke-width="2"/>
+  <text x="890" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#6a1b9a">RRCReconfiguration Message</text>
+  
+  <!-- radioBearerConfig -->
+  <rect x="640" y="185" width="240" height="130" rx="6" fill="white" stroke="#1565c0" stroke-width="1.5"/>
+  <rect x="640" y="185" width="240" height="25" rx="6" fill="url(#srbGrad)"/>
+  <rect x="640" y="200" width="240" height="10" fill="url(#srbGrad)"/>
+  <text x="760" y="202" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="white">radioBearerConfig</text>
+  <text x="650" y="230" font-family="Consolas, monospace" font-size="10" fill="#1565c0">srb-ToAddModList:</text>
+  <text x="660" y="245" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- srb-Identity (1,2,3)</text>
+  <text x="660" y="258" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- pdcp-Config</text>
+  <text x="650" y="275" font-family="Consolas, monospace" font-size="10" fill="#2e7d32">drb-ToAddModList:</text>
+  <text x="660" y="290" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- drb-Identity</text>
+  <text x="660" y="303" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- pdcp-Config, rlc-Config</text>
+  
+  <!-- masterCellGroup -->
+  <rect x="895" y="185" width="245" height="130" rx="6" fill="white" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="895" y="185" width="245" height="25" rx="6" fill="url(#drbGrad)"/>
+  <rect x="895" y="200" width="245" height="10" fill="url(#drbGrad)"/>
+  <text x="1017" y="202" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="white">masterCellGroup (MCG)</text>
+  <text x="905" y="230" font-family="Consolas, monospace" font-size="10" fill="#2e7d32">cellGroupId</text>
+  <text x="905" y="245" font-family="Consolas, monospace" font-size="10" fill="#2e7d32">rlc-BearerToAddModList</text>
+  <text x="905" y="260" font-family="Consolas, monospace" font-size="10" fill="#2e7d32">mac-CellGroupConfig:</text>
+  <text x="915" y="275" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- drx-Config, schedulingReqConfig</text>
+  <text x="915" y="290" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- bsr-Config, tag-Config</text>
+  <text x="915" y="305" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- phr-Config</text>
+  
+  <!-- measConfig -->
+  <rect x="640" y="325" width="240" height="145" rx="6" fill="white" stroke="#ef6c00" stroke-width="1.5"/>
+  <rect x="640" y="325" width="240" height="25" rx="6" fill="#ef6c00"/>
+  <rect x="640" y="340" width="240" height="10" fill="#ef6c00"/>
+  <text x="760" y="342" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="white">measConfig</text>
+  <text x="650" y="370" font-family="Consolas, monospace" font-size="10" fill="#e65100">measObjectToAddModList:</text>
+  <text x="660" y="385" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- measObjectNR (freq, smtc)</text>
+  <text x="650" y="402" font-family="Consolas, monospace" font-size="10" fill="#e65100">reportConfigToAddModList:</text>
+  <text x="660" y="417" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- reportType (periodical/eventTriggered)</text>
+  <text x="650" y="434" font-family="Consolas, monospace" font-size="10" fill="#e65100">measIdToAddModList:</text>
+  <text x="660" y="449" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- measId, measObjectId, reportConfigId</text>
+  <text x="650" y="464" font-family="Consolas, monospace" font-size="10" fill="#e65100">quantityConfig, measGapConfig</text>
+  
+  <!-- secondaryCellGroup / Other IEs -->
+  <rect x="895" y="325" width="245" height="145" rx="6" fill="white" stroke="#c2185b" stroke-width="1.5"/>
+  <rect x="895" y="325" width="245" height="25" rx="6" fill="#c2185b"/>
+  <rect x="895" y="340" width="245" height="10" fill="#c2185b"/>
+  <text x="1017" y="342" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="white">Other Critical IEs</text>
+  <text x="905" y="370" font-family="Consolas, monospace" font-size="10" fill="#c2185b">secondaryCellGroupConfig:</text>
+  <text x="915" y="385" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- SCG (for CA/DC scenarios)</text>
+  <text x="905" y="402" font-family="Consolas, monospace" font-size="10" fill="#c2185b">dedicatedNAS-MessageList:</text>
+  <text x="915" y="417" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- NAS PDUs to transport</text>
+  <text x="905" y="434" font-family="Consolas, monospace" font-size="10" fill="#c2185b">fullConfig (boolean):</text>
+  <text x="915" y="449" font-family="Consolas, monospace" font-size="9" fill="#546e7a">- Full reconfiguration indicator</text>
+  <text x="905" y="464" font-family="Consolas, monospace" font-size="10" fill="#c2185b">lateNonCriticalExtension</text>
+  
+  <!-- Section 3: Signaling Radio Bearers -->
+  <rect x="30" y="505" width="370" height="230" rx="10" fill="white" stroke="#0288d1" stroke-width="2" filter="url(#shadow4)"/>
+  <rect x="30" y="505" width="370" height="40" rx="10" fill="#0288d1"/>
+  <rect x="30" y="535" width="370" height="10" fill="#0288d1"/>
+  <text x="215" y="532" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">Signaling Radio Bearers (SRBs)</text>
+  
+  <!-- SRB Table -->
+  <rect x="45" y="555" width="340" height="30" fill="#e1f5fe"/>
+  <text x="95" y="575" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#01579b">SRB</text>
+  <text x="175" y="575" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#01579b">Channel</text>
+  <text x="290" y="575" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#01579b">Purpose</text>
+  
+  <rect x="45" y="585" width="340" height="35" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="95" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1565c0">SRB0</text>
+  <text x="175" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#37474f">CCCH</text>
+  <text x="290" y="600" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RRC messages before</text>
+  <text x="290" y="613" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">security activation</text>
+  
+  <rect x="45" y="620" width="340" height="35" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="95" y="640" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1565c0">SRB1</text>
+  <text x="175" y="640" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#37474f">DCCH</text>
+  <text x="290" y="635" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RRC messages + piggybacked</text>
+  <text x="290" y="648" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">NAS (after security)</text>
+  
+  <rect x="45" y="655" width="340" height="35" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="95" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1565c0">SRB2</text>
+  <text x="175" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#37474f">DCCH</text>
+  <text x="290" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">NAS messages only</text>
+  <text x="290" y="683" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">(lower priority than SRB1)</text>
+  
+  <rect x="45" y="690" width="340" height="35" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="95" y="710" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1565c0">SRB3</text>
+  <text x="175" y="710" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#37474f">DCCH</text>
+  <text x="290" y="705" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">Split SRB in MR-DC</text>
+  <text x="290" y="718" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">(NR-DC, EN-DC)</text>
+  
+  <!-- Section 4: System Information -->
+  <rect x="420" y="505" width="370" height="230" rx="10" fill="white" stroke="#00897b" stroke-width="2" filter="url(#shadow4)"/>
+  <rect x="420" y="505" width="370" height="40" rx="10" fill="#00897b"/>
+  <rect x="420" y="535" width="370" height="10" fill="#00897b"/>
+  <text x="605" y="532" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">System Information Blocks (SIBs)</text>
+  
+  <!-- SIB Content -->
+  <g transform="translate(435, 555)">
+    <rect x="0" y="0" width="160" height="25" rx="4" fill="#e0f2f1" stroke="#26a69a" stroke-width="1"/>
+    <text x="80" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#00695c">MIB (PBCH)</text>
+    
+    <rect x="170" y="0" width="160" height="25" rx="4" fill="#e0f2f1" stroke="#26a69a" stroke-width="1"/>
+    <text x="250" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#00695c">SIB1 (PDSCH)</text>
+    
+    <rect x="0" y="35" width="160" height="55" rx="4" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1"/>
+    <text x="10" y="52" font-family="Arial, sans-serif" font-size="9" fill="#37474f">• systemFrameNumber</text>
+    <text x="10" y="65" font-family="Arial, sans-serif" font-size="9" fill="#37474f">• subCarrierSpacing</text>
+    <text x="10" y="78" font-family="Arial, sans-serif" font-size="9" fill="#37474f">• ssb-SubcarrierOffset</text>
+    
+    <rect x="170" y="35" width="160" height="55" rx="4" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1"/>
+    <text x="180" y="52" font-family="Arial, sans-serif" font-size="9" fill="#37474f">• cellSelectionInfo</text>
+    <text x="180" y="65" font-family="Arial, sans-serif" font-size="9" fill="#37474f">• cellAccessRelatedInfo</text>
+    <text x="180" y="78" font-family="Arial, sans-serif" font-size="9" fill="#37474f">• servingCellConfigCommon</text>
+    
+    <rect x="0" y="100" width="105" height="60" rx="4" fill="#fff8e1" stroke="#ffb74d" stroke-width="1"/>
+    <text x="52" y="117" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#e65100">SIB2</text>
+    <text x="10" y="132" font-family="Arial, sans-serif" font-size="8" fill="#37474f">Cell Reselection</text>
+    <text x="10" y="145" font-family="Arial, sans-serif" font-size="8" fill="#37474f">Common params</text>
+    
+    <rect x="112" y="100" width="105" height="60" rx="4" fill="#e8f5e9" stroke="#81c784" stroke-width="1"/>
+    <text x="164" y="117" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#2e7d32">SIB3</text>
+    <text x="122" y="132" font-family="Arial, sans-serif" font-size="8" fill="#37474f">Intra-frequency</text>
+    <text x="122" y="145" font-family="Arial, sans-serif" font-size="8" fill="#37474f">cell reselection</text>
+    
+    <rect x="225" y="100" width="105" height="60" rx="4" fill="#e3f2fd" stroke="#64b5f6" stroke-width="1"/>
+    <text x="277" y="117" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#1565c0">SIB4-9</text>
+    <text x="235" y="132" font-family="Arial, sans-serif" font-size="8" fill="#37474f">Inter-freq, EUTRA</text>
+    <text x="235" y="145" font-family="Arial, sans-serif" font-size="8" fill="#37474f">PWS, GPS, etc.</text>
+  </g>
+  
+  <!-- Section 5: RRC Key Timers -->
+  <rect x="810" y="505" width="360" height="230" rx="10" fill="white" stroke="#6a1b9a" stroke-width="2" filter="url(#shadow4)"/>
+  <rect x="810" y="505" width="360" height="40" rx="10" fill="#6a1b9a"/>
+  <rect x="810" y="535" width="360" height="10" fill="#6a1b9a"/>
+  <text x="990" y="532" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">RRC Timers &amp; Constants</text>
+  
+  <!-- Timer Table -->
+  <rect x="825" y="555" width="330" height="25" fill="#f3e5f5"/>
+  <text x="880" y="572" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#4a148c">Timer</text>
+  <text x="1030" y="572" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#4a148c">Purpose</text>
+  
+  <g transform="translate(825, 580)">
+    <rect x="0" y="0" width="330" height="22" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="15" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T300</text>
+    <text x="205" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RRC Connection Establishment</text>
+    
+    <rect x="0" y="22" width="330" height="22" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="37" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T301</text>
+    <text x="205" y="37" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RRC Connection Reestablishment</text>
+    
+    <rect x="0" y="44" width="330" height="22" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="59" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T304</text>
+    <text x="205" y="59" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">Handover Completion</text>
+    
+    <rect x="0" y="66" width="330" height="22" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="81" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T310</text>
+    <text x="205" y="81" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">Radio Link Failure Detection</text>
+    
+    <rect x="0" y="88" width="330" height="22" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="103" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T311</text>
+    <text x="205" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RLF Recovery (Cell Selection)</text>
+    
+    <rect x="0" y="110" width="330" height="22" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="125" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T319</text>
+    <text x="205" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RRC Resume Procedure</text>
+    
+    <rect x="0" y="132" width="330" height="22" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="147" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#6a1b9a">T380</text>
+    <text x="205" y="147" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#37474f">RRC_INACTIVE Timer</text>
+  </g>
+  
+  <!-- Section 6: ASN.1 Structure -->
+  <rect x="30" y="750" width="1140" height="220" rx="10" fill="white" stroke="#455a64" stroke-width="2" filter="url(#shadow4)"/>
+  <rect x="30" y="750" width="1140" height="40" rx="10" fill="#455a64"/>
+  <rect x="30" y="780" width="1140" height="10" fill="#455a64"/>
+  <text x="600" y="777" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">ASN.1 Message Encoding Example - RRCSetupRequest</text>
+  
+  <!-- ASN.1 Code Block -->
+  <rect x="50" y="800" width="540" height="155" rx="6" fill="#263238" stroke="#37474f" stroke-width="2"/>
+  <text x="320" y="820" text-anchor="middle" font-family="Consolas, monospace" font-size="11" fill="#80cbc4">-- ASN.1 Definition (3GPP TS 38.331)</text>
+  <text x="70" y="845" font-family="Consolas, monospace" font-size="11" fill="#4fc3f7">RRCSetupRequest ::= SEQUENCE {</text>
+  <text x="90" y="863" font-family="Consolas, monospace" font-size="11" fill="#ffcc80">rrcSetupRequest</text>
+  <text x="240" y="863" font-family="Consolas, monospace" font-size="11" fill="#a5d6a7">RRCSetupRequest-IEs</text>
+  <text x="70" y="881" font-family="Consolas, monospace" font-size="11" fill="#4fc3f7">}</text>
+  <text x="70" y="905" font-family="Consolas, monospace" font-size="11" fill="#4fc3f7">RRCSetupRequest-IEs ::= SEQUENCE {</text>
+  <text x="90" y="923" font-family="Consolas, monospace" font-size="11" fill="#ffcc80">ue-Identity</text>
+  <text x="210" y="923" font-family="Consolas, monospace" font-size="11" fill="#a5d6a7">InitialUE-Identity,</text>
+  <text x="90" y="941" font-family="Consolas, monospace" font-size="11" fill="#ffcc80">establishmentCause</text>
+  <text x="280" y="941" font-family="Consolas, monospace" font-size="11" fill="#a5d6a7">EstablishmentCause</text>
+  <text x="70" y="953" font-family="Consolas, monospace" font-size="11" fill="#4fc3f7">}</text>
+  
+  <!-- Encoded Example -->
+  <rect x="610" y="800" width="545" height="155" rx="6" fill="#1a237e" stroke="#3949ab" stroke-width="2"/>
+  <text x="882" y="820" text-anchor="middle" font-family="Consolas, monospace" font-size="11" fill="#9fa8da">-- PER Encoded Example (Hex)</text>
+  <text x="630" y="850" font-family="Consolas, monospace" font-size="11" fill="#64b5f6">UL-CCCH-Message:</text>
+  <text x="650" y="873" font-family="Consolas, monospace" font-size="12" fill="#81d4fa">00 00 10 40 00 00 00 00 10</text>
+  <text x="630" y="900" font-family="Consolas, monospace" font-size="10" fill="#ffcc80">Field Breakdown:</text>
+  <text x="650" y="920" font-family="Consolas, monospace" font-size="10" fill="#a5d6a7">00 = message type (rrcSetupRequest)</text>
+  <text x="650" y="937" font-family="Consolas, monospace" font-size="10" fill="#a5d6a7">00 10 40... = ue-Identity (ng-5G-S-TMSI)</text>
+  <text x="650" y="954" font-family="Consolas, monospace" font-size="10" fill="#a5d6a7">00 = establishmentCause (emergency)</text>
+  
+  <!-- Footer -->
+  <text x="600" y="985" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#78909c">© CafeTele Telecom Training | www.cafetele.com | 5G NR RRC Message Structure Diagram</text>
+</svg>

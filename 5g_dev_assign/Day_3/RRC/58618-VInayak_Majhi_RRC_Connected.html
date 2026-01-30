@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR RRC_CONNECTED | Technical Masterclass</title>
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg-dim: #f3efda;
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --dark-fg: #2d353b;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: var(--font);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--dark-fg);
+            color: #d3c6aa;
+            padding: 1.2rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .header-title h1 { font-size: 1.5rem; letter-spacing: -0.5px; }
+        .header-title p { font-size: 0.85rem; opacity: 0.7; }
+
+        .controls { display: flex; gap: 12px; align-items: center;}
+
+        .btn {
+            background: var(--bg4);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-conn { background: var(--green); }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(var(--bg2) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        svg {
+            width: 100%;
+            height: 90%;
+            max-width: 1150px;
+            overflow: visible;
+        }
+
+        /* Node Styling */
+        .node { cursor: pointer; transition: 0.3s; }
+        .node:hover { transform: translateY(-5px); }
+
+        /* Animation Overlays */
+        #toast {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-fg);
+            color: white;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            opacity: 0;
+            z-index: 500;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 2px solid var(--green);
+        }
+
+        /* Detail Panel */
+        #side-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 420px;
+            height: 100%;
+            background: var(--bg0);
+            border-left: 8px solid var(--green);
+            box-shadow: -15px 0 50px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 50px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+        }
+        #side-panel.active { right: 0; }
+
+        .close-btn { position: absolute; top: 25px; right: 25px; font-size: 1.5rem; cursor: pointer; color: var(--fg); background: none; border: none; }
+        .panel-title { font-size: 2rem; color: var(--dark-fg); margin-bottom: 10px; border-bottom: 2px solid var(--bg2); padding-bottom: 15px; }
+        .panel-subtitle { font-size: 0.8rem; font-weight: 800; color: var(--green); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1.5px; }
+        .panel-body { line-height: 1.8; font-size: 1.05rem; text-align: justify; }
+
+        .audio-viz {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 20px;
+            color: var(--green);
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.7;
+            pointer-events: none;
+            border-bottom: 2px solid var(--green);
+        }
+
+        /* Particles */
+        .particle { visibility: hidden; pointer-events: none; }
+        .data-flow { stroke-dasharray: 10; animation: flow 1s infinite linear; }
+        @keyframes flow { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>5G NR RRC_CONNECTED Analysis</h1>
+            <p>Active Data Flow | Measurement Reporting | Handover Control</p>
+        </div>
+        <div class="controls">
+            <span style="font-size: 0.7rem; font-weight: bold; color: #d3c6aa;">SIMULATE:</span>
+            <button class="btn btn-conn" onclick="runConnectedSimulation()">▶ Start Performance Simulation</button>
+            <button class="btn" onclick="resetAll()">↺ Reset</button>
+        </div>
+    </header>
+
+    <div id="toast">Initializing CONNECTED procedures...</div>
+
+    <main>
+        <svg id="conn-svg" viewBox="0 0 1100 800" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8da101"/></marker>
+                <marker id="arr-orange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f57d26"/></marker>
+            </defs>
+
+            <!-- EXTERNAL COMPONENTS -->
+            <!-- Source gNB -->
+            <g class="node" id="gnb-1" onclick="openInfo('gnb')">
+                <path d="M 250 200 L 220 400 L 280 400 Z" fill="var(--bg2)" stroke="var(--fg)" />
+                <circle id="gnb-1-light" cx="250" cy="200" r="15" fill="var(--green)" />
+                <text x="250" y="430" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="14">Serving gNB (Source)</text>
+            </g>
+
+            <!-- Target gNB -->
+            <g class="node" id="gnb-2" onclick="openInfo('handover')">
+                <path d="M 850 200 L 820 400 L 880 400 Z" fill="var(--bg2)" stroke="var(--fg)" opacity="0.4" />
+                <circle id="gnb-2-light" cx="850" cy="200" r="15" fill="var(--bg4)" />
+                <text x="850" y="430" text-anchor="middle" font-weight="bold" fill="var(--fg)" font-size="12" opacity="0.6">Target gNB</text>
+            </g>
+
+            <!-- RRC_CONNECTED MAIN NODE -->
+            <g class="node" id="node-conn" onclick="openInfo('connected')">
+                <circle cx="550" cy="400" r="140" fill="var(--green)" fill-opacity="0.05" stroke="var(--green)" stroke-width="5" stroke-dasharray="10,5" class="data-flow" />
+                <text x="550" y="390" text-anchor="middle" font-weight="bold" fill="var(--green)" font-size="24">RRC_CONNECTED</text>
+                <text x="550" y="415" text-anchor="middle" fill="var(--fg)" font-size="12">Peak Performance State</text>
+                <text x="550" y="435" text-anchor="middle" fill="#888" font-size="10">AS Context Active | C-RNTI Assigned</text>
+            </g>
+
+            <!-- UE ICON -->
+            <g id="ue-entity" transform="translate(250, 600)">
+                <rect x="-20" y="-35" width="40" height="70" rx="8" fill="var(--dark-fg)" />
+                <rect x="-16" y="-28" width="32" height="45" rx="3" fill="white" />
+                <circle id="ue-status" cx="0" cy="28" r="3" fill="var(--green)" />
+                <text y="55" text-anchor="middle" font-weight="bold" fill="var(--dark-fg)" font-size="12">UE (Terminal)</text>
+            </g>
+
+            <!-- PATHS -->
+            <path id="path-data" d="M 250 230 Q 300 450 250 560" stroke="var(--green)" stroke-width="4" stroke-dasharray="8,4" fill="none" opacity="0" />
+            <path id="path-report" d="M 250 560 Q 200 450 250 230" stroke="var(--blue)" stroke-width="2" stroke-dasharray="5,5" fill="none" opacity="0" />
+            <path id="path-ho-exec" d="M 250 600 C 450 750 650 750 850 600" stroke="var(--orange)" stroke-width="3" stroke-dasharray="10,5" fill="none" opacity="0" />
+
+            <!-- PARTICLES -->
+            <circle id="p-green" class="particle" r="8" fill="var(--green)" />
+            <circle id="p-blue" class="particle" r="6" fill="var(--blue)" />
+
+        </svg>
+        <div class="signature">Vinayak Majhi</div>
+    </main>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+        <button class="close-btn" onclick="closeInfo()">✕</button>
+        <span id="p-subtitle" class="panel-subtitle">Technical Logic</span>
+        <h2 id="p-title" class="panel-title">Component</h2>
+        <div id="p-body" class="panel-content">Details...</div>
+        <div class="audio-viz">
+            <span>🔊 Technical narration in progress...</span>
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techData = {
+            connected: {
+                title: "RRC_CONNECTED State",
+                subtitle: "Full Network Control",
+                body: "RRC_CONNECTED is the only state in the 5G NR architecture where the User Equipment (UE) can transmit and receive unicast user data packets. In this state, a full Access Stratum (AS) context is established in both the UE and the serving gNodeB. The UE is identified by a Cell Radio Network Temporary Identifier (C-RNTI). The network has absolute control over the terminal's mobility, and the UE must strictly follow the network's scheduling commands, measurement configurations, and handover instructions to ensure seamless connectivity and maximum throughput.",
+                audio: "User equipment in RRC Connected state is fully engaged with the network. High-speed data is flowing, security is active, and the base station is managing the terminal's location and resources in real-time."
+            },
+            gnb: {
+                title: "The Serving gNodeB",
+                subtitle: "The Master Controller",
+                body: "The serving gNB acts as the primary anchor for the CONNECTED UE. It performs the dynamic scheduling of radio resources on a millisecond basis, deciding which frequency and time slots the UE uses. It also manages the 'Connected-mode DRX' (Discontinuous Reception) cycles to save battery during brief gaps in data flow. The gNB monitors the Measurement Reports sent by the UE over the air interface and applies complex RRM (Radio Resource Management) algorithms to decide when the UE needs to move to another cell.",
+                audio: "The serving base station is the master controller. It schedules every packet, manages the terminal's power-saving cycles, and analyzes signal reports to ensure the best possible connection."
+            },
+            handover: {
+                title: "Network-Controlled Handover",
+                subtitle: "Mobility at Scale",
+                body: "Handovers in 5G NR are 'break-before-make' but highly optimized. Based on the UE's MeasurementReport (A3 event: neighbor becomes better than offset), the source gNB initiates a Handover Request to the target gNB. The target prepares resources and returns a transparent RRCReconfiguration message. Once the UE receives this command, it synchronizes with the new cell via a RACH (Random Access) procedure. This transition is typically completed in under 50 milliseconds to prevent any human-perceptible interruption in high-bandwidth services like video calling.",
+                audio: "Handover is a seamless transition between towers. When a neighboring cell becomes stronger, the network commands the terminal to switch. This process is so fast that the user never notices the change."
+            },
+            measurements: {
+                title: "Measurement Reporting",
+                subtitle: "Closed-Loop Feedback",
+                body: "The UE in CONNECTED mode performs constant measurements of its serving and neighboring cells using Synchronization Signal Blocks (SSB) and Channel State Information Reference Signals (CSI-RS). These measurements (RSRP, RSRQ, SINR) are reported back to the gNB via RRC signaling. This feedback loop is vital for the network to manage beamforming, adaptive modulation and coding (AMC), and mobility decisions. Without these reports, the gNB would be 'blind' to the actual radio environment experienced by the user terminal.",
+                audio: "The terminal constantly measures signal quality from all surrounding towers. It sends these reports back to the network so the base station can adjust the beam and prepare for handovers."
+            }
+        };
+
+        const synth = window.speechSynthesis;
+
+        function speak(text) {
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.pitch = 1;
+            utter.rate = 1;
+            synth.speak(utter);
+        }
+
+        function openInfo(key) {
+            const data = techData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-subtitle').innerText = data.subtitle;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('side-panel').classList.add('active');
+            
+            gsap.to('.node', { opacity: 0.3 });
+            gsap.to(event.currentTarget, { opacity: 1, scale: 1.05 });
+            speak(data.audio);
+        }
+
+        function closeInfo() {
+            document.getElementById('side-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, scale: 1 });
+            synth.cancel();
+        }
+
+        function resetAll() {
+            gsap.killTweensOf("*");
+            synth.cancel();
+            gsap.set(".particle", { visibility: "hidden" });
+            gsap.set("#ue-entity", { x: 250, y: 600, opacity: 1 });
+            gsap.set("#gnb-2-light", { fill: "var(--bg4)" });
+            gsap.set("#gnb-1-light", { fill: "var(--green)" });
+            gsap.to("#toast", { opacity: 0 });
+        }
+
+        async function runConnectedSimulation() {
+            resetAll();
+            
+            // 1. Steady State: Data Flow
+            updateToast("Step 1: Active User Data Transfer (GTP-U Tunneling)", "var(--green)");
+            speak("Simulation started. We are in RRC Connected state. High-speed user data is now flowing between the base station and the terminal.");
+            await animateContinuous("#path-data", "#p-green", 1.5, 3);
+            await wait(2000);
+
+            // 2. Feedback Loop: Measurement Reporting
+            updateToast("Step 2: UE reporting Signal Quality (MeasurementReport)", "var(--blue)");
+            speak("The terminal is now performing radio measurements. It sends signal quality reports back to the base station to optimize the data rate.");
+            await animateContinuous("#path-report", "#p-blue", 1.2, 3);
+            await wait(2000);
+
+            // 3. Handover Decision
+            updateToast("Step 3: Signal Weakening. gNB triggering Handover Decision...", "var(--orange)");
+            speak("The device is moving. The current tower sees a better signal at the neighbor tower and initiates a handover request.");
+            gsap.to("#gnb-1-light", { fill: "var(--red)", duration: 0.5 });
+            await wait(4000);
+
+            // 4. Handover Execution
+            updateToast("Step 4: Executing Handover (RRC Reconfiguration)", "var(--orange)");
+            speak("The handover command is received. The terminal switches its radio focus to the new target tower.");
+            await animateUEToTarget();
+            
+            // 5. Post-Handover
+            updateToast("Handover Complete! Now served by Target gNB.", "var(--green)");
+            gsap.to("#gnb-2-light", { fill: "var(--green)", duration: 0.5 });
+            speak("Success. The handover is complete. The user remains connected without any loss of service. This is the power of 5G mobility.");
+        }
+
+        function updateToast(msg, color) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.borderColor = color || "var(--blue)";
+            gsap.to(toast, { opacity: 1, duration: 0.3 });
+        }
+
+        function animateContinuous(pathId, partId, dur, count) {
+            return new Promise(resolve => {
+                const p = document.querySelector(partId);
+                gsap.set(p, { visibility: "visible", opacity: 1 });
+                gsap.to(p, {
+                    duration: dur,
+                    repeat: count,
+                    ease: "none",
+                    motionPath: { path: pathId, align: pathId, alignOrigin: [0.5, 0.5] },
+                    onComplete: () => {
+                        gsap.set(p, { visibility: "hidden" });
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        function animateUEToTarget() {
+            return new Promise(resolve => {
+                gsap.to("#ue-entity", {
+                    duration: 3,
+                    ease: "power2.inOut",
+                    motionPath: { path: "#path-ho-exec", align: "#path-ho-exec", alignOrigin: [0.5, 0.5] },
+                    onComplete: resolve
+                });
+            });
+        }
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+    </script>
+</body>
+</html>

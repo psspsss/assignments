@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G Control Plane Architecture | Everforest Technical Study</title>
+    <!-- GSAP for technical signaling animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --color-request: var(--blue);
+            --color-response: var(--purple);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        /* --- Header & Layout --- */
+        header {
+            background: var(--bg1);
+            padding: 2.5rem 1rem;
+            text-align: center;
+            border-bottom: 2px solid var(--bg2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #2d353b;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--bg4);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- Control Panel --- */
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            color: var(--fg);
+            padding: 10px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .btn:hover { border-color: var(--blue); transform: translateY(-2px); background: white; }
+        .btn.active { background: var(--blue); color: white; border-color: var(--blue); box-shadow: 0 4px 12px rgba(58, 148, 197, 0.3); }
+
+        /* --- NF Card Grid --- */
+        .nf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .nf-card {
+            background: white;
+            border: 2px solid var(--bg2);
+            border-radius: 15px;
+            padding: 25px;
+            transition: var(--transition);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nf-card:hover {
+            border-color: var(--orange);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .nf-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .nf-icon {
+            font-size: 1.5rem;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg1);
+            border-radius: 10px;
+            border: 1px solid var(--bg2);
+        }
+
+        .nf-name {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #2d353b;
+        }
+
+        .nf-desc {
+            font-size: 0.85rem;
+            color: var(--fg);
+            margin-bottom: 15px;
+            min-height: 60px;
+        }
+
+        .sbi-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--bg0);
+            border: 1px solid var(--bg2);
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin: 2px;
+            color: var(--blue);
+            transition: 0.2s;
+        }
+
+        .nf-card:hover .sbi-tag { background: white; border-color: var(--blue); }
+
+        /* --- Signaling Flow --- */
+        .signaling-container {
+            background: white;
+            border: 2px solid var(--bg2);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .flow-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2d353b;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--bg1);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .message-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .message {
+            display: grid;
+            grid-template-columns: 100px 1fr 100px;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--bg1);
+            border-radius: 10px;
+            border-left: 5px solid var(--bg2);
+            transition: var(--transition);
+        }
+
+        .message.registration { border-left-color: var(--green); }
+        .message.session { border-left-color: var(--blue); }
+
+        .msg-node { font-weight: 800; font-size: 0.8rem; text-align: center; color: var(--fg); }
+        .msg-content { position: relative; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; }
+
+        .msg-label {
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--dark-fg);
+            background: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--bg2);
+            z-index: 2;
+        }
+
+        .msg-line {
+            position: absolute;
+            height: 2px;
+            background: var(--bg2);
+            width: 100%;
+            z-index: 1;
+        }
+
+        .msg-arrow {
+            position: absolute;
+            font-size: 1.2rem;
+            color: var(--blue);
+            z-index: 3;
+        }
+
+        /* --- Legend --- */
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background: var(--bg1);
+            border-radius: 15px;
+            border: 1px solid var(--bg2);
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+        /* --- Signature --- */
+        .signature {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--fg);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 1000;
+            border-bottom: 2px solid var(--orange);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .nf-grid { grid-template-columns: 1fr; }
+            .message { grid-template-columns: 1fr; gap: 5px; }
+            .msg-node { text-align: left; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="subtitle">3GPP TS 23.501 | Service-Based Architecture</div>
+        <h1>5G Control Plane Architecture</h1>
+    </header>
+
+    <div class="container">
+        <!-- Interaction Buttons -->
+        <div class="control-panel">
+            <button class="btn active" onclick="filterFlow('all', this)">All Procedures</button>
+            <button class="btn" onclick="filterFlow('registration', this)">Registration Management</button>
+            <button class="btn" onclick="filterFlow('session', this)">PDU Session Establishment</button>
+        </div>
+
+        <!-- Network Functions Grid -->
+        <div class="nf-grid">
+            <div class="nf-card" onclick="showInfo('amf')">
+                <div class="nf-header">
+                    <div class="nf-icon">🔐</div>
+                    <div class="nf-name">AMF</div>
+                </div>
+                <div class="nf-desc">Access & Mobility Management. Gateway for all UE signaling and terminal reachability.</div>
+                <div>
+                    <span class="sbi-tag">N1 (NAS)</span>
+                    <span class="sbi-tag">N2 (NGAP)</span>
+                    <span class="sbi-tag">N11 (SMF)</span>
+                </div>
+            </div>
+
+            <div class="nf-card" onclick="showInfo('smf')">
+                <div class="nf-header">
+                    <div class="nf-icon">📊</div>
+                    <div class="nf-name">SMF</div>
+                </div>
+                <div class="nf-desc">Session Management. Handles IP allocation and UPF selection for data paths.</div>
+                <div>
+                    <span class="sbi-tag">N4 (PFCP)</span>
+                    <span class="sbi-tag">N7 (PCF)</span>
+                    <span class="sbi-tag">N10 (UDM)</span>
+                </div>
+            </div>
+
+            <div class="nf-card" onclick="showInfo('pcf')">
+                <div class="nf-header">
+                    <div class="nf-icon">⚙️</div>
+                    <div class="nf-name">PCF</div>
+                </div>
+                <div class="nf-desc">Policy Control. Derives rules for QoS, charging, and mobility restrictions.</div>
+                <div>
+                    <span class="sbi-tag">N5 (AF)</span>
+                    <span class="sbi-tag">N15 (AMF)</span>
+                    <span class="sbi-tag">Nnudr</span>
+                </div>
+            </div>
+
+            <div class="nf-card" onclick="showInfo('udm')">
+                <div class="nf-header">
+                    <div class="nf-icon">👤</div>
+                    <div class="nf-name">UDM</div>
+                </div>
+                <div class="nf-desc">Unified Data Management. Master subscriber database and auth credentials.</div>
+                <div>
+                    <span class="sbi-tag">N8 (AMF)</span>
+                    <span class="sbi-tag">N13 (AUSF)</span>
+                    <span class="sbi-tag">Nudr</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signaling Sequence -->
+        <div class="signaling-container">
+            <div class="flow-title">Live Signaling Flow Simulation</div>
+            <div class="message-flow">
+                <div class="message registration">
+                    <div class="msg-node">UE</div>
+                    <div class="msg-content">
+                        <div class="msg-line"></div>
+                        <div class="msg-arrow" style="right: 0;">▶</div>
+                        <div class="msg-label">N1: Registration Request</div>
+                    </div>
+                    <div class="msg-node">AMF</div>
+                </div>
+
+                <div class="message registration">
+                    <div class="msg-node">AMF</div>
+                    <div class="msg-content">
+                        <div class="msg-line"></div>
+                        <div class="msg-arrow" style="right: 0;">▶</div>
+                        <div class="msg-label">N12: Authentication Request</div>
+                    </div>
+                    <div class="msg-node">AUSF</div>
+                </div>
+
+                <div class="message registration">
+                    <div class="msg-node">AUSF</div>
+                    <div class="msg-content">
+                        <div class="msg-line"></div>
+                        <div class="msg-arrow" style="left: 0;">◀</div>
+                        <div class="msg-label">N13: Retrieve Vectors</div>
+                    </div>
+                    <div class="msg-node">UDM</div>
+                </div>
+
+                <div class="message session">
+                    <div class="msg-node">AMF</div>
+                    <div class="msg-content">
+                        <div class="msg-line"></div>
+                        <div class="msg-arrow" style="right: 0;">▶</div>
+                        <div class="msg-label">N11: Create SM Context</div>
+                    </div>
+                    <div class="msg-node">SMF</div>
+                </div>
+
+                <div class="message session">
+                    <div class="msg-node">SMF</div>
+                    <div class="msg-content">
+                        <div class="msg-line"></div>
+                        <div class="msg-arrow" style="right: 0;">▶</div>
+                        <div class="msg-label">N7: Policy Decision Request</div>
+                    </div>
+                    <div class="msg-node">PCF</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="background: var(--blue);"></div>
+                <span><strong>Signaling Request:</strong> NF initiating a procedure.</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: var(--purple);"></div>
+                <span><strong>Service Response:</strong> Target NF responding with data/ack.</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: var(--green);"></div>
+                <span><strong>MM Procedure:</strong> Mobility Management related signaling.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">Vinayak Majhi</div>
+
+    <script>
+        function filterFlow(type, btn) {
+            // Update Buttons
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Filter Messages
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => {
+                if (type === 'all' || msg.classList.contains(type)) {
+                    gsap.to(msg, { opacity: 1, height: 'auto', display: 'grid', duration: 0.3 });
+                } else {
+                    gsap.to(msg, { opacity: 0.1, duration: 0.3 });
+                }
+            });
+
+            // Animate arrows in filtered set
+            animateArrows();
+        }
+
+        function animateArrows() {
+            gsap.from(".msg-arrow", {
+                x: (i, el) => el.style.right === '0px' ? -20 : 20,
+                opacity: 0,
+                duration: 1,
+                repeat: -1,
+                ease: "power1.inOut",
+                stagger: 0.2
+            });
+        }
+
+        function showInfo(nf) {
+            // Placeholder for the detailed panel logic seen in previous turns
+            console.log("Showing info for: " + nf);
+        }
+
+        window.onload = () => animateArrows();
+    </script>
+
+</body>
+</html>

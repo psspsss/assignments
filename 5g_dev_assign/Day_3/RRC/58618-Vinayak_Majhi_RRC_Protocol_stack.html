@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR RRC Protocol Stack | Interactive Study</title>
+    <!-- GSAP for technical animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <style>
+        :root {
+            /* Everforest Light Palette */
+            --bg0: #fdf6e3;
+            --bg1: #f3efda;
+            --bg2: #e0dcc7;
+            --bg4: #a3a68e;
+            --fg: #5c6a72;
+            --red: #f85552;
+            --orange: #f57d26;
+            --yellow: #dfa000;
+            --green: #8da101;
+            --aqua: #35a77c;
+            --blue: #3a94c5;
+            --purple: #df69ba;
+            
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
+
+        body {
+            background-color: var(--bg0);
+            color: var(--fg);
+            height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #2d353b; /* Dark Forest Contrast */
+            color: #d3c6aa;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        header h1 { font-size: 1.8rem; letter-spacing: -0.5px; }
+        header p { font-size: 0.9rem; opacity: 0.8; margin-top: 5px; }
+
+        main {
+            flex: 1;
+            position: relative;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .diagram-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 40px;
+        }
+
+        #main-svg {
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* Module Styling */
+        .node { cursor: pointer; transition: var(--transition); pointer-events: auto; }
+        .node:hover { filter: brightness(1.05); transform: translateY(-3px); }
+        .node-rect { transition: stroke-width 0.2s; }
+        .node:hover .node-rect { stroke-width: 3px; stroke: var(--fg); }
+
+        /* Detail Panel */
+        #detail-panel {
+            position: fixed;
+            right: -450px;
+            top: 0;
+            width: 400px;
+            height: 100%;
+            background: white;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 60px 40px;
+            transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            border-left: 6px solid var(--orange);
+            overflow-y: auto;
+        }
+        #detail-panel.active { right: 0; }
+
+        .close-btn {
+            position: absolute; top: 25px; right: 25px;
+            background: none; border: none; font-size: 1.5rem;
+            color: var(--fg); cursor: pointer;
+        }
+
+        .panel-tag { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--bg4); letter-spacing: 2px; display: block; margin-bottom: 10px; }
+        .panel-title { font-size: 1.8rem; color: #2d353b; margin-bottom: 25px; line-height: 1.1; font-weight: 700; }
+        .panel-content { line-height: 1.8; font-size: 1rem; color: var(--fg); text-align: justify; }
+
+        /* Information Reference Box */
+        .info-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 1100px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--bg2);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .info-col h3 { font-size: 1rem; color: #2d353b; margin-bottom: 15px; border-left: 4px solid var(--orange); padding-left: 10px; }
+        .info-col ul { list-style: none; }
+        .info-col li { font-size: 0.85rem; margin-bottom: 8px; line-height: 1.4; padding-left: 12px; position: relative; }
+        .info-col li::before { content: "•"; position: absolute; left: 0; color: var(--orange); font-weight: bold; }
+
+        /* Flow Indicators */
+        .flow-particle { visibility: hidden; pointer-events: none; }
+
+        /* Signature */
+        .signature {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--fg);
+            opacity: 0.8;
+            pointer-events: none;
+            border-bottom: 1px solid var(--fg);
+        }
+
+        @media (max-width: 900px) {
+            .info-card { grid-template-columns: 1fr; }
+            #detail-panel { width: 100%; right: -100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>5G NR RRC Protocol Stack Architecture</h1>
+        <p>3GPP TS 38.331 - Radio Resource Control (RRC) Protocol Specification</p>
+    </header>
+
+    <main>
+        <div class="diagram-wrapper">
+            <svg id="main-svg" viewBox="0 0 1000 650" xmlns="http://www.w3.org/2000/svg">
+                <!-- Labels -->
+                <text x="150" y="30" text-anchor="middle" font-weight="bold" fill="var(--blue)" font-size="22">UE</text>
+                <text x="150" y="55" text-anchor="middle" fill="var(--fg)" font-size="12">(User Equipment)</text>
+                
+                <text x="500" y="30" text-anchor="middle" font-weight="bold" fill="var(--green)" font-size="22">gNB</text>
+                <text x="500" y="55" text-anchor="middle" fill="var(--fg)" font-size="12">(Next Generation NodeB)</text>
+                
+                <text x="850" y="30" text-anchor="middle" font-weight="bold" fill="var(--orange)" font-size="22">AMF</text>
+                <text x="850" y="55" text-anchor="middle" fill="var(--fg)" font-size="12">(Access and Mobility Function)</text>
+
+                <!-- Connection Paths -->
+                <!-- NAS Signaling -->
+                <path id="path-nas" d="M 150 110 C 250 80 750 80 850 110" stroke="var(--purple)" stroke-width="3" stroke-dasharray="8,5" fill="none" />
+                <text x="500" y="85" text-anchor="middle" fill="var(--purple)" font-weight="bold" font-size="12">NAS Signaling (End-to-End)</text>
+                
+                <!-- RRC Connection -->
+                <path id="path-rrc" d="M 150 190 C 200 170 450 170 500 190" stroke="var(--red)" stroke-width="3" stroke-dasharray="8,5" fill="none" />
+                <text x="325" y="165" text-anchor="middle" fill="var(--red)" font-weight="bold" font-size="11">RRC Connection (Control Plane)</text>
+
+                <!-- Flow Particles -->
+                <circle id="part-nas" class="flow-particle" r="6" fill="var(--purple)" />
+                <circle id="part-rrc" class="flow-particle" r="6" fill="var(--red)" />
+
+                <!-- Interface Arrows -->
+                <!-- Uu -->
+                <path d="M 300 560 L 380 560" stroke="var(--blue)" stroke-width="3" stroke-dasharray="4,4" />
+                <path d="M 300 555 L 290 560 L 300 565" fill="var(--blue)" />
+                <path d="M 380 555 L 390 560 L 380 565" fill="var(--blue)" />
+                <rect x="315" y="580" width="40" height="25" rx="5" fill="var(--blue)" />
+                <text x="335" y="597" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Uu</text>
+
+                <!-- NG -->
+                <path d="M 620 220 L 700 220" stroke="var(--green)" stroke-width="3" stroke-dasharray="4,4" />
+                <path d="M 620 215 L 610 220 L 620 225" fill="var(--green)" />
+                <path d="M 700 215 L 710 220 L 700 225" fill="var(--green)" />
+                <rect x="635" y="200" width="40" height="25" rx="5" fill="var(--green)" />
+                <text x="655" y="217" text-anchor="middle" fill="white" font-size="10" font-weight="bold">NG</text>
+
+                <!-- STACK: UE -->
+                <g class="node" onclick="openNode('ue_nas')">
+                    <rect class="node-rect" x="50" y="110" width="200" height="60" rx="10" fill="var(--purple)" opacity="0.8" />
+                    <text x="150" y="135" text-anchor="middle" fill="white" font-weight="bold" font-size="16">NAS</text>
+                    <text x="150" y="152" text-anchor="middle" fill="white" font-size="9">Non-Access Stratum</text>
+                </g>
+                <g class="node" onclick="openNode('ue_rrc')">
+                    <rect class="node-rect" x="50" y="185" width="200" height="75" rx="10" fill="var(--red)" opacity="0.8" />
+                    <text x="150" y="215" text-anchor="middle" fill="white" font-weight="bold" font-size="16">RRC</text>
+                    <text x="150" y="235" text-anchor="middle" fill="white" font-size="9">Radio Resource Control</text>
+                    <text x="150" y="250" text-anchor="middle" fill="white" font-size="8" opacity="0.7">SRB0, SRB1, SRB2, SRB3</text>
+                </g>
+                <g class="node" onclick="openNode('ue_pdcp')">
+                    <rect class="node-rect" x="50" y="275" width="200" height="65" rx="10" fill="var(--aqua)" opacity="0.8" />
+                    <text x="150" y="305" text-anchor="middle" fill="white" font-weight="bold" font-size="16">PDCP</text>
+                    <text x="150" y="325" text-anchor="middle" fill="white" font-size="9">Packet Data Convergence Protocol</text>
+                </g>
+                <g class="node" onclick="openNode('ue_rlc')">
+                    <rect class="node-rect" x="50" y="355" width="200" height="65" rx="10" fill="var(--green)" opacity="0.8" />
+                    <text x="150" y="385" text-anchor="middle" fill="white" font-weight="bold" font-size="16">RLC</text>
+                    <text x="150" y="405" text-anchor="middle" fill="white" font-size="9">Radio Link Control</text>
+                </g>
+                <g class="node" onclick="openNode('ue_mac')">
+                    <rect class="node-rect" x="50" y="435" width="200" height="65" rx="10" fill="var(--orange)" opacity="0.8" />
+                    <text x="150" y="465" text-anchor="middle" fill="white" font-weight="bold" font-size="16">MAC</text>
+                    <text x="150" y="485" text-anchor="middle" fill="white" font-size="9">Medium Access Control</text>
+                </g>
+                <g class="node" onclick="openNode('ue_phy')">
+                    <rect class="node-rect" x="50" y="515" width="200" height="65" rx="10" fill="#606672" opacity="0.9" />
+                    <text x="150" y="545" text-anchor="middle" fill="white" font-weight="bold" font-size="16">PHY</text>
+                    <text x="150" y="565" text-anchor="middle" fill="white" font-size="9">Physical Layer</text>
+                </g>
+
+                <!-- STACK: gNB -->
+                <g class="node" onclick="openNode('gnb_ngap')">
+                    <rect class="node-rect" x="400" y="110" width="200" height="60" rx="10" fill="var(--green)" opacity="0.8" />
+                    <text x="500" y="135" text-anchor="middle" fill="white" font-weight="bold" font-size="16">NGAP</text>
+                    <text x="500" y="152" text-anchor="middle" fill="white" font-size="9">NG Application Protocol</text>
+                </g>
+                <g class="node" onclick="openNode('ue_rrc')">
+                    <rect class="node-rect" x="400" y="185" width="200" height="75" rx="10" fill="var(--red)" opacity="0.8" />
+                    <text x="500" y="215" text-anchor="middle" fill="white" font-weight="bold" font-size="16">RRC</text>
+                    <text x="500" y="235" text-anchor="middle" fill="white" font-size="9">Radio Resource Control</text>
+                    <text x="500" y="250" text-anchor="middle" fill="white" font-size="8" opacity="0.7">Connection Management</text>
+                </g>
+                <g class="node" onclick="openNode('ue_pdcp')">
+                    <rect class="node-rect" x="400" y="275" width="200" height="65" rx="10" fill="var(--aqua)" opacity="0.8" />
+                    <text x="500" y="305" text-anchor="middle" fill="white" font-weight="bold" font-size="16">PDCP</text>
+                    <text x="500" y="325" text-anchor="middle" fill="white" font-size="9">Ciphering & Integrity Protection</text>
+                </g>
+                <g class="node" onclick="openNode('ue_rlc')">
+                    <rect class="node-rect" x="400" y="355" width="200" height="65" rx="10" fill="var(--green)" opacity="0.8" />
+                    <text x="500" y="385" text-anchor="middle" fill="white" font-weight="bold" font-size="16">RLC</text>
+                    <text x="500" y="405" text-anchor="middle" fill="white" font-size="9">ARQ & Segmentation</text>
+                </g>
+                <g class="node" onclick="openNode('ue_mac')">
+                    <rect class="node-rect" x="400" y="435" width="200" height="65" rx="10" fill="var(--orange)" opacity="0.8" />
+                    <text x="500" y="465" text-anchor="middle" fill="white" font-weight="bold" font-size="16">MAC</text>
+                    <text x="500" y="485" text-anchor="middle" fill="white" font-size="9">Scheduling & HARQ</text>
+                </g>
+                <g class="node" onclick="openNode('ue_phy')">
+                    <rect class="node-rect" x="400" y="515" width="200" height="65" rx="10" fill="#606672" opacity="0.9" />
+                    <text x="500" y="545" text-anchor="middle" fill="white" font-weight="bold" font-size="16">PHY</text>
+                    <text x="500" y="565" text-anchor="middle" fill="white" font-size="9">Physical Layer (Uu Interface)</text>
+                </g>
+
+                <!-- STACK: AMF -->
+                <g class="node" onclick="openNode('ue_nas')">
+                    <rect class="node-rect" x="750" y="110" width="200" height="60" rx="10" fill="var(--purple)" opacity="0.8" />
+                    <text x="850" y="135" text-anchor="middle" fill="white" font-weight="bold" font-size="16">NAS</text>
+                    <text x="850" y="152" text-anchor="middle" fill="white" font-size="9">5GMM / 5GSM</text>
+                </g>
+                <g class="node" onclick="openNode('gnb_ngap')">
+                    <rect class="node-rect" x="750" y="185" width="200" height="75" rx="10" fill="var(--green)" opacity="0.8" />
+                    <text x="850" y="215" text-anchor="middle" fill="white" font-weight="bold" font-size="16">NGAP</text>
+                    <text x="850" y="235" text-anchor="middle" fill="white" font-size="9">NG Application Protocol</text>
+                </g>
+                <g class="node" onclick="openNode('amf_transport')">
+                    <rect class="node-rect" x="750" y="275" width="200" height="65" rx="10" fill="#7a8490" opacity="0.9" />
+                    <text x="850" y="315" text-anchor="middle" fill="white" font-weight="bold" font-size="16">SCTP</text>
+                </g>
+                <g class="node" onclick="openNode('amf_transport')">
+                    <rect class="node-rect" x="750" y="355" width="200" height="65" rx="10" fill="#7a8490" opacity="0.9" />
+                    <text x="850" y="395" text-anchor="middle" fill="white" font-weight="bold" font-size="16">IP</text>
+                </g>
+                <g class="node" onclick="openNode('amf_transport')">
+                    <rect class="node-rect" x="750" y="435" width="200" height="65" rx="10" fill="#606672" opacity="1" />
+                    <text x="850" y="475" text-anchor="middle" fill="white" font-weight="bold" font-size="16">L2 (Data Link)</text>
+                </g>
+                <g class="node" onclick="openNode('amf_transport')">
+                    <rect class="node-rect" x="750" y="515" width="200" height="65" rx="10" fill="#606672" opacity="1" />
+                    <text x="850" y="545" text-anchor="middle" fill="white" font-weight="bold" font-size="16">L1 (Physical)</text>
+                </g>
+            </svg>
+
+            <div class="signature">Vinayak Majhi</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-col">
+                <h3>RRC Functions</h3>
+                <ul>
+                    <li>System Information Broadcasting (SIB1-SIB9)</li>
+                    <li>Paging for Idle/Inactive Mode UEs</li>
+                    <li>RRC Connection Establishment & Control</li>
+                    <li>Radio Bearer Configuration & Modification</li>
+                    <li>Mobility Management and Handover</li>
+                    <li>UE Measurement Configuration & Reporting</li>
+                    <li>Security Activation and Key Derivation</li>
+                </ul>
+            </div>
+            <div class="info-col">
+                <h3>RRC States & Bearers</h3>
+                <ul>
+                    <li><strong>RRC_IDLE:</strong> No RRC connection, cell selection</li>
+                    <li><strong>RRC_INACTIVE:</strong> UE context kept in gNB/Core</li>
+                    <li><strong>RRC_CONNECTED:</strong> Active data/sig connection</li>
+                    <li><strong>SRB0:</strong> CCCH (Messages before security)</li>
+                    <li><strong>SRB1:</strong> DCCH (RRC + piggybacked NAS)</li>
+                    <li><strong>SRB2:</strong> DCCH (NAS messages only)</li>
+                    <li><strong>SRB3:</strong> Dedicated for MR-DC scenarios</li>
+                </ul>
+            </div>
+            <div class="info-col">
+                <h3>Key Interfaces & Specs</h3>
+                <ul>
+                    <li><strong>Uu:</strong> Air interface (UE ↔ gNB)</li>
+                    <li><strong>NG-C:</strong> Control plane (gNB ↔ AMF)</li>
+                    <li><strong>Xn:</strong> Inter-gNB Interface</li>
+                    <li>TS 38.331: RRC Protocol</li>
+                    <li>TS 38.300: NR Architecture</li>
+                    <li>TS 38.321: MAC Protocol</li>
+                    <li>TS 38.323: PDCP Protocol</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <div id="detail-panel">
+        <button class="close-btn" onclick="closeNode()">✕</button>
+        <span id="p-tag" class="panel-tag">Protocol Layer</span>
+        <h2 id="p-title" class="panel-title">Component Name</h2>
+        <div id="p-body" class="panel-content">
+            Detailed technical description will load here...
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(MotionPathPlugin);
+
+        const techData = {
+            ue_nas: {
+                title: "Non-Access Stratum (NAS)",
+                body: "The NAS protocol is the highest logical layer between the UE and the Access and Mobility Management Function (AMF). It manages procedures that are 'transparent' to the radio access network (gNB). Its primary roles include registration management, connection management, session management, and authentication. NAS ensures that the subscriber can identify themselves to the core network and establish secure sessions (PDU sessions) for data transfer. It also handles the 'security mode' commands that establish the encryption used for subsequent NAS and RRC signaling."
+            },
+            ue_rrc: {
+                title: "Radio Resource Control (RRC)",
+                body: "RRC is the 'conductor' of the radio interface stack. Residing in both the UE and the gNB Central Unit (CU), it manages all radio resources. Key responsibilities include the broadcast of System Information (MIB and SIBs), establishment, maintenance, and release of RRC connections, and handover management. 5G NR introduces the 'RRC Inactive' state, allowing UEs to save power while keeping their context stored in the gNB for near-instant reactivation. It maps logical channels to specific radio resources and configures the parameters for lower layers like PDCP, RLC, and MAC."
+            },
+            ue_pdcp: {
+                title: "Packet Data Convergence Protocol (PDCP)",
+                body: "PDCP is the protocol layer responsible for security and header efficiency. In the control plane, it provides ciphering and integrity protection for RRC and NAS messages, ensuring they cannot be intercepted or tampered with over the air. In the user plane, it performs IP Header Compression using the ROHC protocol to maximize spectral efficiency. PDCP also handles sequence numbering and duplicate detection, which is crucial during handovers to ensure that no packets are lost or delivered twice as the UE moves between cells."
+            },
+            ue_rlc: {
+                title: "Radio Link Control (RLC)",
+                body: "RLC ensures the reliable delivery of data packets over the physical air interface. It operates in three modes: Transparent Mode (TM), Unacknowledged Mode (UM), and Acknowledged Mode (AM). In AM mode, RLC uses an Automatic Repeat Request (ARQ) mechanism to retransmit lost packets. It is also responsible for segmentation and concatenation of PDCP service data units (SDUs) to fit into the transport blocks provided by the MAC layer. RLC ensures that the higher layers see a continuous and reliable stream of data despite the noisy nature of wireless communication."
+            },
+            ue_mac: {
+                title: "Medium Access Control (MAC)",
+                body: "MAC is the engine of dynamic radio resource management. It performs multiplexing of logical channels into transport channels and handles Hybrid-ARQ (HARQ) for fast, hardware-level error correction. The MAC layer contains the scheduler, which decides in every millisecond which UEs get to use the available radio bandwidth. It also handles the Random Access (RACH) procedure, which is the gateway for a UE to gain access to the network after power-on or during handover. MAC is the layer that directly translates high-level bandwidth needs into physical resource blocks."
+            },
+            ue_phy: {
+                title: "Physical Layer (PHY)",
+                body: "The PHY layer is where bits are converted into radio waves. In 5G NR, this involves Orthogonal Frequency Division Multiplexing (OFDM) and advanced technologies like massive MIMO and beamforming. The PHY layer manages modulation (up to 256-QAM), channel coding (LDPC for data, Polar for control), and the physical timing of signals. It provides the Uu air interface that physically links the terminal to the base station. Its performance directly determines the ultimate throughput and latency of the 5G connection."
+            },
+            gnb_ngap: {
+                title: "NG Application Protocol (NGAP)",
+                body: "NGAP is the control-plane protocol between the Radio Access Network (gNB) and the 5G Core (AMF). It carries all the messages required to manage the 'NG' interface. Functions include UE context management (establishing the core network's tracking of a user), PDU session management (bridging the core's data path to the base station's tunnels), and transport of NAS messages. NGAP ensures that the gNB and the AMF are always in sync regarding the user's connection status, mobility rules, and assigned slices."
+            },
+            amf_transport: {
+                title: "AMF Transport Stack (SCTP/IP)",
+                body: "The AMF uses a robust transport stack to communicate with gNBs. SCTP (Stream Control Transmission Protocol) is used instead of TCP because it provides multi-homing and multi-streaming, which are vital for carrier-grade reliability. This ensures that signaling messages are delivered in the correct order and are resilient to network path failures. Below SCTP, standard IP (IPv4/v6) is used for routing, supported by Ethernet or other Link Layer (L2) and Physical (L1) technologies. This stack forms the reliable backbone of the 5G Core control plane."
+            }
+        };
+
+        function openNode(key) {
+            const data = techData[key];
+            if(!data) return;
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-body').innerText = data.body;
+            document.getElementById('detail-panel').classList.add('active');
+            gsap.to('.node', { opacity: 0.3, duration: 0.3 });
+            // Re-highlight the clicked element visually
+            gsap.to(event.currentTarget, { opacity: 1, duration: 0.3 });
+        }
+
+        function closeNode() {
+            document.getElementById('detail-panel').classList.remove('active');
+            gsap.to('.node', { opacity: 1, duration: 0.3 });
+        }
+
+        // Initialize animations
+        window.onload = () => {
+            // Animate NAS Signaling flow
+            const nasTL = gsap.timeline({ repeat: -1 });
+            nasTL.set("#part-nas", { visibility: "visible" })
+                 .to("#part-nas", {
+                     motionPath: { path: "#path-nas", align: "#path-nas", alignOrigin: [0.5, 0.5] },
+                     duration: 4,
+                     ease: "power1.inOut"
+                 })
+                 .to("#part-nas", { opacity: 0, duration: 0.5 });
+
+            // Animate RRC Connection flow
+            const rrcTL = gsap.timeline({ repeat: -1, delay: 1 });
+            rrcTL.set("#part-rrc", { visibility: "visible" })
+                 .to("#part-rrc", {
+                     motionPath: { path: "#path-rrc", align: "#path-rrc", alignOrigin: [0.5, 0.5] },
+                     duration: 2.5,
+                     ease: "power1.inOut"
+                 })
+                 .to("#part-rrc", { opacity: 0, duration: 0.5 });
+
+            // Pulse the PHY layer interface to show activity
+            gsap.to(".node-rect", {
+                strokeWidth: 3,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                stagger: 0.1,
+                ease: "sine.inOut"
+            });
+        };
+    </script>
+</body>
+</html>

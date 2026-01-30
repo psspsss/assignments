@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NAS Command Center - Mobility & Session Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+        :root {
+            /* Everforest Dark Palette */
+            --mm-primary: #7fbbb3;   /* Blue */
+            --mm-secondary: #d699b6; /* Purple */
+            --mm-accent: #83c092;    /* Aqua */
+            --mm-glow: rgba(127, 187, 179, 0.4);
+            
+            /* SM Theme Colors */
+            --sm-primary: #a7c080;   /* Green */
+            --sm-secondary: #83c092; /* Aqua */
+            --sm-accent: #dbbc7f;    /* Yellow */
+            --sm-glow: rgba(167, 192, 128, 0.4);
+            
+            /* Current theme */
+            --theme-primary: var(--mm-primary);
+            --theme-secondary: var(--mm-secondary);
+            --theme-glow: var(--mm-glow);
+
+            --bg-dark: #2d353b;
+            --bg-soft: #343e44;
+            --fg-main: #d3c6aa;
+            --fg-dim: #859289;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-dark);
+            color: var(--fg-main);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(167, 192, 128, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(167, 192, 128, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--theme-primary), transparent);
+            box-shadow: 0 0 20px var(--theme-glow);
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.5;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        /* Container */
+        .command-center {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .hud-header {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hud-title {
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px var(--theme-glow);
+            letter-spacing: 0.1em;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 1rem 2rem;
+            background: var(--bg-soft);
+            border: 2px solid rgba(133, 146, 137, 0.2);
+            border-radius: 0.5rem;
+            color: var(--fg-dim);
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .tab-btn:hover::before {
+            left: 100%;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--theme-primary);
+            color: var(--theme-primary);
+            box-shadow: 0 0 20px var(--theme-glow);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+            border-color: var(--theme-primary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px var(--theme-glow);
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(52, 62, 68, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(133, 146, 137, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card {
+            background: rgba(61, 72, 79, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(133, 146, 137, 0.2);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--theme-primary);
+            box-shadow: 0 0 30px var(--theme-glow);
+            transform: translateY(-3px);
+        }
+
+        /* Main Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1280px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 380px;
+            }
+        }
+
+        /* Network Diagram Container */
+        .diagram-container {
+            position: relative;
+            min-height: 600px;
+        }
+
+        .view-container {
+            display: none;
+            opacity: 0;
+        }
+
+        .view-container.active {
+            display: block;
+            animation: fadeInView 0.5s forwards;
+        }
+
+        @keyframes fadeInView {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Network Nodes */
+        .network-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .network-node:hover {
+            filter: brightness(1.2);
+        }
+
+        .node-pulse {
+            animation: nodePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes nodePulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Message Envelope */
+        .message-envelope {
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        /* Signal Path */
+        .signal-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+
+        .signal-path.animate {
+            animation: drawPath 2s ease-in-out forwards;
+        }
+
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Workflow Controls */
+        .workflow-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .workflow-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-soft);
+            border: 2px solid;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .workflow-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .workflow-btn:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .workflow-btn:hover {
+            background: currentColor;
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px currentColor;
+            transform: scale(1.05);
+        }
+
+        .workflow-btn.active {
+            background: currentColor;
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px currentColor, inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Timeline Bar */
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(133, 146, 137, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--theme-glow);
+        }
+
+        /* Side Panel */
+        .side-panel {
+            max-height: 85vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--theme-primary) rgba(61, 72, 79, 0.5);
+        }
+
+        .side-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .side-panel::-webkit-scrollbar-track {
+            background: rgba(61, 72, 79, 0.5);
+            border-radius: 4px;
+        }
+
+        .side-panel::-webkit-scrollbar-thumb {
+            background: var(--theme-primary);
+            border-radius: 4px;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: rgba(45, 53, 59, 0.95);
+            border: 1px solid var(--theme-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+            font-size: 0.875rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--theme-glow);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 50;
+            max-width: 250px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.25rem 0;
+            font-size: 0.75rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        /* Signature Styling */
+        .signature {
+            position: fixed;
+            bottom: 1rem;
+            right: 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--fg-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .signature span {
+            color: var(--mm-primary);
+            font-weight: 700;
+        }
+
+        /* State Machine Ring */
+        .state-ring {
+            fill: none;
+            stroke-width: 3;
+            stroke-dasharray: 5, 5;
+            animation: rotate 10s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* QoS Flow Lanes */
+        .qos-lane {
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .qos-lane.active {
+            opacity: 1;
+            animation: flowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes flowPulse {
+            0%, 100% { stroke-width: 2; }
+            50% { stroke-width: 4; }
+        }
+
+        /* Icons */
+        .icon-shield {
+            filter: drop-shadow(0 0 10px var(--mm-accent));
+        }
+
+        .icon-tunnel {
+            filter: drop-shadow(0 0 10px var(--sm-primary));
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .workflow-btn {
+                font-size: 0.75rem;
+                padding: 0.5rem 1rem;
+            }
+            
+            .legend {
+                display: none;
+            }
+        }
+
+        /* Fade animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Status indicator */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-grid"></div>
+    <div class="scan-line"></div>
+
+    <!-- Main Command Center -->
+    <div class="command-center">
+        <!-- Header -->
+        <header class="hud-header">
+            <h1 class="hud-title">5G NAS COMMAND CENTER</h1>
+            <p class="text-slate-400 text-sm md:text-base mt-2">Non-Access Stratum Protocol Intelligence</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="mm">
+                <span>⚡</span> Mobility Management
+            </button>
+            <button class="tab-btn" data-tab="sm">
+                <span>🌐</span> Session Management
+            </button>
+        </nav>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Main Diagram Area -->
+            <div class="glass-panel p-6">
+                <div class="diagram-container">
+                    <!-- MM View -->
+                    <div id="mmView" class="view-container active">
+                        <h2 class="text-2xl font-bold mb-4" style="color: var(--mm-primary);">
+                            Mobility Management (5GMM)
+                        </h2>
+                        <svg id="mmDiagram" viewBox="0 0 1400 700" class="w-full" style="max-height: 700px;">
+                            <!-- Definitions -->
+                            <defs>
+                                <linearGradient id="mmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#7fbbb3;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#d699b6;stop-opacity:1" />
+                                </linearGradient>
+                                
+                                <filter id="glow-mm">
+                                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+
+                                <marker id="arrowhead-mm" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                    <polygon points="0 0, 10 3, 0 6" fill="#7fbbb3" />
+                                </marker>
+                            </defs>
+
+                            <!-- Background Grid Accent -->
+                            <rect width="1400" height="700" fill="rgba(127, 187, 179, 0.02)"/>
+                            
+                            <!-- N1 Interface Arc -->
+                            <path id="mmN1Path" d="M 200 200 Q 700 50 1200 200" 
+                                  stroke="url(#mmGrad)" stroke-width="3" fill="none" 
+                                  stroke-dasharray="10,5" opacity="0.5" filter="url(#glow-mm)"/>
+                            <text x="700" y="40" text-anchor="middle" class="text-sm font-bold" fill="#7fbbb3">
+                                N1 Interface (MM Signaling)
+                            </text>
+
+                            <!-- UE Node -->
+                            <g id="mmUE" class="network-node" data-tooltip="User Equipment: Originates MM procedures">
+                                <rect x="50" y="150" width="300" height="400" rx="15" 
+                                      class="glass-panel" fill="rgba(45, 53, 59, 0.8)" 
+                                      stroke="#7fbbb3" stroke-width="2"/>
+                                <text x="200" y="185" text-anchor="middle" class="text-2xl font-bold" fill="#d3c6aa">UE</text>
+                                <text x="200" y="210" text-anchor="middle" class="text-xs" fill="#859289">User Equipment</text>
+                                
+                                <!-- MM Block -->
+                                <g id="mmUEBlock">
+                                    <rect x="80" y="240" width="240" height="90" rx="8" 
+                                          fill="rgba(127, 187, 179, 0.1)" stroke="#7fbbb3" stroke-width="2"/>
+                                    <text x="200" y="270" text-anchor="middle" class="text-lg font-bold" fill="#7fbbb3">
+                                        MM / 5GMM
+                                    </text>
+                                    <text x="200" y="295" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                        Mobility Management
+                                    </text>
+                                    
+                                    <!-- State Indicator -->
+                                    <circle cx="200" cy="310" r="4" class="status-dot" fill="#a7c080"/>
+                                    <text x="200" y="325" text-anchor="middle" class="text-xs" fill="#a7c080">
+                                        RM-REGISTERED
+                                    </text>
+                                </g>
+
+                                <!-- Registration State Machine Ring -->
+                                <circle cx="200" cy="430" r="60" class="state-ring" stroke="#d699b6"/>
+                                <text x="200" y="425" text-anchor="middle" class="text-xs font-bold" fill="#d699b6">
+                                    REGISTRATION
+                                </text>
+                                <text x="200" y="445" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                    STATE MACHINE
+                                </text>
+
+                                <!-- RRC Layer -->
+                                <rect x="80" y="500" width="240" height="30" rx="5" 
+                                      fill="rgba(214, 153, 182, 0.15)" stroke="#d699b6" stroke-width="1"/>
+                                <text x="200" y="520" text-anchor="middle" class="text-xs" fill="#d699b6">RRC</text>
+                            </g>
+
+                            <!-- gNB Node (Faded) -->
+                            <g id="mmGNB" class="network-node" opacity="0.4" data-tooltip="gNB: Transparent relay - does not process MM">
+                                <rect x="550" y="250" width="250" height="250" rx="15" 
+                                      class="glass-panel" fill="rgba(45, 53, 59, 0.5)" 
+                                      stroke="#859289" stroke-width="2" stroke-dasharray="5,5"/>
+                                <text x="675" y="285" text-anchor="middle" class="text-xl font-bold" fill="#d3c6aa">gNB</text>
+                                <text x="675" y="310" text-anchor="middle" class="text-xs" fill="#859289">
+                                    5G Base Station
+                                </text>
+                                <text x="675" y="330" text-anchor="middle" class="text-xs font-bold" fill="#dbbc7f">
+                                    ⚠ TRANSPARENT RELAY
+                                </text>
+                                
+                                <!-- Pass-through indicator -->
+                                <rect x="580" y="360" width="190" height="50" rx="8" 
+                                      fill="rgba(133, 146, 137, 0.1)" stroke="#859289" stroke-width="1" stroke-dasharray="3,3"/>
+                                <text x="675" y="385" text-anchor="middle" class="text-sm" fill="#859289">MM Pass-Through</text>
+                                <text x="675" y="400" text-anchor="middle" class="text-xs" fill="#d3c6aa">Not Terminated</text>
+
+                                <text x="675" y="470" text-anchor="middle" class="text-xs" fill="#e67e80">NG-C / N2</text>
+                            </g>
+
+                            <!-- AMF Node -->
+                            <g id="mmAMF" class="network-node" data-tooltip="AMF: Access & Mobility Management Function - Terminates MM">
+                                <rect x="1050" y="150" width="300" height="400" rx="15" 
+                                      class="glass-panel" fill="rgba(45, 53, 59, 0.8)" 
+                                      stroke="#7fbbb3" stroke-width="2"/>
+                                <text x="1200" y="185" text-anchor="middle" class="text-2xl font-bold" fill="#7fbbb3">AMF</text>
+                                <text x="1200" y="210" text-anchor="middle" class="text-xs" fill="#859289">
+                                    Access & Mobility Mgmt
+                                </text>
+
+                                <!-- MM Processing Block -->
+                                <g id="mmAMFBlock">
+                                    <rect x="1080" y="240" width="240" height="90" rx="8" 
+                                          fill="rgba(127, 187, 179, 0.1)" stroke="#7fbbb3" stroke-width="2"/>
+                                    <text x="1200" y="270" text-anchor="middle" class="text-lg font-bold" fill="#d3c6aa">
+                                        MM / 5GMM
+                                    </text>
+                                    <text x="1200" y="295" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                        Mobility Processing
+                                    </text>
+
+                                    <!-- Active Indicator -->
+                                    <circle cx="1200" cy="310" r="4" class="status-dot" fill="#a7c080"/>
+                                    <text x="1200" y="325" text-anchor="middle" class="text-xs" fill="#a7c080">
+                                        PROCESSING
+                                    </text>
+                                </g>
+
+                                <!-- Authentication Shield -->
+                                <g class="icon-shield" transform="translate(1150, 360)">
+                                    <path d="M 50 10 L 50 60 Q 50 80 30 90 Q 10 80 10 60 L 10 10 Z" 
+                                          fill="none" stroke="#83c092" stroke-width="2"/>
+                                    <text x="30" y="55" text-anchor="middle" class="text-xs font-bold" fill="#83c092">
+                                        5G-AKA
+                                    </text>
+                                </g>
+
+                                <!-- Tracking Area Indicator -->
+                                <rect x="1080" y="470" width="240" height="60" rx="8" 
+                                      fill="rgba(219, 188, 127, 0.15)" stroke="#dbbc7f" stroke-width="1"/>
+                                <text x="1200" y="495" text-anchor="middle" class="text-sm font-bold" fill="#dbbc7f">
+                                    Tracking Areas
+                                </text>
+                                <text x="1200" y="515" text-anchor="middle" class="text-xs" fill="#dbbc7f">
+                                    TAI List: [001, 002, 003]
+                                </text>
+                            </g>
+
+                            <!-- Signaling Paths -->
+                            <line x1="350" y1="350" x2="550" y2="350" stroke="#d699b6" stroke-width="2" opacity="0.5"/>
+                            <line x1="800" y1="350" x2="1050" y2="350" stroke="#e67e80" stroke-width="2" opacity="0.5"/>
+
+                            <!-- Message Envelope Container -->
+                            <g id="mmMessageContainer"></g>
+
+                            <!-- Paging Arc (hidden initially) -->
+                            <g id="mmPagingArc" opacity="0">
+                                <path d="M 1200 350 Q 1300 250 1200 150" 
+                                      stroke="#dbbc7f" stroke-width="3" fill="none" 
+                                      stroke-dasharray="5,5" filter="url(#glow-mm)"/>
+                                <text x="1250" y="250" class="text-xs font-bold" fill="#dbbc7f">
+                                    PAGING
+                                </text>
+                            </g>
+                        </svg>
+
+                        <!-- MM Workflow Controls -->
+                        <div class="workflow-controls">
+                            <button class="workflow-btn" data-workflow="mm-registration" 
+                                    style="border-color: #7fbbb3; color: #7fbbb3;">
+                                Registration
+                            </button>
+                            <button class="workflow-btn" data-workflow="mm-authentication" 
+                                    style="border-color: #83c092; color: #83c092;">
+                                Authentication
+                            </button>
+                            <button class="workflow-btn" data-workflow="mm-security" 
+                                    style="border-color: #83c092; color: #83c092;">
+                                Security Setup
+                            </button>
+                            <button class="workflow-btn" data-workflow="mm-tau" 
+                                    style="border-color: #dbbc7f; color: #dbbc7f;">
+                                Tracking Area Update
+                            </button>
+                            <button class="workflow-btn" data-workflow="mm-paging" 
+                                    style="border-color: #dbbc7f; color: #dbbc7f;">
+                                Paging
+                            </button>
+                            <button class="workflow-btn" data-workflow="mm-deregistration" 
+                                    style="border-color: #7fbbb3; color: #7fbbb3;">
+                                Deregistration
+                            </button>
+                            <button class="workflow-btn" data-workflow="reset" 
+                                    style="border-color: #e67e80; color: #e67e80;">
+                                Reset
+                            </button>
+                        </div>
+
+                        <!-- Timeline Bar -->
+                        <div class="timeline-bar">
+                            <div id="mmTimelineProgress" class="timeline-progress"></div>
+                        </div>
+                    </div>
+
+                    <!-- SM View -->
+                    <div id="smView" class="view-container">
+                        <h2 class="text-2xl font-bold mb-4" style="color: var(--sm-primary);">
+                            Session Management (5GSM)
+                        </h2>
+                        <svg id="smDiagram" viewBox="0 0 1400 700" class="w-full" style="max-height: 700px;">
+                            <!-- Definitions -->
+                            <defs>
+                                <linearGradient id="smGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#a7c080;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#83c092;stop-opacity:1" />
+                                </linearGradient>
+                                
+                                <filter id="glow-sm">
+                                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+
+                                <marker id="arrowhead-sm" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                    <polygon points="0 0, 10 3, 0 6" fill="#a7c080" />
+                                </marker>
+                            </defs>
+
+                            <!-- Background Grid Accent -->
+                            <rect width="1400" height="700" fill="rgba(167, 192, 128, 0.02)"/>
+                            
+                            <!-- N1 Interface Arc (SM) -->
+                            <path id="smN1Path" d="M 200 200 Q 700 50 1200 200" 
+                                  stroke="url(#smGrad)" stroke-width="3" fill="none" 
+                                  stroke-dasharray="10,5" opacity="0.5" filter="url(#glow-sm)"/>
+                            <text x="700" y="40" text-anchor="middle" class="text-sm font-bold" fill="#a7c080">
+                                N1 Interface (SM Signaling)
+                            </text>
+
+                            <!-- UE Node -->
+                            <g id="smUE" class="network-node" data-tooltip="User Equipment: Initiates session requests">
+                                <rect x="50" y="150" width="300" height="400" rx="15" 
+                                      class="glass-panel" fill="rgba(45, 53, 59, 0.8)" 
+                                      stroke="#a7c080" stroke-width="2"/>
+                                <text x="200" y="185" text-anchor="middle" class="text-2xl font-bold" fill="#a7c080">UE</text>
+                                <text x="200" y="210" text-anchor="middle" class="text-xs" fill="#859289">User Equipment</text>
+                                
+                                <!-- SM Block -->
+                                <g id="smUEBlock">
+                                    <rect x="80" y="240" width="240" height="90" rx="8" 
+                                          fill="rgba(167, 192, 128, 0.1)" stroke="#a7c080" stroke-width="2"/>
+                                    <text x="200" y="270" text-anchor="middle" class="text-lg font-bold" fill="#a7c080">
+                                        SM / 5GSM
+                                    </text>
+                                    <text x="200" y="295" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                        Session Management
+                                    </text>
+                                    
+                                    <!-- Session Indicator -->
+                                    <circle cx="200" cy="310" r="4" class="status-dot" fill="#a7c080"/>
+                                    <text x="200" y="325" text-anchor="middle" class="text-xs" fill="#a7c080">
+                                        PDU SESSION ACTIVE
+                                    </text>
+                                </g>
+
+                                <!-- Session Lifecycle Loop -->
+                                <g transform="translate(200, 420)">
+                                    <circle cx="0" cy="0" r="50" fill="none" stroke="#83c092" 
+                                            stroke-width="2" stroke-dasharray="5,5" class="node-pulse"/>
+                                    <text x="0" y="-5" text-anchor="middle" class="text-xs font-bold" fill="#83c092">
+                                        SESSION
+                                    </text>
+                                    <text x="0" y="10" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                        LIFECYCLE
+                                    </text>
+                                </g>
+
+                                <!-- IP Address Glow -->
+                                <rect x="80" y="500" width="240" height="30" rx="5" 
+                                      fill="rgba(131, 192, 146, 0.15)" stroke="#83c092" stroke-width="1"/>
+                                <text x="200" y="520" text-anchor="middle" class="text-xs font-bold" fill="#83c092">
+                                    IP: 10.0.1.100
+                                </text>
+                            </g>
+
+                            <!-- gNB Node (Faded) -->
+                            <g id="smGNB" class="network-node" opacity="0.4" data-tooltip="gNB: Transparent relay - does not process SM">
+                                <rect x="550" y="250" width="250" height="250" rx="15" 
+                                      class="glass-panel" fill="rgba(45, 53, 59, 0.5)" 
+                                      stroke="#859289" stroke-width="2" stroke-dasharray="5,5"/>
+                                <text x="675" y="285" text-anchor="middle" class="text-xl font-bold" fill="#d3c6aa">gNB</text>
+                                <text x="675" y="310" text-anchor="middle" class="text-xs" fill="#859289">
+                                    5G Base Station
+                                </text>
+                                <text x="675" y="330" text-anchor="middle" class="text-xs font-bold" fill="#dbbc7f">
+                                    ⚠ TRANSPARENT RELAY
+                                </text>
+                                
+                                <!-- Pass-through indicator -->
+                                <rect x="580" y="360" width="190" height="50" rx="8" 
+                                      fill="rgba(133, 146, 137, 0.1)" stroke="#859289" stroke-width="1" stroke-dasharray="3,3"/>
+                                <text x="675" y="385" text-anchor="middle" class="text-sm" fill="#859289">SM Pass-Through</text>
+                                <text x="675" y="400" text-anchor="middle" class="text-xs" fill="#d3c6aa">Not Terminated</text>
+
+                                <text x="675" y="470" text-anchor="middle" class="text-xs" fill="#e67e80">NG-C / N2</text>
+                            </g>
+
+                            <!-- SMF Node -->
+                            <g id="smSMF" class="network-node" data-tooltip="SMF: Session Management Function - Terminates SM">
+                                <rect x="1050" y="150" width="300" height="400" rx="15" 
+                                      class="glass-panel" fill="rgba(45, 53, 59, 0.8)" 
+                                      stroke="#a7c080" stroke-width="2"/>
+                                <text x="1200" y="185" text-anchor="middle" class="text-2xl font-bold" fill="#a7c080">SMF</text>
+                                <text x="1200" y="210" text-anchor="middle" class="text-xs" fill="#859289">
+                                    Session Management Func
+                                </text>
+
+                                <!-- SM Processing Block -->
+                                <g id="smSMFBlock">
+                                    <rect x="1080" y="240" width="240" height="90" rx="8" 
+                                          fill="rgba(167, 192, 128, 0.1)" stroke="#a7c080" stroke-width="2"/>
+                                    <text x="1200" y="270" text-anchor="middle" class="text-lg font-bold" fill="#a7c080">
+                                        SM / 5GSM
+                                    </text>
+                                    <text x="1200" y="295" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                        Session Processing
+                                    </text>
+
+                                    <!-- Active Indicator -->
+                                    <circle cx="1200" cy="310" r="4" class="status-dot" fill="#a7c080"/>
+                                    <text x="1200" y="325" text-anchor="middle" class="text-xs" fill="#a7c080">
+                                        PROCESSING
+                                    </text>
+                                </g>
+
+                                <!-- PDU Session Tunnel -->
+                                <g class="icon-tunnel" transform="translate(1080, 360)">
+                                    <rect x="0" y="0" width="240" height="60" rx="8" 
+                                          fill="rgba(131, 192, 146, 0.1)" stroke="#83c092" stroke-width="2"/>
+                                    <text x="120" y="25" text-anchor="middle" class="text-sm font-bold" fill="#83c092">
+                                        PDU Session Tunnel
+                                    </text>
+                                    <text x="120" y="45" text-anchor="middle" class="text-xs" fill="#d3c6aa">
+                                        → UPF → Data Network
+                                    </text>
+                                </g>
+
+                                <!-- QoS Flows -->
+                                <g transform="translate(1080, 450)">
+                                    <text x="120" y="0" text-anchor="middle" class="text-sm font-bold" fill="#83c092">
+                                        QoS Flows
+                                    </text>
+                                    <line id="qosFlow1" x1="20" y1="20" x2="220" y2="20" 
+                                          class="qos-lane" stroke="#a7c080" stroke-width="2"/>
+                                    <text x="10" y="25" class="text-xs" fill="#a7c080">GBR</text>
+                                    
+                                    <line id="qosFlow2" x1="20" y1="40" x2="220" y2="40" 
+                                          class="qos-lane" stroke="#83c092" stroke-width="2"/>
+                                    <text x="10" y="45" class="text-xs" fill="#83c092">Non-GBR</text>
+                                    
+                                    <line id="qosFlow3" x1="20" y1="60" x2="220" y2="60" 
+                                          class="qos-lane" stroke="#83c092" stroke-width="2"/>
+                                    <text x="10" y="65" class="text-xs" fill="#d3c6aa">Default</text>
+                                </g>
+                            </g>
+
+                            <!-- Signaling Paths -->
+                            <line x1="350" y1="350" x2="550" y2="350" stroke="#83c092" stroke-width="2" opacity="0.5"/>
+                            <line x1="800" y1="350" x2="1050" y2="350" stroke="#e67e80" stroke-width="2" opacity="0.5"/>
+
+                            <!-- Message Envelope Container -->
+                            <g id="smMessageContainer"></g>
+                        </svg>
+
+                        <!-- SM Workflow Controls -->
+                        <div class="workflow-controls">
+                            <button class="workflow-btn" data-workflow="sm-establish" 
+                                    style="border-color: #a7c080; color: #a7c080;">
+                                PDU Session Establishment
+                            </button>
+                            <button class="workflow-btn" data-workflow="sm-qos" 
+                                    style="border-color: #83c092; color: #83c092;">
+                                QoS Flow Creation
+                            </button>
+                            <button class="workflow-btn" data-workflow="sm-modify" 
+                                    style="border-color: #83c092; color: #83c092;">
+                                Session Modification
+                            </button>
+                            <button class="workflow-btn" data-workflow="sm-release" 
+                                    style="border-color: #a7c080; color: #a7c080;">
+                                Session Release
+                            </button>
+                            <button class="workflow-btn" data-workflow="reset" 
+                                    style="border-color: #e67e80; color: #e67e80;">
+                                Reset
+                            </button>
+                        </div>
+
+                        <!-- Timeline Bar -->
+                        <div class="timeline-bar">
+                            <div id="smTimelineProgress" class="timeline-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div class="glass-panel p-6 side-panel">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span style="color: var(--theme-primary);">📊</span>
+                    <span>Intelligence Panel</span>
+                </h2>
+                <div id="explanationContent">
+                    <!-- Default content will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Legend -->
+        <div class="legend glass-card p-3">
+            <h3 class="text-xs font-bold mb-2 uppercase" style="color: var(--theme-primary);">Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--theme-primary);"></div>
+                <span>NAS Signaling</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #d699b6;"></div>
+                <span>RRC Transport</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e67e80;"></div>
+                <span>NG-C / N2</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #859289;"></div>
+                <span>Transparent Relay</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+        Core Intelligence by: <span>58618-Vinayak Majhi</span>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        // ==================== GLOBAL STATE ====================
+        let currentTab = 'mm';
+        let currentWorkflow = null;
+        let animationTimeline = null;
+
+        // ==================== WORKFLOW DEFINITIONS ====================
+        const workflows = {
+            // MOBILITY MANAGEMENT WORKFLOWS
+            'mm-registration': {
+                title: 'UE Registration Procedure',
+                color: '#7fbbb3',
+                steps: [
+                    { from: 'UE', to: 'AMF', msg: 'Registration Request', desc: 'UE initiates registration with network capabilities and 5G-S-TMSI', delay: 0 },
+                    { from: 'AMF', to: 'UE', msg: 'Identity Request', desc: 'AMF requests permanent identity (SUPI)', delay: 2000 },
+                    { from: 'UE', to: 'AMF', msg: 'Identity Response (SUCI)', desc: 'UE provides encrypted SUCI (Subscription Concealed Identifier)', delay: 4000 },
+                    { from: 'AMF', to: 'UE', msg: 'Authentication Request', desc: 'Initiates 5G-AKA with RAND and AUTN', delay: 6000 },
+                    { from: 'UE', to: 'AMF', msg: 'Authentication Response', desc: 'UE sends RES after validating AUTN', delay: 8000 },
+                    { from: 'AMF', to: 'UE', msg: 'Security Mode Command', desc: 'Activates NAS encryption (NEA) and integrity (NIA)', delay: 10000 },
+                    { from: 'UE', to: 'AMF', msg: 'Security Mode Complete', desc: 'First integrity-protected message', delay: 12000 },
+                    { from: 'AMF', to: 'UE', msg: 'Registration Accept', desc: '5G-GUTI assigned, TAI list provided, RM-REGISTERED state', delay: 14000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #7fbbb3;">Registration Procedure</h3>
+                    <p class="text-sm text-slate-300 mb-3">Establishes UE's connection to 5G Core Network.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400">Trigger:</strong> UE power-on, new coverage area
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400">Key Steps:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• Identity concealment (SUCI)</li>
+                                <li>• Mutual authentication (5G-AKA)</li>
+                                <li>• Security activation (NEA/NIA)</li>
+                                <li>• 5G-GUTI assignment</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400">Outcome:</strong> UE enters RM-REGISTERED state
+                        </div>
+                    </div>
+                `
+            },
+            
+            'mm-authentication': {
+                title: '5G-AKA Authentication',
+                color: '#83c092',
+                steps: [
+                    { from: 'AMF', to: 'UE', msg: 'Authentication Request (RAND, AUTN)', desc: 'Challenge with random number and auth token', delay: 0 },
+                    { from: 'UE', to: 'UE', msg: 'Verify AUTN', desc: 'UE validates network authenticity using USIM', delay: 2000 },
+                    { from: 'UE', to: 'UE', msg: 'Compute RES, CK, IK', desc: 'Calculate response and derive keys', delay: 4000 },
+                    { from: 'UE', to: 'AMF', msg: 'Authentication Response (RES)', desc: 'Send authentication result', delay: 6000 },
+                    { from: 'AMF', to: 'AMF', msg: 'Verify RES = XRES', desc: 'Compare with expected response', delay: 8000 },
+                    { from: 'AMF', to: 'UE', msg: 'Authentication Success', desc: 'Mutual authentication complete, keys K_AMF derived', delay: 10000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #83c092;">5G-AKA Authentication</h3>
+                    <p class="text-sm text-slate-300 mb-3">Mutual authentication using Authentication and Key Agreement.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-cyan-400">Security Properties:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• Mutual authentication (UE ↔ Network)</li>
+                                <li>• Key derivation (K_AUSF, K_SEAF, K_AMF)</li>
+                                <li>• Protection against replay attacks</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-cyan-400">Parameters:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• RAND: Random challenge (128 bits)</li>
+                                <li>• AUTN: Authentication token</li>
+                                <li>• RES/XRES: Response values</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+
+            'mm-security': {
+                title: 'NAS Security Mode Setup',
+                color: '#83c092',
+                steps: [
+                    { from: 'AMF', to: 'UE', msg: 'Security Mode Command', desc: 'Selects encryption (NEA) and integrity (NIA) algorithms', delay: 0 },
+                    { from: 'UE', to: 'UE', msg: 'Activate NAS Security', desc: 'Enable selected algorithms with K_NASenc and K_NASint', delay: 2000 },
+                    { from: 'UE', to: 'AMF', msg: 'Security Mode Complete', desc: 'First integrity-protected & encrypted message', delay: 4000 },
+                    { from: 'AMF', to: 'AMF', msg: 'Verify Integrity MAC', desc: 'Validate message authentication code', delay: 6000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #83c092;">Security Mode Setup</h3>
+                    <p class="text-sm text-slate-300 mb-3">Activates NAS-level encryption and integrity protection.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-cyan-400">Encryption Algorithms:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• NEA0: No encryption</li>
+                                <li>• NEA1: SNOW 3G</li>
+                                <li>• NEA2: AES-CTR</li>
+                                <li>• NEA3: ZUC</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-cyan-400">Integrity Algorithms:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• NIA1: SNOW 3G</li>
+                                <li>• NIA2: AES-CMAC</li>
+                                <li>• NIA3: ZUC</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+
+            'mm-tau': {
+                title: 'Tracking Area Update',
+                color: '#dbbc7f',
+                steps: [
+                    { from: 'UE', to: 'UE', msg: 'Detect New TA', desc: 'UE enters Tracking Area not in TAI list', delay: 0 },
+                    { from: 'UE', to: 'AMF', msg: 'Registration Request (Mobility)', desc: 'Mobility registration update with last visited TAI', delay: 2000 },
+                    { from: 'AMF', to: 'AMF', msg: 'Validate Context', desc: 'Verify UE registration and security context', delay: 4000 },
+                    { from: 'AMF', to: 'UE', msg: 'Registration Accept (TAI List)', desc: 'Provides updated list of allowed Tracking Areas', delay: 6000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #dbbc7f;">Tracking Area Update</h3>
+                    <p class="text-sm text-slate-300 mb-3">Updates UE location when moving between Tracking Areas.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-yellow-400">Triggers:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• UE enters new TA not in list</li>
+                                <li>• Periodic TAU timer expires</li>
+                                <li>• After RRC_INACTIVE</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-yellow-400">Purpose:</strong> Network tracks UE approximate location for efficient paging
+                        </div>
+                    </div>
+                `
+            },
+
+            'mm-paging': {
+                title: 'Paging Procedure',
+                color: '#dbbc7f',
+                steps: [
+                    { from: 'AMF', to: 'AMF', msg: 'Incoming Data/Call', desc: 'Network has mobile-terminated traffic for idle UE', delay: 0 },
+                    { from: 'AMF', to: 'gNB', msg: 'Paging (N2)', desc: 'AMF pages all cells in registered Tracking Areas', delay: 2000 },
+                    { from: 'gNB', to: 'UE', msg: 'Paging (RRC)', desc: 'gNB broadcasts paging message with 5G-S-TMSI', delay: 4000 },
+                    { from: 'UE', to: 'AMF', msg: 'Service Request', desc: 'UE responds and requests NAS signaling connection', delay: 6000 },
+                    { from: 'AMF', to: 'UE', msg: 'Service Accept', desc: 'Connection established, pending traffic delivered', delay: 8000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #dbbc7f;">Paging Procedure</h3>
+                    <p class="text-sm text-slate-300 mb-3">Locates and alerts idle UE for mobile-terminated services.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-yellow-400">Triggers:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• Incoming voice/video call</li>
+                                <li>• Downlink data arrival</li>
+                                <li>• SMS delivery</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-yellow-400">Coverage:</strong> All cells in UE's registered Tracking Areas
+                        </div>
+                    </div>
+                `,
+                specialEffect: 'paging'
+            },
+
+            'mm-deregistration': {
+                title: 'Deregistration Procedure',
+                color: '#7fbbb3',
+                steps: [
+                    { from: 'UE', to: 'AMF', msg: 'Deregistration Request', desc: 'UE or network initiates deregistration', delay: 0 },
+                    { from: 'AMF', to: 'AMF', msg: 'Release PDU Sessions', desc: 'Terminate all active data sessions', delay: 2000 },
+                    { from: 'AMF', to: 'AMF', msg: 'Delete Security Context', desc: 'Remove NAS keys and authentication data', delay: 4000 },
+                    { from: 'AMF', to: 'UE', msg: 'Deregistration Accept', desc: 'Confirms successful deregistration', delay: 6000 },
+                    { from: 'UE', to: 'UE', msg: 'Enter RM-DEREGISTERED', desc: 'UE returns to deregistered state', delay: 8000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #7fbbb3;">Deregistration Procedure</h3>
+                    <p class="text-sm text-slate-300 mb-3">Terminates UE's registration with 5G network.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400">Types:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• UE-initiated: Power-off, user action</li>
+                                <li>• Network-initiated: Admin, subscription expired</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400">Effects:</strong> All sessions released, contexts deleted
+                        </div>
+                    </div>
+                `
+            },
+
+            // SESSION MANAGEMENT WORKFLOWS
+            'sm-establish': {
+                title: 'PDU Session Establishment',
+                color: '#a7c080',
+                steps: [
+                    { from: 'UE', to: 'SMF', msg: 'PDU Session Establishment Request', desc: 'Requests session with DNN, S-NSSAI, PDU session type', delay: 0 },
+                    { from: 'SMF', to: 'SMF', msg: 'Select UPF', desc: 'Choose User Plane Function based on DNN and location', delay: 2000 },
+                    { from: 'SMF', to: 'SMF', msg: 'Allocate IP Address', desc: 'Assign IPv4/IPv6 address from pool', delay: 4000 },
+                    { from: 'SMF', to: 'UPF', msg: 'N4 Session Establishment', desc: 'Configure UPF with packet detection and forwarding rules', delay: 6000 },
+                    { from: 'SMF', to: 'UE', msg: 'PDU Session Establishment Accept', desc: 'Provides IP address, QoS rules, session-AMBR', delay: 8000 },
+                    { from: 'UE', to: 'UE', msg: 'Configure IP Interface', desc: 'Activate network interface with assigned address', delay: 10000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #a7c080;">PDU Session Establishment</h3>
+                    <p class="text-sm text-slate-300 mb-3">Creates data connection between UE and Data Network.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400">Session Parameters:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• PDU Type: IPv4, IPv6, Ethernet</li>
+                                <li>• DNN: Data Network Name</li>
+                                <li>• S-NSSAI: Network slice identifier</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400">Resources Allocated:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• IP address from pool</li>
+                                <li>• Default QoS Flow</li>
+                                <li>• Session-AMBR limit</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                specialEffect: 'tunnel'
+            },
+
+            'sm-qos': {
+                title: 'QoS Flow Creation',
+                color: '#83c092',
+                steps: [
+                    { from: 'SMF', to: 'UE', msg: 'PDU Session Modification Command', desc: 'Add QoS Flow with QFI, 5QI, GFBR, MFBR', delay: 0 },
+                    { from: 'UE', to: 'UE', msg: 'Apply QoS Rules', desc: 'Install packet filters and QoS parameters', delay: 2000 },
+                    { from: 'SMF', to: 'UPF', msg: 'N4 Session Modification', desc: 'Update UPF with new QoS enforcement rules', delay: 4000 },
+                    { from: 'UE', to: 'SMF', msg: 'PDU Session Modification Complete', desc: 'Confirms QoS Flow activation', delay: 6000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #83c092;">QoS Flow Creation</h3>
+                    <p class="text-sm text-slate-300 mb-3">Establishes quality-of-service differentiation within PDU session.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-teal-400">QoS Parameters:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• 5QI: Standardized QoS profile (1-127)</li>
+                                <li>• GFBR/MFBR: Bit rate guarantees</li>
+                                <li>• Priority: Packet scheduling priority</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-teal-400">Flow Types:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• GBR: Guaranteed bit rate (VoIP)</li>
+                                <li>• Non-GBR: Best effort (web)</li>
+                                <li>• Delay-critical GBR (URLLC)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                specialEffect: 'qos'
+            },
+
+            'sm-modify': {
+                title: 'Session Modification',
+                color: '#83c092',
+                steps: [
+                    { from: 'UE', to: 'SMF', msg: 'PDU Session Modification Request', desc: 'Request changes to QoS, filters, or parameters', delay: 0 },
+                    { from: 'SMF', to: 'SMF', msg: 'Validate Modification', desc: 'Check policy and resource availability', delay: 2000 },
+                    { from: 'SMF', to: 'UPF', msg: 'N4 Session Modification', desc: 'Update packet forwarding rules in UPF', delay: 4000 },
+                    { from: 'SMF', to: 'UE', msg: 'PDU Session Modification Command', desc: 'Provide updated QoS rules and parameters', delay: 6000 },
+                    { from: 'UE', to: 'SMF', msg: 'PDU Session Modification Complete', desc: 'Confirms modification applied', delay: 8000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #83c092;">Session Modification</h3>
+                    <p class="text-sm text-slate-300 mb-3">Updates existing PDU session without teardown.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-cyan-400">Modification Types:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• Add/remove QoS Flows</li>
+                                <li>• Update QoS parameters</li>
+                                <li>• Change packet filters</li>
+                                <li>• Modify session-AMBR</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+
+            'sm-release': {
+                title: 'PDU Session Release',
+                color: '#a7c080',
+                steps: [
+                    { from: 'UE', to: 'SMF', msg: 'PDU Session Release Request', desc: 'UE or network initiates session termination', delay: 0 },
+                    { from: 'SMF', to: 'UPF', msg: 'N4 Session Deletion', desc: 'Remove all packet forwarding rules from UPF', delay: 2000 },
+                    { from: 'SMF', to: 'SMF', msg: 'Release IP Address', desc: 'Return IP address to pool', delay: 4000 },
+                    { from: 'SMF', to: 'UE', msg: 'PDU Session Release Command', desc: 'Confirms session termination', delay: 6000 },
+                    { from: 'UE', to: 'UE', msg: 'Deactivate IP Interface', desc: 'Remove network interface configuration', delay: 8000 }
+                ],
+                explanation: `
+                    <h3 class="text-lg font-bold mb-3" style="color: #a7c080;">Session Release</h3>
+                    <p class="text-sm text-slate-300 mb-3">Terminates PDU session and releases resources.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400">Triggers:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• User disconnection</li>
+                                <li>• Inactivity timeout</li>
+                                <li>• Policy enforcement</li>
+                                <li>• UE deregistration</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400">Cleanup:</strong> All QoS flows deleted, IP released, UPF resources freed
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // ==================== TAB SWITCHING ====================
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const mmView = document.getElementById('mmView');
+        const smView = document.getElementById('smView');
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tab = this.getAttribute('data-tab');
+                switchTab(tab);
+            });
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update active tab button
+            tabButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+            });
+
+            // Update CSS variables for theme
+            const root = document.documentElement;
+            if (tab === 'mm') {
+                root.style.setProperty('--theme-primary', 'var(--mm-primary)');
+                root.style.setProperty('--theme-secondary', 'var(--mm-secondary)');
+                root.style.setProperty('--theme-glow', 'var(--mm-glow)');
+                
+                mmView.classList.add('active');
+                smView.classList.remove('active');
+            } else {
+                root.style.setProperty('--theme-primary', 'var(--sm-primary)');
+                root.style.setProperty('--theme-secondary', 'var(--sm-secondary)');
+                root.style.setProperty('--theme-glow', 'var(--sm-glow)');
+                
+                smView.classList.add('active');
+                mmView.classList.remove('active');
+            }
+
+            // Reset workflow
+            resetWorkflow();
+            loadDefaultExplanation(tab);
+        }
+
+        // ==================== TOOLTIP SYSTEM ====================
+        const tooltip = document.getElementById('tooltip');
+        const tooltipElements = document.querySelectorAll('[data-tooltip]');
+
+        tooltipElements.forEach(el => {
+            el.addEventListener('mouseenter', (e) => {
+                const text = el.getAttribute('data-tooltip');
+                tooltip.textContent = text;
+                tooltip.classList.add('show');
+                updateTooltipPosition(e);
+            });
+
+            el.addEventListener('mousemove', updateTooltipPosition);
+
+            el.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('show');
+            });
+        });
+
+        function updateTooltipPosition(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+            tooltip.style.left = (x + 15) + 'px';
+            tooltip.style.top = (y + 15) + 'px';
+        }
+
+        // ==================== WORKFLOW EXECUTION ====================
+        document.querySelectorAll('.workflow-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const workflowId = this.getAttribute('data-workflow');
+                
+                if (workflowId === 'reset') {
+                    resetWorkflow();
+                    return;
+                }
+                
+                runWorkflow(workflowId);
+                
+                // Update active button
+                const container = this.closest('.view-container');
+                container.querySelectorAll('.workflow-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        function runWorkflow(id) {
+            const workflow = workflows[id];
+            if (!workflow) return;
+
+            currentWorkflow = workflow;
+            resetWorkflow();
+
+            // Update explanation panel
+            updateExplanation(workflow);
+
+            // Animate message sequence
+            animateMessageSequence(workflow);
+
+            // Handle special effects
+            if (workflow.specialEffect) {
+                triggerSpecialEffect(workflow.specialEffect);
+            }
+        }
+
+        function animateMessageSequence(workflow) {
+            const prefix = currentTab === 'mm' ? 'mm' : 'sm';
+            const messageContainer = document.getElementById(prefix + 'MessageContainer');
+            const timelineProgress = document.getElementById(prefix + 'TimelineProgress');
+            
+            const positions = {
+                'UE': { x: 200, y: 350 },
+                'AMF': { x: 1200, y: 350 },
+                'SMF': { x: 1200, y: 350 },
+                'gNB': { x: 675, y: 375 },
+                'UPF': { x: 1400, y: 350 }
+            };
+
+            let totalSteps = workflow.steps.length;
+            
+            workflow.steps.forEach((step, index) => {
+                setTimeout(() => {
+                    // Update timeline
+                    const progress = ((index + 1) / totalSteps) * 100;
+                    timelineProgress.style.width = progress + '%';
+
+                    // Create message envelope
+                    const envelope = createMessageEnvelope(step, workflow.color, prefix);
+                    messageContainer.appendChild(envelope);
+
+                    // Animate
+                    const startPos = positions[step.from] || positions['UE'];
+                    const endPos = positions[step.to] || positions['AMF'];
+
+                    // Self-message handling
+                    if (step.from === step.to) {
+                        gsap.to(envelope, {
+                            duration: 1,
+                            x: 80,
+                            y: 40,
+                            ease: 'power2.inOut',
+                            yoyo: true,
+                            repeat: 1,
+                            onComplete: () => {
+                                gsap.to(envelope, {
+                                    duration: 0.3,
+                                    opacity: 0,
+                                    scale: 0.5,
+                                    onComplete: () => envelope.remove()
+                                });
+                            }
+                        });
+                    } else {
+                        gsap.to(envelope, {
+                            duration: 1.5,
+                            x: endPos.x - startPos.x,
+                            y: endPos.y - startPos.y,
+                            ease: 'power2.inOut',
+                            onComplete: () => {
+                                // Flash effect
+                                gsap.to(envelope, {
+                                    duration: 0.3,
+                                    opacity: 0,
+                                    scale: 1.5,
+                                    onComplete: () => envelope.remove()
+                                });
+
+                                // Highlight destination block
+                                highlightBlock(prefix, step.to);
+                            }
+                        });
+                    }
+
+                    // Update step description
+                    updateStepDescription(step, index + 1);
+                    
+                }, step.delay);
+            });
+        }
+
+        function createMessageEnvelope(step, color, prefix) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('class', 'message-envelope');
+            
+            const positions = {
+                'UE': { x: 200, y: 350 },
+                'AMF': { x: 1200, y: 350 },
+                'SMF': { x: 1200, y: 350 }
+            };
+            
+            const startPos = positions[step.from] || positions['UE'];
+
+            // Envelope rect
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', startPos.x - 25);
+            rect.setAttribute('y', startPos.y - 20);
+            rect.setAttribute('width', '50');
+            rect.setAttribute('height', '35');
+            rect.setAttribute('rx', '4');
+            rect.setAttribute('fill', color);
+            rect.setAttribute('stroke', '#d3c6aa');
+            rect.setAttribute('stroke-width', '2');
+            g.appendChild(rect);
+
+            // Envelope flap
+            const flap = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            flap.setAttribute('d', `M ${startPos.x - 25} ${startPos.y - 20} L ${startPos.x} ${startPos.y - 2} L ${startPos.x + 25} ${startPos.y - 20}`);
+            flap.setAttribute('stroke', '#d3c6aa');
+            flap.setAttribute('stroke-width', '2');
+            flap.setAttribute('fill', 'none');
+            g.appendChild(flap);
+
+            // Label
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', startPos.x);
+            text.setAttribute('y', startPos.y + 5);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('class', 'text-xs font-bold');
+            text.setAttribute('fill', '#2d353b');
+            text.textContent = prefix === 'mm' ? 'MM' : 'SM';
+            g.appendChild(text);
+
+            return g;
+        }
+
+        function highlightBlock(prefix, node) {
+            let blockId;
+            if (node === 'UE') {
+                blockId = prefix + 'UEBlock';
+            } else if (node === 'AMF' || node === 'SMF') {
+                blockId = prefix === 'mm' ? 'mmAMFBlock' : 'smSMFBlock';
+            }
+
+            if (blockId) {
+                const block = document.getElementById(blockId);
+                if (block) {
+                    gsap.to(block, {
+                        duration: 0.3,
+                        opacity: 0.5,
+                        yoyo: true,
+                        repeat: 1
+                    });
+                }
+            }
+        }
+
+        function triggerSpecialEffect(effect) {
+            if (effect === 'paging') {
+                const pagingArc = document.getElementById('mmPagingArc');
+                if (pagingArc) {
+                    gsap.to(pagingArc, {
+                        duration: 1,
+                        opacity: 1,
+                        delay: 4,
+                        onComplete: () => {
+                            gsap.to(pagingArc, { duration: 1, opacity: 0, delay: 2 });
+                        }
+                    });
+                }
+            } else if (effect === 'tunnel') {
+                // Animate tunnel glow
+                const tunnel = document.querySelector('.icon-tunnel rect');
+                if (tunnel) {
+                    gsap.to(tunnel, {
+                        duration: 0.5,
+                        attr: { 'stroke-width': 4 },
+                        repeat: 3,
+                        yoyo: true,
+                        delay: 6
+                    });
+                }
+            } else if (effect === 'qos') {
+                // Activate QoS lanes
+                ['qosFlow1', 'qosFlow2', 'qosFlow3'].forEach((id, index) => {
+                    setTimeout(() => {
+                        const flow = document.getElementById(id);
+                        if (flow) {
+                            flow.classList.add('active');
+                            setTimeout(() => flow.classList.remove('active'), 3000);
+                        }
+                    }, index * 2000 + 4000);
+                });
+            }
+        }
+
+        function updateStepDescription(step, stepNum) {
+            const panel = document.getElementById('explanationContent');
+            
+            // Add step to panel
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'mt-3 p-2 glass-card border-l-2 fade-in';
+            stepDiv.style.borderColor = 'var(--theme-primary)';
+            stepDiv.innerHTML = `
+                <div class="text-xs" style="color: var(--theme-primary)">Step ${stepNum}</div>
+                <div class="font-semibold text-sm">${step.msg}</div>
+                <div class="text-xs text-slate-400 mt-1">${step.desc}</div>
+            `;
+            
+            panel.appendChild(stepDiv);
+            panel.scrollTop = panel.scrollHeight;
+        }
+
+        function updateExplanation(workflow) {
+            const panel = document.getElementById('explanationContent');
+            panel.innerHTML = workflow.explanation;
+        }
+
+        function resetWorkflow() {
+            // Clear message containers
+            ['mmMessageContainer', 'smMessageContainer'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) container.innerHTML = '';
+            });
+
+            // Reset timeline
+            ['mmTimelineProgress', 'smTimelineProgress'].forEach(id => {
+                const progress = document.getElementById(id);
+                if (progress) progress.style.width = '0%';
+            });
+
+            // Reset active buttons
+            document.querySelectorAll('.workflow-btn').forEach(b => b.classList.remove('active'));
+
+            // Reset special effects
+            const pagingArc = document.getElementById('mmPagingArc');
+            if (pagingArc) pagingArc.setAttribute('opacity', '0');
+
+            document.querySelectorAll('.qos-lane').forEach(lane => lane.classList.remove('active'));
+
+            // Load default explanation
+            loadDefaultExplanation(currentTab);
+        }
+
+        function loadDefaultExplanation(tab) {
+            const panel = document.getElementById('explanationContent');
+            
+            if (tab === 'mm') {
+                panel.innerHTML = `
+                    <h3 class="text-lg font-bold mb-3" style="color: #7fbbb3;">Mobility Management (5GMM)</h3>
+                    <p class="text-sm text-slate-300 mb-3">Controls UE registration, authentication, and mobility.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400" style="color: #7fbbb3">Core Functions:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• Registration & Deregistration</li>
+                                <li>• Authentication (5G-AKA)</li>
+                                <li>• NAS Security (Encryption & Integrity)</li>
+                                <li>• Tracking Area Updates</li>
+                                <li>• Paging & Service Request</li>
+                                <li>• Connection Management</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400" style="color: #7fbbb3">Network Function:</strong> AMF (Access & Mobility Management Function)
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-blue-400" style="color: #7fbbb3">Key Concept:</strong> MM must complete before SM can establish sessions
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
+                            <div class="text-xs font-bold text-blue-300 mb-1" style="color: #7fbbb3">💡 Interactive Demo</div>
+                            <div class="text-xs text-slate-300">Click any workflow button above to see animated signaling!</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                panel.innerHTML = `
+                    <h3 class="text-lg font-bold mb-3" style="color: #a7c080;">Session Management (5GSM)</h3>
+                    <p class="text-sm text-slate-300 mb-3">Controls PDU sessions and data connectivity.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400" style="color: #a7c080">Core Functions:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• PDU Session Establishment</li>
+                                <li>• IP Address Allocation</li>
+                                <li>• QoS Flow Management</li>
+                                <li>• Session Modification</li>
+                                <li>• Session Release</li>
+                                <li>• Network Slice Selection</li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400" style="color: #a7c080">Network Function:</strong> SMF (Session Management Function)
+                        </div>
+                        <div class="glass-card p-2">
+                            <strong class="text-green-400" style="color: #a7c080">PDU Session Types:</strong>
+                            <ul class="ml-4 mt-1 space-y-1 text-xs">
+                                <li>• IPv4, IPv6, IPv4v6</li>
+                                <li>• Ethernet</li>
+                                <li>• Unstructured</li>
+                            </ul>
+                        </div>
+                        <div class="mt-4 p-3 bg-green-900/20 rounded border border-green-500/30">
+                            <div class="text-xs font-bold text-green-300 mb-1" style="color: #a7c080">💡 Interactive Demo</div>
+                            <div class="text-xs text-slate-300">Click any workflow button above to see animated signaling!</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('load', () => {
+            // Initial explanation
+            loadDefaultExplanation('mm');
+
+            // Fade in elements
+            gsap.from('.tab-btn', {
+                duration: 0.8,
+                opacity: 0,
+                y: -30,
+                stagger: 0.1,
+                ease: 'power3.out'
+            });
+
+            gsap.from('.glass-panel', {
+                duration: 1,
+                opacity: 0,
+                y: 50,
+                stagger: 0.2,
+                delay: 0.3,
+                ease: 'power3.out'
+            });
+        });
+    </script>
+</body>
+</html>

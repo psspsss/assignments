@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROHC Internal Mechanics - Everforest</title>
+    <style>
+        /* EVERFOREST DARK THEME */
+        :root {
+            --bg0: #272e33;
+            --bg1: #2d353b;
+            --bg2: #374145;
+            --fg: #d3c6aa;
+            --red: #e67e80;
+            --orange: #e69875;
+            --yellow: #dbbc7f;
+            --green: #a7c080;
+            --aqua: #83c092;
+            --blue: #7fbbb3;
+            --purple: #d699b6;
+            --gray: #859289;
+        }
+
+        body {
+            font-family: 'Segoe UI', monospace, sans-serif;
+            background-color: var(--bg0);
+            color: var(--fg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { color: var(--green); margin-bottom: 5px; }
+        .subtitle { color: var(--gray); font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* BUTTONS */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background-color: var(--bg2);
+            color: var(--fg);
+            border: 1px solid var(--blue);
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: var(--blue); color: var(--bg0); }
+        button.active { background-color: var(--green); border-color: var(--green); color: var(--bg0); }
+
+        /* MAIN STAGE */
+        .stage {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 500px;
+            position: relative;
+        }
+
+        /* THE PACKET STACK (Left Side) */
+        .packet-container {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .packet-row {
+            background-color: var(--bg2);
+            border: 1px solid var(--gray);
+            padding: 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 50px; /* Explicit height for collapsing anim */
+        }
+
+        .packet-label { font-weight: bold; color: var(--blue); }
+        .packet-value { font-family: monospace; color: var(--fg); }
+
+        /* Color classes for logic */
+        .static-field { border-left: 5px solid var(--red); } /* Red = Will be removed */
+        .dynamic-field { border-left: 5px solid var(--green); } /* Green = Kept/Calculated */
+        .payload-field { border-left: 5px solid var(--yellow); background-color: var(--bg1); }
+
+        /* CONTEXT MEMORY (Right Side) */
+        .context-box {
+            width: 280px;
+            background-color: var(--bg1);
+            border: 2px dashed var(--gray);
+            border-radius: 12px;
+            padding: 20px;
+            opacity: 0.5;
+            transform: translateX(50px);
+            transition: all 0.5s ease;
+        }
+
+        .context-box.active {
+            opacity: 1;
+            border-color: var(--yellow);
+            transform: translateX(0);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .context-title {
+            color: var(--yellow);
+            font-weight: bold;
+            border-bottom: 1px solid var(--gray);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .context-item {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+            opacity: 0; /* Hidden initially */
+            transform: translateX(-20px);
+            transition: all 0.5s ease;
+        }
+        .context-item.stored { opacity: 1; transform: translateX(0); color: var(--fg); }
+
+        /* COMPRESSED RESULT VISUAL */
+        .result-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .tiny-header {
+            background-color: var(--green);
+            color: var(--bg0);
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* ANIMATION STATES */
+        
+        /* Step 2: Dim static fields */
+        .dimmed {
+            background-color: var(--bg0);
+            color: var(--gray);
+            border-color: var(--bg0);
+        }
+
+        /* Step 3: Collapse */
+        .collapsed {
+            height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+            opacity: 0;
+        }
+
+        /* Flying Animation Helper */
+        .fly-particle {
+            position: absolute;
+            background: var(--red);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* INFO BOX */
+        .info-box {
+            margin-top: 20px;
+            background-color: var(--bg1);
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            border-left: 4px solid var(--purple);
+            line-height: 1.6;
+        }
+
+        /* ARROW SVG */
+        .arrow-svg {
+            position: absolute;
+            left: 360px;
+            top: 100px;
+            width: 100px;
+            height: 100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .arrow-path {
+            stroke: var(--yellow);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: dash 1s linear forwards;
+        }
+
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <h1>Header Compression Internals</h1>
+    <div class="subtitle">Dissecting the 5G ROHC Algorithm • WhatsApp Payload</div>
+
+    <div class="controls">
+        <button onclick="setStep(1)" id="btn1">1. Raw Packet</button>
+        <button onclick="setStep(2)" id="btn2">2. Classification</button>
+        <button onclick="setStep(3)" id="btn3">3. Extraction</button>
+        <button onclick="setStep(4)" id="btn4">4. Delta Encoding</button>
+        <button onclick="setStep(5)" id="btn5">5. Final Result</button>
+    </div>
+
+    <div class="stage">
+        
+        <!-- THE PACKET -->
+        <div class="packet-container" id="packetStack">
+            <!-- IPv6 Header (40 Bytes) -->
+            <div class="packet-row" id="row-src">
+                <span class="packet-label">Source IP</span>
+                <span class="packet-value">2001:db8::1</span>
+            </div>
+            <div class="packet-row" id="row-dst">
+                <span class="packet-label">Dest IP</span>
+                <span class="packet-value">2001:db8::2</span>
+            </div>
+            <div class="packet-row" id="row-ver">
+                <span class="packet-label">Version</span>
+                <span class="packet-value">IPv6</span>
+            </div>
+            
+            <!-- UDP Header (8 Bytes) -->
+            <div class="packet-row" id="row-port">
+                <span class="packet-label">Ports (Src/Dst)</span>
+                <span class="packet-value">443 / 8080</span>
+            </div>
+            <div class="packet-row" id="row-len">
+                <span class="packet-label">Length/Check</span>
+                <span class="packet-value">0x4A21</span>
+            </div>
+
+            <!-- Dynamic Fields (To be compressed) -->
+            <div class="packet-row" id="row-sn">
+                <span class="packet-label">Seq Number</span>
+                <span class="packet-value" id="val-sn">1050</span>
+            </div>
+            <div class="packet-row" id="row-ts">
+                <span class="packet-label">Timestamp</span>
+                <span class="packet-value" id="val-ts">12:00:01</span>
+            </div>
+            <div class="packet-row" id="row-chk">
+                <span class="packet-label">CRC</span>
+                <span class="packet-value">0xFF</span>
+            </div>
+
+            <!-- Payload -->
+            <div class="packet-row payload-field" id="row-pay">
+                <span class="packet-label">Payload</span>
+                <span class="packet-value">"Hello!"</span>
+            </div>
+        </div>
+
+        <!-- VISUAL ARROW -->
+        <svg class="arrow-svg" id="arrowSvg" viewBox="0 0 100 100">
+            <path class="arrow-path" d="M 0 50 Q 50 50 90 50 L 80 40 M 90 50 L 80 60" />
+        </svg>
+
+        <!-- CONTEXT MEMORY -->
+        <div class="context-box" id="contextBox">
+            <div class="context-title">CID: 1 (Context Memory)</div>
+            <div class="context-item" id="ctx-ip">Source: 2001:db8::1</div>
+            <div class="context-item" id="ctx-dst">Dest: 2001:db8::2</div>
+            <div class="context-item" id="ctx-port">Ports: 443/8080</div>
+            <div class="context-item" id="ctx-ver">Proto: IPv6/UDP</div>
+            <div style="margin-top:15px; font-size:0.7rem; color:var(--gray);">*Stored at both UE and gNB</div>
+        </div>
+
+    </div>
+
+    <div class="result-container" id="resultVis">
+        <div style="color:var(--gray); margin-bottom:5px;">Transmission Size</div>
+        <div class="tiny-header">ROHC Header (3B) [CID + &Delta;SN]</div>
+        <div class="packet-row payload-field" style="width: 200px; padding: 10px;">
+            <span class="packet-value">"Hello!"</span>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong style="color:var(--green)" id="info-title">Introduction</strong>
+        <p id="info-text">Select a step to see how ROHC processes a standard WhatsApp packet.</p>
+    </div>
+
+    <script>
+        // DOM Elements
+        const rows = {
+            src: document.getElementById('row-src'),
+            dst: document.getElementById('row-dst'),
+            ver: document.getElementById('row-ver'),
+            port: document.getElementById('row-port'),
+            len: document.getElementById('row-len'),
+            sn: document.getElementById('row-sn'),
+            ts: document.getElementById('row-ts'),
+            chk: document.getElementById('row-chk'),
+            pay: document.getElementById('row-pay')
+        };
+        
+        const ctxItems = [
+            document.getElementById('ctx-ip'),
+            document.getElementById('ctx-dst'),
+            document.getElementById('ctx-port'),
+            document.getElementById('ctx-ver')
+        ];
+
+        const contextBox = document.getElementById('contextBox');
+        const arrow = document.getElementById('arrowSvg');
+        const resultVis = document.getElementById('resultVis');
+        const valSn = document.getElementById('val-sn');
+        const valTs = document.getElementById('val-ts');
+        const packetStack = document.getElementById('packetStack');
+
+        const infoTitle = document.getElementById('info-title');
+        const infoText = document.getElementById('info-text');
+
+        function reset() {
+            // Restore Rows
+            Object.values(rows).forEach(row => {
+                row.classList.remove('static-field', 'dynamic-field', 'dimmed', 'collapsed');
+                row.style.display = 'flex'; 
+            });
+            // Reset Values
+            valSn.innerText = "1050";
+            valTs.innerText = "12:00:01";
+            rows.sn.querySelector('.packet-label').innerText = "Seq Number";
+
+            // Reset Context
+            contextBox.classList.remove('active');
+            ctxItems.forEach(item => item.classList.remove('stored'));
+            
+            // Reset Graphics
+            arrow.style.opacity = '0';
+            resultVis.style.opacity = '0';
+            packetStack.style.opacity = '1';
+        }
+
+        function setStep(step) {
+            // Update buttons
+            for(let i=1; i<=5; i++) document.getElementById(`btn${i}`).classList.remove('active');
+            document.getElementById(`btn${step}`).classList.add('active');
+            
+            reset();
+
+            if (step === 1) {
+                infoTitle.innerText = "1. The Raw Packet";
+                infoText.innerHTML = "This is a standard IPv6/UDP packet carrying a WhatsApp message. <br>Total Header Size: <strong>~60 Bytes</strong>.<br>Payload Size: ~10 Bytes.<br>Problem: We are sending more header than data!";
+            }
+
+            if (step >= 2) {
+                // Classify
+                rows.src.classList.add('static-field');
+                rows.dst.classList.add('static-field');
+                rows.ver.classList.add('static-field');
+                rows.port.classList.add('static-field');
+                rows.len.classList.add('static-field'); // Length is usually inferred or compressed
+
+                rows.sn.classList.add('dynamic-field');
+                rows.ts.classList.add('dynamic-field');
+                rows.chk.classList.add('dynamic-field');
+
+                if(step === 2) {
+                    infoTitle.innerText = "2. Classification";
+                    infoText.innerHTML = "<span style='color:var(--red)'>Red (Static):</span> Fields that never change in a flow (IPs, Ports).<br><span style='color:var(--green)'>Green (Dynamic):</span> Fields that change per packet (Sequence Numbers, Timestamps).<br>ROHC separates these.";
+                }
+            }
+
+            if (step >= 3) {
+                // Extraction Animation
+                contextBox.classList.add('active');
+                
+                // Show arrow
+                if(step === 3) arrow.style.opacity = '1';
+
+                // Populate Context
+                setTimeout(() => {
+                    ctxItems.forEach((item, index) => {
+                        setTimeout(() => item.classList.add('stored'), index * 100);
+                    });
+                }, 100);
+
+                // Dim the static rows in packet to show they are moved
+                ['src', 'dst', 'ver', 'port', 'len'].forEach(k => rows[k].classList.add('dimmed'));
+
+                if(step === 3) {
+                    infoTitle.innerText = "3. Extraction & Context Storage";
+                    infoText.innerHTML = "The static fields are extracted and stored in a <strong>Context ID (CID)</strong> on both sides. We don't need to send these anymore. We just send the CID (e.g., '1').";
+                }
+            }
+
+            if (step >= 4) {
+                // Delta Encoding
+                ['src', 'dst', 'ver', 'port', 'len'].forEach(k => rows[k].classList.add('collapsed'));
+                
+                // Change Values to Deltas
+                valSn.innerHTML = "<span style='color:var(--green)'>+1</span> (Delta)";
+                valTs.innerHTML = "<span style='color:var(--green)'>+10ms</span>";
+                rows.sn.querySelector('.packet-label').innerText = "Comp. SN";
+
+                if(step === 4) {
+                    infoTitle.innerText = "4. Delta Encoding (W-LSB)";
+                    infoText.innerHTML = "We don't send the full Sequence Number (1050). We send the difference from the last packet.<br>Previous: 1049. Current: 1050.<br><strong>Delta: +1</strong>. This takes only bits, not bytes.";
+                }
+            }
+
+            if (step === 5) {
+                // Final Result
+                packetStack.style.opacity = '0'; // Hide original stack
+                resultVis.style.opacity = '1';   // Show result
+                
+                infoTitle.innerText = "5. Final Compressed Header";
+                infoText.innerHTML = "The massive 60-byte header is gone. <br>It is replaced by a <strong>3-Byte ROHC Header</strong> containing: <br>1. Context ID (to find IPs)<br>2. Delta SN (to order packets)<br>3. CRC (to check for errors).<br><br><strong>Efficiency gain: >90%</strong>";
+            }
+        }
+
+        // Init
+        setStep(1);
+
+    </script>
+</body>
+</html>
