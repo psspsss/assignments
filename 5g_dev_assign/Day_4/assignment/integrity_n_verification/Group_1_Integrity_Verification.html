@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR PDCP Integrity Verification - Receiver Side Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #05070a;
+            --bg-primary: #0a0e14;
+            --bg-secondary: #0f1419;
+            --bg-card: #141920;
+            --bg-elevated: #1a1f28;
+
+            --border-subtle: #1f2937;
+            --border-medium: #2d3748;
+            --border-bright: #3d4a5c;
+
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            --accent-yellow: #fbbf24;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+
+            --glow-cyan: 0 0 30px rgba(6, 182, 212, 0.5);
+            --glow-blue: 0 0 30px rgba(59, 130, 246, 0.5);
+            --glow-purple: 0 0 30px rgba(139, 92, 246, 0.5);
+            --glow-green: 0 0 30px rgba(16, 185, 129, 0.5);
+            --glow-red: 0 0 30px rgba(239, 68, 68, 0.5);
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Grid Background */
+        .grid-background {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            background-image:
+                linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0%   { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        /* Glowing Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .orb-1 {
+            width: 500px; height: 500px;
+            background: var(--accent-purple);
+            top: -250px; left: -250px;
+            animation: float 20s ease-in-out infinite;
+        }
+        .orb-2 {
+            width: 400px; height: 400px;
+            background: var(--accent-pink);
+            bottom: -200px; right: -200px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50%      { transform: translate(100px,100px) scale(1.1); }
+        }
+
+        /* ═══════════════════════════════════════════
+           TOP NAVIGATION
+        ═══════════════════════════════════════════ */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            background: rgba(10,14,20,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-medium);
+            padding: 1rem 2rem;
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .nav-content {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700;
+            box-shadow: var(--glow-purple);
+        }
+        .logo-text {
+            font-size: 1.5rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink), var(--accent-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-status { display: flex; gap: 2rem; align-items: center; }
+        .status-pill {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-medium);
+            border-radius: 20px; font-size: 0.85rem;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .status-dot.active  { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+        /* ═══════════════════════════════════════════
+           CONTAINER & LAYOUT
+        ═══════════════════════════════════════════ */
+        .container {
+            position: relative; z-index: 10;
+            max-width: 1920px;
+            margin: 0 auto; padding: 2rem;
+        }
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr 450px;
+            gap: 1.5rem;
+            min-height: calc(100vh - 150px);
+        }
+
+        /* ═══════════════════════════════════════════
+           DIAGRAM - Integrity Verification Flow
+        ═══════════════════════════════════════════ */
+        .diagram-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .diagram-title {
+            font-size: 1.25rem; font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .diagram-content {
+            position: relative;
+            height: 280px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .flow-node {
+            position: absolute;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-medium);
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.85rem; font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        .flow-node .node-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* Flow nodes for integrity verification */
+        .flow-node.n-input {
+            top: 50%; left: 3%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(6,182,212,0.25), rgba(6,182,212,0.06));
+            border-color: var(--accent-cyan);
+        }
+        .flow-node.n-input.active {
+            border-color: var(--accent-cyan);
+            background: rgba(6,182,212,0.22);
+            box-shadow: var(--glow-cyan);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .flow-node.n-received-mac {
+            top: 10%; left: 28%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05));
+            border-color: var(--accent-purple);
+            padding: 0.6rem 1rem;
+        }
+        .flow-node.n-received-mac.active {
+            border-color: var(--accent-purple);
+            background: rgba(139,92,246,0.18);
+            box-shadow: var(--glow-purple);
+            animation: macExtract 1s ease-in-out;
+        }
+
+        @keyframes macExtract {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); filter: brightness(1.3); }
+        }
+
+        .flow-node.n-compute {
+            top: 50%; left: 28%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(249,115,22,0.22), rgba(249,115,22,0.06));
+            border-color: var(--accent-orange);
+            width: 100px; height: 100px;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+        }
+        .flow-node.n-compute.active {
+            border-color: var(--accent-orange);
+            background: rgba(249,115,22,0.25);
+            box-shadow: 0 0 30px rgba(249,115,22,0.6);
+            animation: computeSpin 1.5s ease-in-out;
+        }
+
+        @keyframes computeSpin {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) rotate(360deg) scale(1.1); }
+        }
+
+        .flow-node.n-computed-mac {
+            bottom: 10%; left: 28%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.05));
+            border-color: var(--accent-yellow);
+            padding: 0.6rem 1rem;
+        }
+        .flow-node.n-computed-mac.active {
+            border-color: var(--accent-yellow);
+            background: rgba(251,191,36,0.18);
+            box-shadow: 0 0 30px rgba(251,191,36,0.6);
+        }
+
+        .flow-node.n-compare {
+            top: 50%; left: 52%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(59,130,246,0.06));
+            border-color: var(--accent-blue);
+            width: 90px; height: 90px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            font-size: 1.2rem;
+        }
+        .flow-node.n-compare.active {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.25);
+            box-shadow: var(--glow-blue);
+            animation: compareShake 0.8s ease-in-out;
+        }
+
+        @keyframes compareShake {
+            0%, 100% { transform: translateY(-50%) scale(1); }
+            25% { transform: translateY(-50%) scale(1.05) rotate(5deg); }
+            75% { transform: translateY(-50%) scale(1.05) rotate(-5deg); }
+        }
+
+        .flow-node.n-result {
+            top: 50%; right: 3%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.06));
+            border-color: var(--accent-green);
+            min-width: 120px;
+        }
+        .flow-node.n-result.active {
+            border-color: var(--accent-green);
+            background: rgba(16,185,129,0.22);
+            box-shadow: var(--glow-green);
+            transform: translateY(-50%) scale(1.05);
+        }
+        .flow-node.n-result.failed {
+            background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.06));
+            border-color: var(--accent-red);
+            box-shadow: var(--glow-red);
+        }
+
+        /* Flow lines */
+        .flow-line {
+            position: absolute;
+            height: 2px;
+            background: var(--border-medium);
+            transition: all 0.5s ease;
+        }
+        .flow-line.active {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-blue));
+            box-shadow: 0 0 10px rgba(6,182,212,0.5);
+        }
+
+        .line-1 { top: 50%; left: 15%; width: 10%; }
+        .line-2 { top: 50%; left: 39%; width: 11%; }
+        .line-3 { top: 50%; left: 64%; width: 26%; }
+
+        /* Vertical lines for MAC comparison */
+        .line-v1 {
+            left: 28%;
+            top: 20%;
+            height: 25%;
+            width: 2px;
+        }
+        .line-v2 {
+            left: 28%;
+            bottom: 22%;
+            height: 25%;
+            width: 2px;
+        }
+
+        /* Shield icon for security */
+        .security-shield {
+            position: absolute;
+            top: 50%;
+            left: 52%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+        .security-shield.active {
+            opacity: 0.3;
+            animation: shieldPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes shieldPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+        }
+
+        /* ═══════════════════════════════════════════
+           PANELS
+        ═══════════════════════════════════════════ */
+        .panel {
+            background: rgba(20, 25, 32, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .panel-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* ═══════════════════════════════════════════
+           LEFT PANEL - CONTROLS
+        ═══════════════════════════════════════════ */
+        .controls-panel .panel-icon {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+        }
+
+        .control-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.85rem 1.25rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-color: var(--accent-purple);
+            box-shadow: var(--glow-purple);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-color: var(--accent-blue);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-red));
+            border-color: var(--accent-red);
+        }
+
+        /* Security Config */
+        .security-config {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .config-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .config-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .config-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ═══════════════════════════════════════════
+           CENTER PANEL - VERIFICATION VISUALIZATION
+        ═══════════════════════════════════════════ */
+        .verification-panel .panel-icon {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        }
+
+        .verify-stage {
+            margin-bottom: 1.5rem;
+        }
+
+        .stage-header {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .data-view {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.5rem;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mac-box {
+            font-family: 'JetBrains Mono', monospace;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            animation: macFadeIn 0.5s ease;
+        }
+
+        @keyframes macFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .mac-box.received {
+            background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05));
+            border: 2px solid var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .mac-box.computed {
+            background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.05));
+            border: 2px solid var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        .comparison-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .comparison-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .comparison-symbol {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .result-badge {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            animation: resultPop 0.5s ease;
+        }
+
+        @keyframes resultPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-badge.success {
+            background: linear-gradient(135deg, rgba(16,185,129,0.3), rgba(16,185,129,0.1));
+            border: 2px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .result-badge.failed {
+            background: linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1));
+            border: 2px solid var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* ═══════════════════════════════════════════
+           RIGHT PANEL - LOG
+        ═══════════════════════════════════════════ */
+        .log-panel .panel-icon {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+        }
+
+        .log-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 300px);
+        }
+
+        .log-entry {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border-left: 3px solid;
+            font-size: 0.85rem;
+            animation: logSlideIn 0.3s ease;
+        }
+
+        @keyframes logSlideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-entry.info {
+            background: rgba(6,182,212,0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .log-entry.success {
+            background: rgba(16,185,129,0.1);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .log-entry.warning {
+            background: rgba(251,191,36,0.1);
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        .log-entry.error {
+            background: rgba(239,68,68,0.1);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .log-entry.security {
+            background: rgba(139,92,246,0.1);
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .log-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="grid-background"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">5G NR PDCP Integrity Verification</div>
+            </div>
+            <div class="nav-status">
+                <div class="status-pill">
+                    <div class="status-dot" id="systemStatus"></div>
+                    <span id="systemStatusText">System Ready</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Flow Diagram -->
+        <div class="diagram-container">
+            <div class="diagram-title">
+                🛡️ PDCP Integrity Verification Process Flow (Receiver Side)
+            </div>
+            <div class="diagram-content">
+                <!-- Security Shield Background -->
+                <div class="security-shield" id="securityShield">🛡️</div>
+
+                <!-- Flow Nodes -->
+                <div class="flow-node n-input" id="nodeInput">
+                    <div>Received Data</div>
+                    <div class="node-sub">+ MAC-I</div>
+                </div>
+
+                <div class="flow-node n-received-mac" id="nodeReceivedMac">
+                    <div>Received</div>
+                    <div>MAC-I</div>
+                </div>
+
+                <div class="flow-node n-compute" id="nodeCompute">
+                    <div style="font-size: 1.1rem; margin-bottom: 0.3rem;">🔐</div>
+                    <div>Compute</div>
+                    <div>MAC-I</div>
+                </div>
+
+                <div class="flow-node n-computed-mac" id="nodeComputedMac">
+                    <div>Computed</div>
+                    <div>MAC-I</div>
+                </div>
+
+                <div class="flow-node n-compare" id="nodeCompare">
+                    ≟
+                </div>
+
+                <div class="flow-node n-result" id="nodeResult">
+                    <div>Verification</div>
+                    <div class="node-sub">Result</div>
+                </div>
+
+                <!-- Flow Lines -->
+                <div class="flow-line line-1" id="line1"></div>
+                <div class="flow-line line-2" id="line2"></div>
+                <div class="flow-line line-3" id="line3"></div>
+                <div class="flow-line line-v1" id="lineV1"></div>
+                <div class="flow-line line-v2" id="lineV2"></div>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Left Panel: Controls -->
+            <div class="panel controls-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-icon">⚙️</div>
+                        <span>Control Panel</span>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="section-label">Simulation Controls</div>
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" id="startSimBtn">
+                            ▶️ Start Verification
+                        </button>
+                        <button class="btn btn-secondary" id="pauseSimBtn" disabled>
+                            ⏸️ Pause
+                        </button>
+                        <button class="btn btn-danger" id="resetSimBtn">
+                            🔄 Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="section-label">Integrity Configuration</div>
+                    <div class="security-config">
+                        <div class="config-item">
+                            <span class="config-label">Algorithm</span>
+                            <span class="config-value">AES-CMAC</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Key Length</span>
+                            <span class="config-value">128-bit</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">MAC Size</span>
+                            <span class="config-value">32-bit</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Bearer ID</span>
+                            <span class="config-value">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="section-label">Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statVerified">0</div>
+                            <div class="stat-label">Verified</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSuccess">0</div>
+                            <div class="stat-label">Success</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statFailed">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statRate">100%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel: Verification Visualization -->
+            <div class="panel verification-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-icon">🛡️</div>
+                        <span>Integrity Verification Process</span>
+                    </div>
+                </div>
+
+                <div class="verify-stage">
+                    <div class="stage-header">
+                        📩 Received MAC-I (from sender)
+                    </div>
+                    <div class="data-view" id="receivedMacView">
+                        <div class="empty-state">Waiting for data...</div>
+                    </div>
+                </div>
+
+                <div class="verify-stage">
+                    <div class="stage-header">
+                        🔐 Computed MAC-I (locally calculated)
+                    </div>
+                    <div class="data-view" id="computedMacView">
+                        <div class="empty-state">No computation yet</div>
+                    </div>
+                </div>
+
+                <div class="verify-stage">
+                    <div class="stage-header">
+                        ≟ Comparison: Received vs Computed
+                    </div>
+                    <div class="data-view" id="comparisonView">
+                        <div class="empty-state">No comparison yet</div>
+                    </div>
+                </div>
+
+                <div class="verify-stage">
+                    <div class="stage-header">
+                        ✅ Verification Result
+                    </div>
+                    <div class="data-view" id="resultView">
+                        <div class="empty-state">No result yet</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Log -->
+            <div class="panel log-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-icon">📋</div>
+                        <span>Activity Log</span>
+                    </div>
+                </div>
+                <div class="log-container" id="logContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        const state = {
+            running: false,
+            paused: false,
+            verifiedCount: 0,
+            successCount: 0,
+            failedCount: 0,
+            startTime: null
+        };
+
+        // Sample packets with MAC-I values
+        const samplePackets = [
+            { 
+                sn: 0,
+                payload: "Hello 5G!",
+                receivedMac: "A3F2E1D4",
+                computedMac: "A3F2E1D4",
+                valid: true
+            },
+            { 
+                sn: 1,
+                payload: "PDCP Data",
+                receivedMac: "B7C8D2E9",
+                computedMac: "B7C8D2E9",
+                valid: true
+            },
+            { 
+                sn: 2,
+                payload: "Network Test",
+                receivedMac: "E4D9C1B8",
+                computedMac: "E4D9C1B8",
+                valid: true
+            },
+            { 
+                sn: 3,
+                payload: "RAN Message",
+                receivedMac: "F6A2B3C4",
+                computedMac: "F6A2B3C4",
+                valid: true
+            },
+            { 
+                sn: 4,
+                payload: "UE Signal",
+                receivedMac: "C9E1F2A7",
+                computedMac: "C9E1F2A7",
+                valid: true
+            }
+        ];
+
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function getTimestamp() {
+            const now = new Date();
+            return now.toTimeString().split(' ')[0];
+        }
+
+        function addLog(type, message) {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="log-time">${getTimestamp()}</span>${message}`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('statVerified').textContent = state.verifiedCount;
+            document.getElementById('statSuccess').textContent = state.successCount;
+            document.getElementById('statFailed').textContent = state.failedCount;
+            
+            const rate = state.verifiedCount > 0 
+                ? ((state.successCount / state.verifiedCount) * 100).toFixed(1)
+                : 100;
+            document.getElementById('statRate').textContent = `${rate}%`;
+        }
+
+        // ==========================================
+        // VISUALIZATION FUNCTIONS
+        // ==========================================
+        function activateNode(nodeId) {
+            document.getElementById(nodeId).classList.add('active');
+        }
+
+        function deactivateNode(nodeId) {
+            document.getElementById(nodeId).classList.remove('active');
+        }
+
+        function activateLine(lineId) {
+            document.getElementById(lineId).classList.add('active');
+            setTimeout(() => {
+                document.getElementById(lineId).classList.remove('active');
+            }, 1500);
+        }
+
+        function showSecurityShield() {
+            const shield = document.getElementById('securityShield');
+            shield.classList.add('active');
+            setTimeout(() => {
+                shield.classList.remove('active');
+            }, 3000);
+        }
+
+        // ==========================================
+        // INTEGRITY VERIFICATION PROCESS
+        // ==========================================
+        async function verifyPacket(packet) {
+            // Step 1: Receive data with MAC-I
+            addLog('info', `📥 Received packet (SN: ${packet.sn}) with MAC-I`);
+            activateNode('nodeInput');
+            activateLine('line1');
+            await sleep(800);
+
+            // Step 2: Extract received MAC-I
+            addLog('security', `🔍 Extracting received MAC-I: ${packet.receivedMac}`);
+            activateNode('nodeReceivedMac');
+            activateLine('lineV1');
+            document.getElementById('receivedMacView').innerHTML = `
+                <div class="mac-box received">${packet.receivedMac}</div>
+            `;
+            await sleep(1000);
+
+            // Step 3: Compute MAC-I locally
+            addLog('info', `🔐 Computing MAC-I using AES-CMAC algorithm...`);
+            activateNode('nodeCompute');
+            showSecurityShield();
+            await sleep(1500);
+
+            addLog('success', `✅ Computed MAC-I: ${packet.computedMac}`);
+            activateNode('nodeComputedMac');
+            activateLine('lineV2');
+            document.getElementById('computedMacView').innerHTML = `
+                <div class="mac-box computed">${packet.computedMac}</div>
+            `;
+            await sleep(1000);
+
+            // Step 4: Compare MACs
+            addLog('info', `⚖️ Comparing received vs computed MAC-I...`);
+            activateNode('nodeCompare');
+            activateLine('line2');
+            document.getElementById('comparisonView').innerHTML = `
+                <div class="comparison-view">
+                    <div class="comparison-item">
+                        <div class="comparison-label">Received</div>
+                        <div class="mac-box received" style="font-size: 0.8rem; padding: 0.5rem 1rem;">${packet.receivedMac}</div>
+                    </div>
+                    <div class="comparison-symbol" style="color: var(--accent-blue);">≟</div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">Computed</div>
+                        <div class="mac-box computed" style="font-size: 0.8rem; padding: 0.5rem 1rem;">${packet.computedMac}</div>
+                    </div>
+                </div>
+            `;
+            await sleep(1500);
+
+            // Step 5: Result
+            deactivateNode('nodeInput');
+            deactivateNode('nodeReceivedMac');
+            deactivateNode('nodeCompute');
+            deactivateNode('nodeComputedMac');
+            deactivateNode('nodeCompare');
+
+            activateLine('line3');
+            activateNode('nodeResult');
+
+            if (packet.valid) {
+                addLog('success', `✅ INTEGRITY CHECK PASSED - MAC values match!`);
+                document.getElementById('resultView').innerHTML = `
+                    <div class="result-badge success">
+                        ✅ VERIFIED<br>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.8;">Data integrity confirmed</div>
+                    </div>
+                `;
+                state.successCount++;
+            } else {
+                addLog('error', `❌ INTEGRITY CHECK FAILED - MAC values mismatch!`);
+                document.getElementById('resultView').innerHTML = `
+                    <div class="result-badge failed">
+                        ❌ FAILED<br>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.8;">Data may be tampered</div>
+                    </div>
+                `;
+                document.getElementById('nodeResult').classList.add('failed');
+                state.failedCount++;
+            }
+
+            state.verifiedCount++;
+            updateStats();
+
+            await sleep(1500);
+            deactivateNode('nodeResult');
+
+            // Clear views
+            await sleep(500);
+            document.getElementById('receivedMacView').innerHTML = '<div class="empty-state">-</div>';
+            document.getElementById('computedMacView').innerHTML = '<div class="empty-state">-</div>';
+            document.getElementById('comparisonView').innerHTML = '<div class="empty-state">-</div>';
+
+            addLog('info', `📤 Forwarding verified data (SN: ${packet.sn}) to Reception Buffer`);
+        }
+
+        // ==========================================
+        // SIMULATION CONTROL
+        // ==========================================
+        async function startSimulation() {
+            state.running = true;
+            state.paused = false;
+            state.startTime = Date.now();
+            state.verifiedCount = 0;
+            state.successCount = 0;
+            state.failedCount = 0;
+            
+            document.getElementById('startSimBtn').disabled = true;
+            document.getElementById('pauseSimBtn').disabled = false;
+            document.getElementById('systemStatus').classList.add('active');
+            document.getElementById('systemStatusText').textContent = 'Verification Active';
+            
+            addLog('info', '🛡️ Starting PDCP Integrity Verification simulation...');
+            addLog('security', '🔐 Using AES-CMAC algorithm for MAC-I verification');
+            
+            // Process packets
+            for (let i = 0; i < samplePackets.length && state.running && !state.paused; i++) {
+                await verifyPacket(samplePackets[i]);
+                await sleep(800);
+            }
+            
+            if (state.running && !state.paused) {
+                state.running = false;
+                document.getElementById('startSimBtn').disabled = false;
+                document.getElementById('pauseSimBtn').disabled = true;
+                document.getElementById('systemStatus').classList.remove('active');
+                document.getElementById('systemStatusText').textContent = 'Verification Complete';
+                addLog('success', '🎉 All packets verified successfully!');
+                addLog('info', `Results: ${state.successCount} passed, ${state.failedCount} failed out of ${state.verifiedCount} total`);
+            }
+        }
+
+        function pauseSimulation() {
+            state.paused = !state.paused;
+            const btn = document.getElementById('pauseSimBtn');
+            btn.textContent = state.paused ? '▶️ Resume' : '⏸️ Pause';
+            
+            if (state.paused) {
+                document.getElementById('systemStatusText').textContent = 'Simulation Paused';
+                addLog('warning', '⏸️ Simulation paused');
+            } else {
+                document.getElementById('systemStatusText').textContent = 'Verification Active';
+                addLog('info', '▶️ Simulation resumed');
+            }
+        }
+
+        function resetSimulation() {
+            state.running = false;
+            state.paused = false;
+            state.verifiedCount = 0;
+            state.successCount = 0;
+            state.failedCount = 0;
+            state.startTime = null;
+            
+            document.getElementById('startSimBtn').disabled = false;
+            document.getElementById('pauseSimBtn').disabled = true;
+            document.getElementById('pauseSimBtn').textContent = '⏸️ Pause';
+            document.getElementById('systemStatus').classList.remove('active');
+            document.getElementById('systemStatusText').textContent = 'System Ready';
+            
+            // Clear all views
+            document.getElementById('receivedMacView').innerHTML = '<div class="empty-state">Waiting for data...</div>';
+            document.getElementById('computedMacView').innerHTML = '<div class="empty-state">No computation yet</div>';
+            document.getElementById('comparisonView').innerHTML = '<div class="empty-state">No comparison yet</div>';
+            document.getElementById('resultView').innerHTML = '<div class="empty-state">No result yet</div>';
+            
+            // Deactivate all nodes
+            ['nodeInput', 'nodeReceivedMac', 'nodeCompute', 'nodeComputedMac', 'nodeCompare', 'nodeResult'].forEach(deactivateNode);
+            document.getElementById('nodeResult').classList.remove('failed');
+            
+            updateStats();
+            document.getElementById('logContainer').innerHTML = '';
+            addLog('info', '🔄 System reset - Ready to start');
+        }
+
+        // ==========================================
+        // EVENT LISTENERS
+        // ==========================================
+        document.getElementById('startSimBtn').addEventListener('click', startSimulation);
+        document.getElementById('pauseSimBtn').addEventListener('click', pauseSimulation);
+        document.getElementById('resetSimBtn').addEventListener('click', resetSimulation);
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        window.addEventListener('load', () => {
+            addLog('info', '🛡️ 5G NR PDCP Integrity Verification Simulator initialized');
+            addLog('security', '🔐 Security configuration: AES-CMAC, 32-bit MAC-I');
+            addLog('info', '🎯 Ready to verify packet integrity');
+            updateStats();
+        });
+    </script>
+</body>
+</html>

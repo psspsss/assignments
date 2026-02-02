@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR PDCP Integrity Protection Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #05070a;
+            --bg-primary: #0a0e14;
+            --bg-secondary: #0f1419;
+            --bg-card: #141920;
+            --bg-elevated: #1a1f28;
+            
+            --border-subtle: #1f2937;
+            --border-medium: #2d3748;
+            --border-bright: #3d4a5c;
+            
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+            
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            --accent-yellow: #fbbf24;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            
+            --glow-cyan: 0 0 30px rgba(6, 182, 212, 0.5);
+            --glow-blue: 0 0 30px rgba(59, 130, 246, 0.5);
+            --glow-purple: 0 0 30px rgba(139, 92, 246, 0.5);
+            --glow-green: 0 0 30px rgba(16, 185, 129, 0.5);
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Grid Background */
+        .grid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            background-image: 
+                linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        /* Glowing Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-purple);
+            top: -250px;
+            left: -250px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-pink);
+            bottom: -200px;
+            right: -200px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 100px) scale(1.1); }
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 14, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-medium);
+            padding: 1rem 2rem;
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-content {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            box-shadow: var(--glow-purple);
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink), var(--accent-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-status {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-medium);
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.active {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .status-dot.standby {
+            background: var(--accent-yellow);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Manual Mode Toggle Button */
+        .manual-mode-toggle {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid var(--accent-purple);
+            color: var(--accent-purple);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .manual-mode-toggle:hover {
+            background: rgba(139, 92, 246, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .manual-mode-toggle.disabled {
+            background: rgba(100, 116, 139, 0.1);
+            border-color: var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Diagram Animation Styles */
+        .diagram-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .diagram-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .diagram-content {
+            position: relative;
+            height: 300px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .flow-node {
+            position: absolute;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-medium);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .flow-node.active {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            box-shadow: var(--glow-cyan);
+            transform: scale(1.05);
+        }
+
+        .flow-node.sender {
+            top: 50%;
+            left: 5%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05));
+            border-color: var(--accent-purple);
+        }
+
+        .flow-node.receiver {
+            top: 50%;
+            right: 5%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.05));
+            border-color: var(--accent-pink);
+        }
+
+        .flow-node.headercomp {
+            top: 12%;
+            left: 24%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.05));
+            border-color: var(--accent-orange);
+        }
+
+        .flow-node.headercomp.active {
+            border-color: var(--accent-orange);
+            background: rgba(249, 115, 22, 0.18);
+            box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+        }
+
+        .flow-node.process {
+            top: 12%;
+            left: 62%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+            border-color: var(--accent-green);
+        }
+
+        .flow-node.verify {
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
+            border-color: var(--accent-blue);
+        }
+
+        .flow-arrow {
+            position: absolute;
+            height: 2px;
+            background: var(--border-medium);
+            transform-origin: left center;
+            transition: all 0.5s ease;
+        }
+
+        .flow-arrow::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid var(--border-medium);
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        .flow-arrow.active {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .flow-arrow.active::after {
+            border-left-color: var(--accent-cyan);
+        }
+
+        .data-packet {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--accent-cyan);
+            border-radius: 6px;
+            box-shadow: var(--glow-cyan);
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .data-packet.moving {
+            animation: packetMove 2s ease-in-out;
+        }
+
+        @keyframes packetMove {
+            0% { opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .flow-label {
+            position: absolute;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* Three Column Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr 450px;
+            gap: 1.5rem;
+            min-height: calc(100vh - 150px);
+        }
+
+        /* Panel Base Styles */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-header {
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-medium);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .panel-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .panel-body {
+            padding: 1.5rem;
+        }
+
+        /* LEFT COLUMN - Controls & Algorithm Info */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Entity Cards */
+        .entity-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .entity-card.active {
+            border-color: var(--accent-purple);
+            box-shadow: var(--glow-purple);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+        }
+
+        .entity-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .entity-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(139, 92, 246, 0.2);
+            border: 2px solid var(--accent-purple);
+        }
+
+        .entity-info {
+            flex: 1;
+        }
+
+        .entity-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .entity-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Manual Messaging Input */
+        .message-input-area {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+        
+        .message-input-area.hidden {
+            display: none;
+        }
+        
+        .message-input-area input {
+            width: 100%;
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid var(--border-medium);
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+        
+        .message-input-area input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.1);
+        }
+        
+        .message-input-area input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .send-message-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .send-message-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
+        }
+        
+        .send-message-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Control Buttons */
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-btn {
+            padding: 0.875rem 1.25rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-purple);
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-bright);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--accent-purple);
+        }
+
+        /* Algorithm Info */
+        .algo-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-purple);
+            margin-bottom: 1rem;
+        }
+
+        .algo-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            margin-bottom: 0.5rem;
+        }
+
+        .algo-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .algo-spec {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            background: var(--bg-elevated);
+            border-radius: 6px;
+        }
+
+        /* Stats Grid */
+        .stat-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* CENTER COLUMN - Visualization */
+        .center-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Integrity Process Visualization */
+        .integrity-process {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05));
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .process-step {
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .process-step.active {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+            transform: scale(1.02);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .step-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+
+        .step-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--accent-purple);
+            margin: 0.5rem 0;
+        }
+
+        /* Message Exchange Panel */
+        #messageExchangePanel {
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #messageExchangePanel .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        #messageExchangePanel .panel-body::-webkit-scrollbar,
+        #textMessagesPanel .panel-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #messageExchangePanel .panel-body::-webkit-scrollbar-track,
+        #textMessagesPanel .panel-body::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+        }
+
+        #messageExchangePanel .panel-body::-webkit-scrollbar-thumb,
+        #textMessagesPanel .panel-body::-webkit-scrollbar-thumb {
+            background: var(--border-bright);
+            border-radius: 10px;
+        }
+
+        #messageExchangePanel .panel-body::-webkit-scrollbar-thumb:hover,
+        #textMessagesPanel .panel-body::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-purple);
+        }
+
+        .message-item {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-item.verified {
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .message-item.protected {
+            border-left: 3px solid var(--accent-purple);
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-type {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .message-item.protected .message-type {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .message-item.verified .message-type {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .message-content {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-details {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* RIGHT COLUMN - Text Messages & Logs */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Text Messages Panel */
+        #textMessagesPanel {
+            height: 450px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #textMessagesPanel .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .text-bubble {
+            max-width: 85%;
+            padding: 0.875rem 1.125rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            color: white;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            align-self: flex-start;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+            animation: slideIn 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .text-bubble.from-gnb {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .text-bubble::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 12px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid var(--accent-purple);
+        }
+
+        .text-bubble.from-gnb::before {
+            left: auto;
+            right: -8px;
+            border-right: none;
+            border-left: 8px solid var(--accent-blue);
+        }
+
+        .text-meta {
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            font-family: 'JetBrains Mono', monospace;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Log Console */
+        .log-console {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .log-entry {
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border-left: 3px solid var(--border-subtle);
+            animation: slideIn 0.3s ease;
+        }
+
+        .log-entry.info {
+            border-left-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .log-entry.success {
+            border-left-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .log-entry.warning {
+            border-left-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        .log-entry.error {
+            border-left-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .log-entry.security {
+            border-left-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .log-timestamp {
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 300px 1fr 400px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .left-column, .right-column {
+                order: 2;
+            }
+            
+            .center-column {
+                order: 1;
+            }
+        }
+
+        /* MAC-I Display */
+        .mac-display {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-purple);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .mac-label {
+            font-size: 0.8rem;
+            color: var(--accent-purple);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .mac-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            word-break: break-all;
+            background: var(--bg-elevated);
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        /* Attack Simulation */
+        .attack-btn {
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .attack-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="grid-background"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <div class="logo-icon">🔒</div>
+                <div class="logo-text">5G NR PDCP Integrity Protection</div>
+            </div>
+            <div class="nav-status">
+                <div class="status-pill">
+                    <div class="status-dot standby" id="systemStatus"></div>
+                    <span id="systemStatusText">System Ready</span>
+                </div>
+                <button class="manual-mode-toggle" id="manualModeToggle" onclick="toggleManualMode()">
+                    <span class="toggle-icon">💬</span>
+                    <span id="manualModeText">Manual Messaging ON</span>
+                </button>
+                <div class="status-pill">
+                    <span>Protected: <strong id="protectedCount">0</strong></span>
+                </div>
+                <div class="status-pill">
+                    <span>Verified: <strong id="verifiedCount">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Diagram Animation -->
+        <div class="diagram-container">
+            <div class="diagram-title">
+                <span>🔄</span>
+                <span>PDCP Integrity Protection Flow</span>
+            </div>
+            <div class="diagram-content" id="diagramContent">
+                <!-- Sender Node -->
+                <div class="flow-node sender" id="senderNode">
+                    <div>📱 UE</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">Sender</div>
+                </div>
+
+                <!-- Receiver Node -->
+                <div class="flow-node receiver" id="receiverNode">
+                    <div>📡 gNB</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">Receiver</div>
+                </div>
+
+                <!-- Header Compression Node -->
+                <div class="flow-node headercomp" id="headerCompNode">
+                    <div>📦 Header Compression</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">ROHC</div>
+                </div>
+
+                <!-- Process Node -->
+                <div class="flow-node process" id="processNode">
+                    <div>🔐 Generate MAC-I</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">NIA2 Algorithm</div>
+                </div>
+
+                <!-- Verify Node -->
+                <div class="flow-node verify" id="verifyNode">
+                    <div>✅ Verify MAC-I</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">Integrity Check</div>
+                </div>
+
+                <!-- Arrows -->
+                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;" id="flowSvg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="var(--border-medium)" id="arrowPolygon"/>
+                        </marker>
+                        <marker id="arrowheadActive" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="var(--accent-cyan)"/>
+                        </marker>
+                    </defs>
+                    <!-- Arrow 0: Sender to Header Compression -->
+                    <path id="arrow0" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <!-- Arrow 1: Header Compression to Process -->
+                    <path id="arrow1" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <!-- Arrow 2: Process to Receiver -->
+                    <path id="arrow2" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <!-- Arrow 3: Receiver to Verify -->
+                    <path id="arrow3" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                </svg>
+
+                <!-- Data Packet -->
+                <div class="data-packet" id="dataPacket">📦</div>
+
+                <!-- Labels -->
+                <div class="flow-label" id="label1" style="display: none;">Attach MAC-I</div>
+                <div class="flow-label" id="label2" style="display: none;">Protected PDU</div>
+                <div class="flow-label" id="label3" style="display: none;">Verify Integrity</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT COLUMN - Controls & Algorithm Info -->
+            <div class="left-column">
+                <!-- Network Entities -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">🌐</div>
+                        <div class="panel-title">Network Entities</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="entity-card" id="ueEntity">
+                            <div class="entity-header">
+                                <div class="entity-avatar">📱</div>
+                                <div class="entity-info">
+                                    <div class="entity-name">User Equipment</div>
+                                    <div class="entity-type">Transmitter</div>
+                                </div>
+                            </div>
+                            <div class="message-input-area" id="ueInputArea">
+                                <input 
+                                    type="text" 
+                                    id="ueInput" 
+                                    placeholder="Type message from UE..." 
+                                    onkeypress="handleKeyPress(event, 'ue')"
+                                >
+                                <button class="send-message-btn" onclick="sendManualMessage('ue')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/>
+                                    </svg>
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="entity-card" id="gnbEntity">
+                            <div class="entity-header">
+                                <div class="entity-avatar">📡</div>
+                                <div class="entity-info">
+                                    <div class="entity-name">gNodeB</div>
+                                    <div class="entity-type">Receiver</div>
+                                </div>
+                            </div>
+                            <div class="message-input-area" id="gnbInputArea">
+                                <input 
+                                    type="text" 
+                                    id="gnbInput" 
+                                    placeholder="Type message from gNB..." 
+                                    onkeypress="handleKeyPress(event, 'gnb')"
+                                >
+                                <button class="send-message-btn" onclick="sendManualMessage('gnb')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/>
+                                    </svg>
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">⚙️</div>
+                        <div class="panel-title">Simulation Controls</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="control-section">
+                            <button id="startSimBtn" class="control-btn btn-primary">▶️ Start Simulation</button>
+                            <button id="pauseSimBtn" class="control-btn btn-secondary" disabled>⏸️ Pause</button>
+                            <button id="resetSimBtn" class="control-btn btn-secondary">🔄 Reset</button>
+                            <button class="attack-btn" onclick="simulateAttack()">⚠️ Simulate Tampering Attack</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algorithm Info -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">🔐</div>
+                        <div class="panel-title">Integrity Algorithms</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="algo-card">
+                            <div class="algo-name">128-NIA2 (AES-CMAC)</div>
+                            <div class="algo-desc">AES-based CMAC for integrity protection</div>
+                            <div class="algo-spec">TS 33.501 • 128-bit key • 32-bit MAC-I</div>
+                        </div>
+                        <div class="algo-card">
+                            <div class="algo-name">128-NIA1 (SNOW 3G)</div>
+                            <div class="algo-desc">SNOW 3G stream cipher based</div>
+                            <div class="algo-spec">TS 35.215 • 128-bit key • 32-bit MAC-I</div>
+                        </div>
+                        <div class="algo-card">
+                            <div class="algo-name">128-NIA3 (ZUC)</div>
+                            <div class="algo-desc">ZUC stream cipher based</div>
+                            <div class="algo-spec">TS 35.223 • 128-bit key • 32-bit MAC-I</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER COLUMN - Visualization -->
+            <div class="center-column">
+                <!-- Integrity Process Visualization -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">🔐</div>
+                        <div class="panel-title">Integrity Protection Process</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="integrity-process" id="integrityProcess">
+                            <div class="process-step" id="step1">
+                                <div class="step-header">
+                                    <div class="step-number">1</div>
+                                    <div class="step-title">Input Parameters</div>
+                                </div>
+                                <div class="step-content" id="inputParams">
+                                    COUNT: 0x00000000<br>
+                                    BEARER: 0x00<br>
+                                    DIRECTION: 0 (Uplink)<br>
+                                    MESSAGE: Waiting for transmission...
+                                </div>
+                            </div>
+
+                            <div class="step-arrow">↓</div>
+
+                            <div class="process-step" id="step2">
+                                <div class="step-header">
+                                    <div class="step-number">2</div>
+                                    <div class="step-title">NIA2 Algorithm (AES-CMAC)</div>
+                                </div>
+                                <div class="step-content" id="algorithmProcess">
+                                    KEY: K_RRCint (128-bit)<br>
+                                    Processing with AES-CMAC...<br>
+                                    Generating 32-bit MAC-I...
+                                </div>
+                            </div>
+
+                            <div class="step-arrow">↓</div>
+
+                            <div class="process-step" id="step3">
+                                <div class="step-header">
+                                    <div class="step-number">3</div>
+                                    <div class="step-title">MAC-I Generated</div>
+                                </div>
+                                <div class="mac-display">
+                                    <div class="mac-label">Message Authentication Code - Integrity</div>
+                                    <div class="mac-value" id="macValue">0x00000000</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Exchange -->
+                <div class="panel" id="messageExchangePanel">
+                    <div class="panel-header">
+                        <div class="panel-icon">💬</div>
+                        <div class="panel-title">Message Exchange (UE ↔ gNB)</div>
+                    </div>
+                    <div class="panel-body" id="messageContainer">
+                        <!-- Messages will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN - Text Messages & Logs -->
+            <div class="right-column">
+                <!-- Text Messages -->
+                <div class="panel" id="textMessagesPanel">
+                    <div class="panel-header">
+                        <div class="panel-icon">💭</div>
+                        <div class="panel-title">Actual Messages</div>
+                    </div>
+                    <div class="panel-body" id="textMessageContainer">
+                        <!-- Text messages will appear here -->
+                    </div>
+                </div>
+
+                <!-- Log Console -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">📋</div>
+                        <div class="panel-title">Security Log</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="log-console" id="logConsole">
+                            <!-- Log entries will be added here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">📊</div>
+                        <div class="panel-title">Statistics</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="stat-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">🔒 Protected PDUs</div>
+                                <div class="stat-value" id="protectedStat">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">✅ Verified PDUs</div>
+                                <div class="stat-value" id="verifiedStat">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">⚠️ Integrity Failures</div>
+                                <div class="stat-value" id="failureStat">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        function scrollToBottom(element) {
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function formatTime() {
+            return new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                fractionalSecondDigits: 3
+            });
+        }
+
+        function generateHex(length) {
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += Math.floor(Math.random() * 16).toString(16);
+            }
+            return result.toUpperCase();
+        }
+
+        function generateMacI(message, count, bearer, direction, key) {
+            // Simulate MAC-I generation (in real implementation, this would use AES-CMAC)
+            const input = `${count.toString(16).padStart(8, '0')}${bearer.toString(16).padStart(2, '0')}${direction}${message}${key}`;
+            let hash = 0;
+            for (let i = 0; i < input.length; i++) {
+                hash = ((hash << 5) - hash) + input.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16).padStart(8, '0').toUpperCase().substring(0, 8);
+        }
+
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        
+        const state = {
+            running: false,
+            paused: false,
+            protectedCount: 0,
+            verifiedCount: 0,
+            failureCount: 0,
+            count: 0,
+            bearer: 0,
+            direction: 0,
+            manualMode: true,
+            manualMessageQueue: [],
+            integrityKey: generateHex(32), // 128-bit key
+            autoMessages: [
+                { message: 'Hello, this is a test message', from: 'UE', to: 'gNB' },
+                { message: 'Integrity protection active', from: 'gNB', to: 'UE' },
+                { message: 'Secure communication established', from: 'UE', to: 'gNB' },
+                { message: 'Data transmission in progress', from: 'gNB', to: 'UE' },
+                { message: 'Connection verified and protected', from: 'UE', to: 'gNB' },
+                { message: 'Message authentication successful', from: 'gNB', to: 'UE' },
+                { message: 'Bearer configured successfully', from: 'UE', to: 'gNB' },
+                { message: 'Security context activated', from: 'gNB', to: 'UE' },
+                { message: 'RRC connection reconfiguration complete', from: 'UE', to: 'gNB' },
+                { message: 'Acknowledgment received', from: 'gNB', to: 'UE' }
+            ],
+            currentAutoMsgIndex: 0,
+            maxMessages: 20
+        };
+
+        // ==========================================
+        // MANUAL MODE TOGGLE
+        // ==========================================
+        
+        function toggleManualMode() {
+            state.manualMode = !state.manualMode;
+            
+            const toggleBtn = document.getElementById('manualModeToggle');
+            const toggleText = document.getElementById('manualModeText');
+            const ueInputArea = document.getElementById('ueInputArea');
+            const gnbInputArea = document.getElementById('gnbInputArea');
+            
+            if (state.manualMode) {
+                toggleBtn.classList.remove('disabled');
+                toggleText.textContent = 'Manual Messaging ON';
+                ueInputArea.classList.remove('hidden');
+                gnbInputArea.classList.remove('hidden');
+                addLog('info', '💬 Manual messaging enabled - You can send custom messages anytime');
+            } else {
+                toggleBtn.classList.add('disabled');
+                toggleText.textContent = 'Manual Messaging OFF';
+                ueInputArea.classList.add('hidden');
+                gnbInputArea.classList.add('hidden');
+                
+                if (state.manualMessageQueue.length > 0) {
+                    addLog('warning', `Cleared ${state.manualMessageQueue.length} queued manual message(s)`);
+                    state.manualMessageQueue = [];
+                }
+                
+                addLog('info', '🔇 Manual messaging disabled - Auto simulation only');
+            }
+        }
+
+        // ==========================================
+        // MANUAL MESSAGING FUNCTIONS
+        // ==========================================
+        
+        function handleKeyPress(event, sender) {
+            if (event.key === 'Enter') {
+                sendManualMessage(sender);
+            }
+        }
+        
+        async function sendManualMessage(sender) {
+            if (!state.manualMode) return;
+            
+            const input = document.getElementById(`${sender}Input`);
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            input.value = '';
+            
+            state.manualMessageQueue.push({
+                sender: sender,
+                message: message,
+                from: sender === 'ue' ? 'UE' : 'gNB',
+                to: sender === 'ue' ? 'gNB' : 'UE'
+            });
+            
+            addLog('info', `Manual message queued from ${sender === 'ue' ? 'UE' : 'gNB'}: "${message}"`);
+            
+            if (!state.running) {
+                await processManualMessage();
+            }
+        }
+        
+        async function processManualMessage() {
+            if (state.manualMessageQueue.length === 0) return;
+            
+            const msgData = state.manualMessageQueue.shift();
+            await protectAndTransmitMessage(msgData.message, msgData.from, msgData.to);
+        }
+
+        // ==========================================
+        // UI UPDATE FUNCTIONS
+        // ==========================================
+        
+        function updateStats() {
+            document.getElementById('protectedCount').textContent = state.protectedCount;
+            document.getElementById('verifiedCount').textContent = state.verifiedCount;
+            document.getElementById('protectedStat').textContent = state.protectedCount;
+            document.getElementById('verifiedStat').textContent = state.verifiedCount;
+            document.getElementById('failureStat').textContent = state.failureCount;
+        }
+
+        function addLog(level, message) {
+            const console = document.getElementById('logConsole');
+            const line = document.createElement('div');
+            line.className = `log-entry ${level}`;
+            line.innerHTML = `
+                <span class="log-timestamp">[${formatTime()}]</span>${message}
+            `;
+            console.appendChild(line);
+            scrollToBottom(console);
+        }
+
+        function addMessage(type, text, meta) {
+            const container = document.getElementById('messageContainer');
+            const msg = document.createElement('div');
+            msg.className = `message-item ${type}`;
+            msg.innerHTML = `
+                <div class="message-header">
+                    <div class="message-type">${type}</div>
+                    <div class="message-time">${formatTime()}</div>
+                </div>
+                <div class="message-content">${text}</div>
+                <div class="message-details">${meta}</div>
+            `;
+            container.appendChild(msg);
+            scrollToBottom(container);
+            return msg;
+        }
+
+        function displayTextMessage(message, from, to) {
+            const container = document.getElementById('textMessageContainer');
+            const bubble = document.createElement('div');
+            
+            // Add 'from-gnb' class if message is from gNB
+            bubble.className = from === 'gNB' ? 'text-bubble from-gnb' : 'text-bubble';
+            bubble.innerHTML = `
+                "${message}"
+                <div class="text-meta">
+                    ${from} → ${to} | Protected with MAC-I
+                </div>
+            `;
+            
+            container.appendChild(bubble);
+            scrollToBottom(container);
+            return bubble;
+        }
+
+        // ==========================================
+        // INTEGRITY PROTECTION LOGIC
+        // ==========================================
+        
+        async function protectAndTransmitMessage(message, from, to) {
+            state.count++;
+            state.direction = from === 'UE' ? 0 : 1;
+            
+            // Activate entities
+            document.getElementById('ueEntity').classList.add('active');
+            document.getElementById('gnbEntity').classList.add('active');
+
+            // Step 1: Show input parameters
+            addLog('security', `Starting integrity protection for message from ${from}`);
+            document.getElementById('step1').classList.add('active');
+            animateDiagram(1);
+            
+            document.getElementById('inputParams').innerHTML = `
+                COUNT: 0x${state.count.toString(16).padStart(8, '0').toUpperCase()}<br>
+                BEARER: 0x${state.bearer.toString(16).padStart(2, '0').toUpperCase()}<br>
+                DIRECTION: ${state.direction} (${from === 'UE' ? 'Uplink' : 'Downlink'})<br>
+                MESSAGE: "${message}"
+            `;
+            
+            await sleep(800);
+
+            // Step 2: Algorithm processing
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+            addLog('security', 'Applying NIA2 (AES-CMAC) algorithm...');
+            
+            document.getElementById('algorithmProcess').innerHTML = `
+                KEY: 0x${state.integrityKey.substring(0, 16)}...<br>
+                Processing with AES-CMAC...<br>
+                Input: COUNT || BEARER || DIRECTION || MESSAGE<br>
+                Computing CMAC over input block...
+            `;
+            
+            await sleep(1000);
+
+            // Step 3: Generate MAC-I
+            const macI = generateMacI(message, state.count, state.bearer, state.direction, state.integrityKey);
+            
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step3').classList.add('active');
+            document.getElementById('macValue').textContent = `0x${macI}`;
+            
+            addLog('success', `MAC-I generated: 0x${macI}`);
+            state.protectedCount++;
+            updateStats();
+            
+            await sleep(800);
+
+            // Add protected message
+            addMessage('protected', `"${message}"`, `${from} → ${to} | MAC-I: 0x${macI} | COUNT: ${state.count}`);
+            
+            await sleep(600);
+            addLog('info', 'Transmitting protected PDU...');
+            animateDiagram(2);
+            
+            await sleep(800);
+
+            // Verification at receiver
+            addLog('security', `Verifying integrity at ${to}...`);
+            animateDiagram(3);
+            await sleep(500);
+            
+            const verifyMacI = generateMacI(message, state.count, state.bearer, state.direction, state.integrityKey);
+            
+            if (macI === verifyMacI) {
+                addLog('success', `✅ Integrity verified! MAC-I match: 0x${macI}`);
+                addMessage('verified', 'Integrity check passed', `Message authenticated and delivered to ${to}`);
+                state.verifiedCount++;
+                displayTextMessage(message, from, to);
+            } else {
+                addLog('error', `❌ Integrity verification failed! MAC-I mismatch`);
+                state.failureCount++;
+            }
+            
+            updateStats();
+
+            // Reset visualization
+            await sleep(1000);
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('ueEntity').classList.remove('active');
+            document.getElementById('gnbEntity').classList.remove('active');
+        }
+
+        // ==========================================
+        // SIMULATION LOGIC
+        // ==========================================
+        
+        async function startSimulation() {
+            if (state.running) return;
+            
+            state.running = true;
+            state.paused = false;
+            
+            document.getElementById('startSimBtn').disabled = true;
+            document.getElementById('pauseSimBtn').disabled = false;
+            document.getElementById('systemStatus').classList.add('active');
+            document.getElementById('systemStatusText').textContent = 'Simulation Running';
+            
+            addLog('info', 'PDCP Integrity Protection simulation started');
+            addLog('security', `Using NIA2 (AES-CMAC) with key: 0x${state.integrityKey.substring(0, 16)}...`);
+            
+            await sleep(500);
+            
+            while (state.running && !state.paused && state.protectedCount < state.maxMessages) {
+                // Process manual messages first if any are queued
+                if (state.manualMessageQueue.length > 0) {
+                    await processManualMessage();
+                } else {
+                    // Send automated message
+                    const msgData = state.autoMessages[state.currentAutoMsgIndex % state.autoMessages.length];
+                    state.currentAutoMsgIndex++;
+                    await protectAndTransmitMessage(msgData.message, msgData.from, msgData.to);
+                }
+                
+                await sleep(2000);
+            }
+            
+            if (state.protectedCount >= state.maxMessages) {
+                state.running = false;
+                document.getElementById('startSimBtn').disabled = false;
+                document.getElementById('pauseSimBtn').disabled = true;
+                document.getElementById('systemStatus').classList.remove('active');
+                document.getElementById('systemStatusText').textContent = 'Simulation Complete ✓';
+                addLog('success', '🎉 Simulation completed successfully!');
+            }
+        }
+
+        function pauseSimulation() {
+            state.paused = !state.paused;
+            const btn = document.getElementById('pauseSimBtn');
+            btn.textContent = state.paused ? '▶️ Resume' : '⏸️ Pause';
+            
+            if (state.paused) {
+                document.getElementById('systemStatusText').textContent = 'Simulation Paused';
+                addLog('warning', 'Simulation paused');
+            } else {
+                document.getElementById('systemStatusText').textContent = 'Simulation Running';
+                addLog('info', 'Simulation resumed');
+                continueSim();
+            }
+        }
+        
+        async function continueSim() {
+            while (state.running && !state.paused && state.protectedCount < state.maxMessages) {
+                // Process manual messages first if any are queued
+                if (state.manualMessageQueue.length > 0) {
+                    await processManualMessage();
+                } else {
+                    // Send automated message
+                    const msgData = state.autoMessages[state.currentAutoMsgIndex % state.autoMessages.length];
+                    state.currentAutoMsgIndex++;
+                    await protectAndTransmitMessage(msgData.message, msgData.from, msgData.to);
+                }
+                await sleep(2000);
+            }
+            
+            if (state.protectedCount >= state.maxMessages) {
+                state.running = false;
+                document.getElementById('startSimBtn').disabled = false;
+                document.getElementById('pauseSimBtn').disabled = true;
+                document.getElementById('systemStatus').classList.remove('active');
+                document.getElementById('systemStatusText').textContent = 'Simulation Complete ✓';
+                addLog('success', '🎉 Simulation completed!');
+            }
+        }
+
+        function resetSimulation() {
+            state.running = false;
+            state.paused = false;
+            state.protectedCount = 0;
+            state.verifiedCount = 0;
+            state.failureCount = 0;
+            state.count = 0;
+            state.currentAutoMsgIndex = 0;
+            state.manualMessageQueue = [];
+            state.integrityKey = generateHex(32);
+            
+            document.getElementById('startSimBtn').disabled = false;
+            document.getElementById('pauseSimBtn').disabled = true;
+            document.getElementById('pauseSimBtn').textContent = '⏸️ Pause';
+            document.getElementById('systemStatus').classList.remove('active');
+            document.getElementById('systemStatusText').textContent = 'System Ready';
+            
+            document.getElementById('ueEntity').classList.remove('active');
+            document.getElementById('gnbEntity').classList.remove('active');
+            
+            document.getElementById('messageContainer').innerHTML = '';
+            document.getElementById('textMessageContainer').innerHTML = '';
+            document.getElementById('logConsole').innerHTML = '';
+            
+            document.getElementById('ueInput').value = '';
+            document.getElementById('gnbInput').value = '';
+            
+            document.getElementById('inputParams').innerHTML = `
+                COUNT: 0x00000000<br>
+                BEARER: 0x00<br>
+                DIRECTION: 0 (Uplink)<br>
+                MESSAGE: Waiting for transmission...
+            `;
+            
+            document.getElementById('algorithmProcess').innerHTML = `
+                KEY: K_RRCint (128-bit)<br>
+                Processing with AES-CMAC...<br>
+                Generating 32-bit MAC-I...
+            `;
+            
+            document.getElementById('macValue').textContent = '0x00000000';
+            
+            document.querySelectorAll('.process-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            updateStats();
+            addLog('info', 'Simulation reset - Ready to start');
+            addLog('security', `New integrity key generated: 0x${state.integrityKey.substring(0, 16)}...`);
+        }
+
+        // ==========================================
+        // ATTACK SIMULATION
+        // ==========================================
+        
+        async function simulateAttack() {
+            if (!state.running && state.protectedCount === 0) {
+                addLog('warning', 'Start simulation first before simulating attack');
+                return;
+            }
+            
+            addLog('warning', '⚠️ Simulating message tampering attack...');
+            
+            const originalMessage = 'This is a legitimate message';
+            const tamperedMessage = 'This is a TAMPERED message';
+            
+            await sleep(500);
+            
+            state.count++;
+            const originalMacI = generateMacI(originalMessage, state.count, state.bearer, 0, state.integrityKey);
+            
+            addLog('security', `Original message: "${originalMessage}"`);
+            addLog('security', `Original MAC-I: 0x${originalMacI}`);
+            
+            await sleep(800);
+            
+            addLog('error', `🔴 Attacker modified message to: "${tamperedMessage}"`);
+            addMessage('protected', `"${tamperedMessage}"`, `UE → gNB | MAC-I: 0x${originalMacI} (FORGED) | COUNT: ${state.count}`);
+            
+            await sleep(1000);
+            
+            addLog('security', 'Receiver verifying integrity...');
+            const verifyMacI = generateMacI(tamperedMessage, state.count, state.bearer, 0, state.integrityKey);
+            
+            await sleep(800);
+            
+            addLog('error', `❌ MAC-I verification FAILED!`);
+            addLog('error', `Expected: 0x${verifyMacI} | Received: 0x${originalMacI}`);
+            addLog('success', '🛡️ Attack detected and blocked! Message discarded.');
+            
+            state.failureCount++;
+            updateStats();
+        }
+
+        // ==========================================
+        // EVENT LISTENERS
+        // ==========================================
+        
+        document.getElementById('startSimBtn').addEventListener('click', startSimulation);
+        document.getElementById('pauseSimBtn').addEventListener('click', pauseSimulation);
+        document.getElementById('resetSimBtn').addEventListener('click', resetSimulation);
+
+        // ==========================================
+        // DIAGRAM ANIMATION
+        // ==========================================
+        
+        function initDiagram() {
+            const svg = document.getElementById('flowSvg');
+            if (!svg) return;
+
+            const senderNode      = document.getElementById('senderNode');
+            const headerCompNode  = document.getElementById('headerCompNode');
+            const processNode     = document.getElementById('processNode');
+            const receiverNode    = document.getElementById('receiverNode');
+            const verifyNode      = document.getElementById('verifyNode');
+
+            if (!senderNode || !headerCompNode || !processNode || !receiverNode || !verifyNode) return;
+
+            const diagramEl = document.getElementById('diagramContent');
+            if (!diagramEl) return;
+            const D = diagramEl.getBoundingClientRect();
+
+            function r(el) { return el.getBoundingClientRect(); }
+
+            const sR  = r(senderNode);
+            const hR  = r(headerCompNode);
+            const pR  = r(processNode);
+            const rcR = r(receiverNode);
+            const vR  = r(verifyNode);
+
+            // helper: centre-x / centre-y / right-mid / left-mid / bottom-mid / top-mid  relative to diagram
+            function cx(rect) { return rect.left + rect.width  / 2 - D.left; }
+            function cy(rect) { return rect.top  + rect.height / 2 - D.top;  }
+            function rm(rect) { return { x: rect.right  - D.left,  y: cy(rect) }; }
+            function lm(rect) { return { x: rect.left   - D.left,  y: cy(rect) }; }
+            function bm(rect) { return { x: cx(rect),              y: rect.bottom - D.top }; }
+            function tm(rect) { return { x: cx(rect),              y: rect.top    - D.top }; }
+
+            // arrow0: Sender right-mid  →  HeaderComp left-mid  (straight horizontal)
+            const a0 = document.getElementById('arrow0');
+            if (a0) {
+                const s = rm(sR), e = lm(hR);
+                a0.setAttribute('d', `M ${s.x} ${s.y} L ${e.x} ${e.y}`);
+            }
+
+            // arrow1: HeaderComp right-mid  →  Process left-mid  (straight horizontal)
+            const a1 = document.getElementById('arrow1');
+            if (a1) {
+                const s = rm(hR), e = lm(pR);
+                a1.setAttribute('d', `M ${s.x} ${s.y} L ${e.x} ${e.y}`);
+            }
+
+            // arrow2: Process right-mid  →  Receiver left-mid  (curved up)
+            const a2 = document.getElementById('arrow2');
+            if (a2) {
+                const s = rm(pR), e = lm(rcR);
+                a2.setAttribute('d', `M ${s.x} ${s.y} Q ${(s.x+e.x)/2} ${(s.y+e.y)/2 - 30} ${e.x} ${e.y}`);
+            }
+
+            // arrow3: Receiver bottom-mid  →  Verify top-mid  (curved right)
+            const a3 = document.getElementById('arrow3');
+            if (a3) {
+                const s = bm(rcR), e = tm(vR);
+                a3.setAttribute('d', `M ${s.x} ${s.y} Q ${(s.x+e.x)/2 + 30} ${(s.y+e.y)/2} ${e.x} ${e.y}`);
+            }
+        }
+        
+        async function animateDiagram(step) {
+            const senderNode     = document.getElementById('senderNode');
+            const headerCompNode = document.getElementById('headerCompNode');
+            const processNode    = document.getElementById('processNode');
+            const receiverNode   = document.getElementById('receiverNode');
+            const verifyNode     = document.getElementById('verifyNode');
+            const arrow0 = document.getElementById('arrow0');
+            const arrow1 = document.getElementById('arrow1');
+            const arrow2 = document.getElementById('arrow2');
+            const arrow3 = document.getElementById('arrow3');
+            const packet = document.getElementById('dataPacket');
+
+            if (!senderNode || !headerCompNode || !processNode || !receiverNode || !verifyNode || !packet) return;
+
+            // Reset all nodes and arrows
+            [senderNode, headerCompNode, processNode, receiverNode, verifyNode].forEach(n => n.classList.remove('active'));
+            [arrow0, arrow1, arrow2, arrow3].forEach(a => {
+                if (a) {
+                    a.setAttribute('stroke', 'var(--border-medium)');
+                    a.setAttribute('marker-end', 'url(#arrowhead)');
+                }
+            });
+
+            if (step === 1) {
+                // Step 1: Sender → Header Compression → Generate MAC-I
+                senderNode.classList.add('active');
+                if (arrow0) { arrow0.setAttribute('stroke', 'var(--accent-cyan)'); arrow0.setAttribute('marker-end', 'url(#arrowheadActive)'); }
+                await sleep(350);
+                headerCompNode.classList.add('active');
+                if (arrow1) { arrow1.setAttribute('stroke', 'var(--accent-cyan)'); arrow1.setAttribute('marker-end', 'url(#arrowheadActive)'); }
+                await sleep(350);
+                processNode.classList.add('active');
+
+            } else if (step === 2) {
+                // Step 2: Process → Receiver (with moving packet)
+                processNode.classList.add('active');
+                await sleep(200);
+                if (arrow2) { arrow2.setAttribute('stroke', 'var(--accent-cyan)'); arrow2.setAttribute('marker-end', 'url(#arrowheadActive)'); }
+
+                const pR = processNode.getBoundingClientRect();
+                const D  = document.getElementById('diagramContent').getBoundingClientRect();
+                packet.style.left = (pR.right - D.left) + 'px';
+                packet.style.top  = (pR.top + pR.height / 2 - D.top - 15) + 'px';
+                packet.classList.add('moving');
+
+                await sleep(1000);
+                receiverNode.classList.add('active');
+                packet.classList.remove('moving');
+
+            } else if (step === 3) {
+                // Step 3: Receiver → Verify
+                receiverNode.classList.add('active');
+                await sleep(200);
+                if (arrow3) { arrow3.setAttribute('stroke', 'var(--accent-cyan)'); arrow3.setAttribute('marker-end', 'url(#arrowheadActive)'); }
+                await sleep(300);
+                verifyNode.classList.add('active');
+            }
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        
+        window.addEventListener('load', () => {
+            addLog('info', '5G NR PDCP Integrity Protection Simulator initialized');
+            addLog('security', `Integrity algorithm: NIA2 (AES-CMAC based)`);
+            addLog('security', `Key: 0x${state.integrityKey.substring(0, 16)}...`);
+            addLog('info', 'System ready - Click "Start Simulation" to begin');
+            updateStats();
+            
+            // Initialize diagram
+            setTimeout(initDiagram, 100);
+            window.addEventListener('resize', initDiagram);
+        });
+    </script>
+</body>
+</html>

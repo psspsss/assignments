@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR PDCP Ciphering Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #05070a;
+            --bg-primary: #0a0e14;
+            --bg-secondary: #0f1419;
+            --bg-card: #141920;
+            --bg-elevated: #1a1f28;
+
+            --border-subtle: #1f2937;
+            --border-medium: #2d3748;
+            --border-bright: #3d4a5c;
+
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            --accent-yellow: #fbbf24;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+
+            --glow-cyan: 0 0 30px rgba(6, 182, 212, 0.5);
+            --glow-blue: 0 0 30px rgba(59, 130, 246, 0.5);
+            --glow-purple: 0 0 30px rgba(139, 92, 246, 0.5);
+            --glow-green: 0 0 30px rgba(16, 185, 129, 0.5);
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Grid Background */
+        .grid-background {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            background-image:
+                linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0%   { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        /* Glowing Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .orb-1 {
+            width: 500px; height: 500px;
+            background: var(--accent-cyan);
+            top: -250px; right: -250px;
+            animation: float 20s ease-in-out infinite;
+        }
+        .orb-2 {
+            width: 400px; height: 400px;
+            background: var(--accent-blue);
+            bottom: -200px; left: -200px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50%      { transform: translate(100px,100px) scale(1.1); }
+        }
+
+        /* ═══════════════════════════════════════════
+           TOP NAVIGATION  (identical structure)
+        ═══════════════════════════════════════════ */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            background: rgba(10,14,20,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-medium);
+            padding: 1rem 2rem;
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .nav-content {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700;
+            box-shadow: var(--glow-cyan);
+        }
+        .logo-text {
+            font-size: 1.5rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-status { display: flex; gap: 2rem; align-items: center; }
+        .status-pill {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-medium);
+            border-radius: 20px; font-size: 0.85rem;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .status-dot.active  { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        .status-dot.standby { background: var(--accent-yellow); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+        .manual-mode-toggle {
+            background: rgba(6,182,212,0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 8px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .manual-mode-toggle:hover { background: rgba(6,182,212,0.2); transform: translateY(-1px); }
+        .manual-mode-toggle.disabled {
+            background: rgba(100,116,139,0.1);
+            border-color: var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        /* ═══════════════════════════════════════════
+           CONTAINER & LAYOUT
+        ═══════════════════════════════════════════ */
+        .container {
+            position: relative; z-index: 10;
+            max-width: 1920px;
+            margin: 0 auto; padding: 2rem;
+        }
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr 450px;
+            gap: 1.5rem;
+            min-height: calc(100vh - 150px);
+        }
+
+        /* ═══════════════════════════════════════════
+           DIAGRAM  (ciphering flow)
+        ═══════════════════════════════════════════ */
+        .diagram-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .diagram-title {
+            font-size: 1.25rem; font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .diagram-content {
+            position: relative;
+            height: 220px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .flow-node {
+            position: absolute;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-medium);
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.85rem; font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        .flow-node .node-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* individual node positions — 6 nodes in a horizontal chain with better spacing */
+        .flow-node.n-integrity {
+            top: 50%; left: 2%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05));
+            border-color: var(--accent-green);
+        }
+        .flow-node.n-integrity.active {
+            border-color: var(--accent-green);
+            background: rgba(16,185,129,0.18);
+            box-shadow: 0 0 30px rgba(16,185,129,0.5);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .flow-node.n-cipher {
+            top: 50%; left: 24%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(6,182,212,0.25), rgba(6,182,212,0.06));
+            border-color: var(--accent-cyan);
+        }
+        .flow-node.n-cipher.active {
+            border-color: var(--accent-cyan);
+            background: rgba(6,182,212,0.22);
+            box-shadow: var(--glow-cyan);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .flow-node.n-keystream {
+            top: 8%; left: 42%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05));
+            border-color: var(--accent-purple);
+        }
+        .flow-node.n-keystream.active {
+            border-color: var(--accent-purple);
+            background: rgba(139,92,246,0.18);
+            box-shadow: var(--glow-purple);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .flow-node.n-xor {
+            top: 50%; left: 42%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(249,115,22,0.22), rgba(249,115,22,0.06));
+            border-color: var(--accent-orange);
+            border-radius: 50%;
+            width: 64px; height: 64px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0;
+            font-size: 1.1rem;
+        }
+        .flow-node.n-xor.active {
+            border-color: var(--accent-orange);
+            background: rgba(249,115,22,0.25);
+            box-shadow: 0 0 30px rgba(249,115,22,0.5);
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+
+        .flow-node.n-ciphertext {
+            top: 50%; left: 60%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.05));
+            border-color: var(--accent-blue);
+        }
+        .flow-node.n-ciphertext.active {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.18);
+            box-shadow: var(--glow-blue);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .flow-node.n-receiver {
+            top: 50%; right: 2%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(236,72,153,0.05));
+            border-color: var(--accent-pink);
+        }
+        .flow-node.n-receiver.active {
+            border-color: var(--accent-pink);
+            background: rgba(236,72,153,0.18);
+            box-shadow: 0 0 30px rgba(236,72,153,0.5);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .data-packet {
+            position: absolute;
+            width: 28px; height: 28px;
+            background: var(--accent-cyan);
+            border-radius: 6px;
+            box-shadow: var(--glow-cyan);
+            opacity: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .data-packet.moving {
+            animation: packetTravel 0.6s ease-in-out forwards;
+        }
+        @keyframes packetTravel {
+            0%   { opacity: 0; transform: translateX(0); }
+            15%  { opacity: 1; }
+            85%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* ═══════════════════════════════════════════
+           PANEL BASE (identical)
+        ═══════════════════════════════════════════ */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .panel-header {
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-medium);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .panel-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .panel-title { font-size: 1.1rem; font-weight: 600; flex: 1; }
+        .panel-body { padding: 1.5rem; }
+
+        /* ═══════════════════════════════════════════
+           LEFT COLUMN
+        ═══════════════════════════════════════════ */
+        .left-column  { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        /* Entity cards */
+        .entity-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px; padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .entity-card.active {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+            background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.1));
+        }
+        .entity-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; }
+        .entity-avatar {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(6,182,212,0.2);
+            border: 2px solid var(--accent-cyan);
+        }
+        .entity-info { flex: 1; }
+        .entity-name  { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+        .entity-type  { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Manual input */
+        .message-input-area {
+            margin-top: 15px; padding-top: 15px;
+            border-top: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+        .message-input-area.hidden { display: none; }
+        .message-input-area input {
+            width: 100%;
+            background: rgba(6,182,212,0.05);
+            border: 1px solid var(--border-medium);
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: var(--text-primary);
+            font-family: inherit; font-size: 0.85rem;
+            transition: all 0.3s ease; margin-bottom: 8px;
+        }
+        .message-input-area input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(6,182,212,0.3);
+            background: rgba(6,182,212,0.1);
+        }
+        .message-input-area input::placeholder { color: var(--text-muted); }
+        .send-message-btn {
+            width: 100%; padding: 10px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border: none; color: white;
+            font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .send-message-btn:hover { transform: translateY(-2px); box-shadow: var(--glow-cyan); }
+        .send-message-btn:active { transform: translateY(0); }
+
+        /* Control buttons */
+        .control-section { display: flex; flex-direction: column; gap: 1rem; }
+        .control-btn {
+            padding: 0.875rem 1.25rem;
+            border: none; border-radius: 10px;
+            font-size: 0.95rem; font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+            box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+        }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--glow-cyan); }
+        .btn-secondary {
+            background: var(--bg-elevated); color: var(--text-primary);
+            border: 1px solid var(--border-bright);
+        }
+        .btn-secondary:hover:not(:disabled) { background: var(--bg-secondary); border-color: var(--accent-cyan); }
+
+        /* Cipher algorithm cards */
+        .algo-card {
+            background: var(--bg-secondary);
+            padding: 1rem; border-radius: 10px;
+            border-left: 3px solid var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+        .algo-card.active-algo {
+            border-left-color: var(--accent-green);
+            background: rgba(16,185,129,0.07);
+            box-shadow: 0 0 12px rgba(16,185,129,0.15);
+        }
+        .algo-name { font-size: 0.9rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.5rem; }
+        .algo-card.active-algo .algo-name { color: var(--accent-green); }
+        .algo-desc { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .algo-spec {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; color: var(--text-muted);
+            padding: 0.5rem; background: var(--bg-elevated); border-radius: 6px;
+        }
+
+        /* Attack button */
+        .attack-btn {
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+            color: white; border: none;
+            padding: 0.75rem 1.5rem; border-radius: 10px;
+            font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; margin-top: 1rem;
+        }
+        .attack-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(239,68,68,0.4); }
+
+        /* ═══════════════════════════════════════════
+           CENTER COLUMN
+        ═══════════════════════════════════════════ */
+        .center-column { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .cipher-process {
+            background: linear-gradient(135deg, rgba(6,182,212,0.05), rgba(59,130,246,0.05));
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px; padding: 2rem;
+            min-height: 420px;
+        }
+        .process-step {
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .process-step.active {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(6,182,212,0.3);
+            transform: scale(1.02);
+        }
+        .step-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .step-number {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.2rem;
+        }
+        .step-title { font-weight: 700; font-size: 1rem; }
+        .step-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 1rem; border-radius: 8px;
+            word-break: break-all;
+        }
+        .step-arrow { text-align: center; font-size: 1.5rem; color: var(--accent-cyan); margin: 0.5rem 0; }
+
+        /* Ciphertext display box */
+        .cipher-display {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 12px; padding: 1.5rem;
+            margin-top: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .cipher-label {
+            font-size: 0.8rem; color: var(--accent-cyan);
+            margin-bottom: 0.5rem; font-weight: 700;
+            text-transform: uppercase;
+        }
+        .cipher-value {
+            font-size: 0.95rem; color: var(--text-primary);
+            word-break: break-all;
+            background: var(--bg-elevated);
+            padding: 0.75rem; border-radius: 8px;
+        }
+
+        /* Message exchange panel */
+        #messageExchangePanel { height: 350px; display: flex; flex-direction: column; }
+        #messageExchangePanel .panel-body {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 1rem;
+            display: flex; flex-direction: column; gap: 0.75rem;
+        }
+
+        .message-item {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .message-item.encrypted  { border-left: 3px solid var(--accent-cyan); }
+        .message-item.decrypted  { border-left: 3px solid var(--accent-green); }
+        .message-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .message-type {
+            padding: 0.25rem 0.75rem; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+        }
+        .message-item.encrypted .message-type { background: rgba(6,182,212,0.2); color: var(--accent-cyan); }
+        .message-item.decrypted  .message-type { background: rgba(16,185,129,0.2); color: var(--accent-green); }
+        .message-time    { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
+        .message-content { font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .message-details { font-size: 0.75rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+
+        /* ═══════════════════════════════════════════
+           RIGHT COLUMN
+        ═══════════════════════════════════════════ */
+        .right-column { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        /* Chat bubbles */
+        #textMessagesPanel { height: 450px; display: flex; flex-direction: column; }
+        #textMessagesPanel .panel-body {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 1rem;
+            display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .text-bubble {
+            max-width: 85%; padding: 0.875rem 1.125rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white; font-size: 0.9rem; line-height: 1.5;
+            align-self: flex-start;
+            box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+        .text-bubble.from-gnb {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        }
+        .text-bubble::before {
+            content: ''; position: absolute;
+            left: -8px; top: 12px;
+            width: 0; height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid var(--accent-cyan);
+        }
+        .text-bubble.from-gnb::before {
+            left: auto; right: -8px;
+            border-right: none;
+            border-left: 8px solid var(--accent-purple);
+        }
+        .text-meta {
+            margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.8;
+            font-family: 'JetBrains Mono', monospace;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Log console */
+        .log-console {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; max-height: 300px;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .log-entry {
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary); border-radius: 6px;
+            border-left: 3px solid var(--border-subtle);
+            animation: slideIn 0.3s ease;
+        }
+        .log-entry.info     { border-left-color: var(--accent-blue);   color: var(--accent-blue);   }
+        .log-entry.success  { border-left-color: var(--accent-green);  color: var(--accent-green);  }
+        .log-entry.warning  { border-left-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .log-entry.error    { border-left-color: var(--accent-red);    color: var(--accent-red);    }
+        .log-entry.security { border-left-color: var(--accent-cyan);   color: var(--accent-cyan);   }
+        .log-timestamp { color: var(--text-muted); margin-right: 0.5rem; }
+
+        /* Stats */
+        .stat-grid { display: grid; gap: 1rem; }
+        .stat-card {
+            background: var(--bg-secondary); padding: 1rem;
+            border-radius: 10px; border: 1px solid var(--border-subtle);
+        }
+        .stat-label {
+            font-size: 0.85rem; color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .stat-value {
+            font-size: 1.75rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Scrollbar styling */
+        #messageExchangePanel .panel-body::-webkit-scrollbar,
+        #textMessagesPanel .panel-body::-webkit-scrollbar { width: 8px; }
+        #messageExchangePanel .panel-body::-webkit-scrollbar-track,
+        #textMessagesPanel .panel-body::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 10px; }
+        #messageExchangePanel .panel-body::-webkit-scrollbar-thumb,
+        #textMessagesPanel .panel-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 10px; }
+        #messageExchangePanel .panel-body::-webkit-scrollbar-thumb:hover,
+        #textMessagesPanel .panel-body::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+        /* Responsive */
+        @media (max-width: 1400px) { .main-layout { grid-template-columns: 300px 1fr 400px; } }
+        @media (max-width: 1024px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .left-column, .right-column { order: 2; }
+            .center-column { order: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-background"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- ═══ NAV ═══ -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <div class="logo-icon">🔐</div>
+                <div class="logo-text">5G NR PDCP Ciphering</div>
+            </div>
+            <div class="nav-status">
+                <div class="status-pill">
+                    <div class="status-dot standby" id="systemStatus"></div>
+                    <span id="systemStatusText">System Ready</span>
+                </div>
+                <button class="manual-mode-toggle" id="manualModeToggle" onclick="toggleManualMode()">
+                    <span>💬</span>
+                    <span id="manualModeText">Manual Messaging ON</span>
+                </button>
+                <div class="status-pill"><span>Encrypted: <strong id="encryptedCount">0</strong></span></div>
+                <div class="status-pill"><span>Decrypted: <strong id="decryptedCount">0</strong></span></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="container">
+
+        <!-- ─── DIAGRAM ─── -->
+        <div class="diagram-container">
+            <div class="diagram-title"><span>🔄</span><span>PDCP Ciphering Flow</span></div>
+            <div class="diagram-content" id="diagramContent">
+                <div class="flow-node n-integrity" id="dIntegrity">
+                    <div>🔒 Integrity</div><div class="node-sub">Protected PDU</div>
+                </div>
+                <div class="flow-node n-cipher" id="dCipher">
+                    <div>🔐 Cipher Init</div><div class="node-sub">NEA2 / AES-CTR</div>
+                </div>
+                <div class="flow-node n-keystream" id="dKeystream">
+                    <div>🗝️ Keystream</div><div class="node-sub">128-bit CK</div>
+                </div>
+                <div class="flow-node n-xor" id="dXor">⊕</div>
+                <div class="flow-node n-ciphertext" id="dCiphertext">
+                    <div>📩 Ciphertext</div><div class="node-sub">Encrypted PDU</div>
+                </div>
+                <div class="flow-node n-receiver" id="dReceiver">
+                    <div>📡 Receiver</div><div class="node-sub">Decrypts</div>
+                </div>
+                <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;" id="flowSvg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="var(--border-medium)"/>
+                        </marker>
+                        <marker id="arrowActive" markerWidth="10" markerHeight="7" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="var(--accent-cyan)"/>
+                        </marker>
+                    </defs>
+                    <path id="a0" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <path id="a1" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <path id="a2" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <path id="a3" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                    <path id="a4" d="" stroke="var(--border-medium)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                </svg>
+                <div class="data-packet" id="dataPacket">📦</div>
+            </div>
+        </div>
+
+        <!-- ─── 3-COL GRID ─── -->
+        <div class="main-layout">
+
+            <!-- LEFT -->
+            <div class="left-column">
+                <!-- Network Entities -->
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-icon">🌐</div><div class="panel-title">Network Entities</div></div>
+                    <div class="panel-body">
+                        <div class="entity-card" id="ueEntity">
+                            <div class="entity-header">
+                                <div class="entity-avatar">📱</div>
+                                <div class="entity-info"><div class="entity-name">User Equipment</div><div class="entity-type">Transmitter</div></div>
+                            </div>
+                            <div class="message-input-area" id="ueInputArea">
+                                <input type="text" id="ueInput" placeholder="Type message from UE..." onkeypress="handleKeyPress(event,'ue')">
+                                <button class="send-message-btn" onclick="sendManualMessage('ue')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/></svg> Send
+                                </button>
+                            </div>
+                        </div>
+                        <div class="entity-card" id="gnbEntity">
+                            <div class="entity-header">
+                                <div class="entity-avatar">📡</div>
+                                <div class="entity-info"><div class="entity-name">gNodeB</div><div class="entity-type">Receiver</div></div>
+                            </div>
+                            <div class="message-input-area" id="gnbInputArea">
+                                <input type="text" id="gnbInput" placeholder="Type message from gNB..." onkeypress="handleKeyPress(event,'gnb')">
+                                <button class="send-message-btn" onclick="sendManualMessage('gnb')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/></svg> Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Controls -->
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-icon">⚙️</div><div class="panel-title">Simulation Controls</div></div>
+                    <div class="panel-body">
+                        <div class="control-section">
+                            <button id="startSimBtn" class="control-btn btn-primary">▶️ Start Simulation</button>
+                            <button id="pauseSimBtn" class="control-btn btn-secondary" disabled>⏸️ Pause</button>
+                            <button id="resetSimBtn" class="control-btn btn-secondary">🔄 Reset</button>
+                            <button class="attack-btn" onclick="simulateAttack()">⚠️ Simulate Eavesdropping Attack</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cipher Algorithms -->
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-icon">🔐</div><div class="panel-title">Ciphering Algorithms</div></div>
+                    <div class="panel-body">
+                        <div class="algo-card active-algo" id="algoNEA2">
+                            <div class="algo-name">128-NEA2 (AES-CTR) ✓</div>
+                            <div class="algo-desc">AES Counter Mode encryption</div>
+                            <div class="algo-spec">TS 35.222 • 128-bit CK • Stream cipher</div>
+                        </div>
+                        <div class="algo-card" id="algoNEA1">
+                            <div class="algo-name">128-NEA1 (SNOW 3G)</div>
+                            <div class="algo-desc">SNOW 3G stream cipher</div>
+                            <div class="algo-spec">TS 35.221 • 128-bit CK • Stream cipher</div>
+                        </div>
+                        <div class="algo-card" id="algoNEA3">
+                            <div class="algo-name">128-NEA3 (ZUC)</div>
+                            <div class="algo-desc">ZUC stream cipher</div>
+                            <div class="algo-spec">TS 35.222 • 128-bit CK • Stream cipher</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER -->
+            <div class="center-column">
+                <!-- Ciphering Process -->
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-icon">🔐</div><div class="panel-title">Ciphering Process</div></div>
+                    <div class="panel-body">
+                        <div class="cipher-process">
+                            <div class="process-step" id="step1">
+                                <div class="step-header"><div class="step-number">1</div><div class="step-title">Input — Protected PDU</div></div>
+                                <div class="step-content" id="inputParams">
+                                    COUNT:     0x00000000<br>
+                                    BEARER:    0x00<br>
+                                    DIRECTION: 0 (Uplink)<br>
+                                    PLAINTEXT: Waiting for transmission...
+                                </div>
+                            </div>
+                            <div class="step-arrow">↓</div>
+                            <div class="process-step" id="step2">
+                                <div class="step-header"><div class="step-number">2</div><div class="step-title">NEA2 Keystream Generation (AES-CTR)</div></div>
+                                <div class="step-content" id="keystreamProcess">
+                                    CK:  K_enc (128-bit)<br>
+                                    Initialising AES-CTR counter block...<br>
+                                    Generating keystream bits...
+                                </div>
+                            </div>
+                            <div class="step-arrow">↓</div>
+                            <div class="process-step" id="step3">
+                                <div class="step-header"><div class="step-number">3</div><div class="step-title">XOR — Plaintext ⊕ Keystream</div></div>
+                                <div class="step-content" id="xorProcess">
+                                    PLAINTEXT:  (waiting)<br>
+                                    KEYSTREAM:  (waiting)<br>
+                                    ─────────────────────<br>
+                                    CIPHERTEXT: (waiting)
+                                </div>
+                            </div>
+                            <div class="step-arrow">↓</div>
+                            <div class="process-step" id="step4">
+                                <div class="step-header"><div class="step-number">4</div><div class="step-title">Ciphertext Output</div></div>
+                                <div class="cipher-display">
+                                    <div class="cipher-label">Encrypted PDCP PDU</div>
+                                    <div class="cipher-value" id="cipherValue">0x0000000000000000</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Message Exchange -->
+                <div class="panel" id="messageExchangePanel">
+                    <div class="panel-header"><div class="panel-icon">💬</div><div class="panel-title">Message Exchange (UE ↔ gNB)</div></div>
+                    <div class="panel-body" id="messageContainer"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="right-column">
+                <!-- Actual Messages -->
+                <div class="panel" id="textMessagesPanel">
+                    <div class="panel-header"><div class="panel-icon">💭</div><div class="panel-title">Actual Messages</div></div>
+                    <div class="panel-body" id="textMessageContainer"></div>
+                </div>
+                <!-- Security Log -->
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-icon">📋</div><div class="panel-title">Security Log</div></div>
+                    <div class="panel-body">
+                        <div class="log-console" id="logConsole"></div>
+                    </div>
+                </div>
+                <!-- Statistics -->
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-icon">📊</div><div class="panel-title">Statistics</div></div>
+                    <div class="panel-body">
+                        <div class="stat-grid">
+                            <div class="stat-card"><div class="stat-label">🔐 Encrypted PDUs</div><div class="stat-value" id="encryptedStat">0</div></div>
+                            <div class="stat-card"><div class="stat-label">🔓 Decrypted PDUs</div><div class="stat-value" id="decryptedStat">0</div></div>
+                            <div class="stat-card"><div class="stat-label">🕵️ Attacks Blocked</div><div class="stat-value" id="attackStat">0</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         JAVASCRIPT
+    ═══════════════════════════════════════════════════════════════ -->
+    <script>
+    /* ── utilities ── */
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function scrollToBottom(el) { el.scrollTop = el.scrollHeight; }
+    function formatTime() {
+        return new Date().toLocaleTimeString('en-US', {
+            hour12: false, hour:'2-digit', minute:'2-digit',
+            second:'2-digit', fractionalSecondDigits: 3
+        });
+    }
+    function generateHex(n) {
+        let s = '';
+        for (let i = 0; i < n; i++) s += Math.floor(Math.random()*16).toString(16);
+        return s.toUpperCase();
+    }
+
+    /* ── keystream + encrypt helpers ── */
+    function generateKeystream(count, bearer, direction, ck) {
+        // deterministic pseudo-keystream from inputs (simulates AES-CTR)
+        const seed = `${count.toString(16).padStart(8,'0')}${bearer.toString(16).padStart(2,'0')}${direction}${ck}`;
+        let h = 0;
+        for (let i = 0; i < seed.length; i++) { h = ((h << 5) - h) + seed.charCodeAt(i); h |= 0; }
+        // expand to 64 hex chars (256-bit block)
+        let ks = '';
+        for (let i = 0; i < 8; i++) {
+            h = ((h << 5) - h) + (i * 0x9e3779b9) | 0;
+            ks += (h >>> 0).toString(16).padStart(8, '0');
+        }
+        return ks.toUpperCase();
+    }
+    function textToHex(txt) {
+        let h = '';
+        for (let i = 0; i < txt.length; i++) h += txt.charCodeAt(i).toString(16).padStart(2,'0');
+        return h.toUpperCase();
+    }
+    function xorHex(a, b) {
+        // XOR two hex strings (use shorter length)
+        const len = Math.min(a.length, b.length);
+        let r = '';
+        for (let i = 0; i < len; i += 2) {
+            r += (parseInt(a.substr(i,2),16) ^ parseInt(b.substr(i,2),16)).toString(16).padStart(2,'0');
+        }
+        return r.toUpperCase();
+    }
+
+    /* ── state ── */
+    const state = {
+        running: false, paused: false,
+        encryptedCount: 0, decryptedCount: 0, attackCount: 0,
+        count: 0, bearer: 0, direction: 0,
+        manualMode: true, manualMessageQueue: [],
+        cipherKey: generateHex(32),   // 128-bit CK
+        autoMessages: [
+            { message:'Hello, this is a test message',          from:'UE',  to:'gNB' },
+            { message:'Ciphering layer activated',              from:'gNB', to:'UE'  },
+            { message:'Secure tunnel established',              from:'UE',  to:'gNB' },
+            { message:'Encrypted channel confirmed',            from:'gNB', to:'UE'  },
+            { message:'Bearer reconfiguration in progress',     from:'UE',  to:'gNB' },
+            { message:'Key refresh complete',                   from:'gNB', to:'UE'  },
+            { message:'Handover encryption active',             from:'UE',  to:'gNB' },
+            { message:'Confidentiality protection verified',    from:'gNB', to:'UE'  },
+            { message:'RLC data transfer secured',              from:'UE',  to:'gNB' },
+            { message:'Session encryption acknowledgment',     from:'gNB', to:'UE'  }
+        ],
+        currentAutoMsgIndex: 0,
+        maxMessages: 20
+    };
+
+    /* ── UI helpers ── */
+    function updateStats() {
+        document.getElementById('encryptedCount').textContent = state.encryptedCount;
+        document.getElementById('decryptedCount').textContent = state.decryptedCount;
+        document.getElementById('encryptedStat').textContent  = state.encryptedCount;
+        document.getElementById('decryptedStat').textContent  = state.decryptedCount;
+        document.getElementById('attackStat').textContent     = state.attackCount;
+    }
+    function addLog(level, msg) {
+        const c = document.getElementById('logConsole');
+        const d = document.createElement('div');
+        d.className = `log-entry ${level}`;
+        d.innerHTML = `<span class="log-timestamp">[${formatTime()}]</span>${msg}`;
+        c.appendChild(d);
+        scrollToBottom(c);
+    }
+    function addMessage(type, text, meta) {
+        const c = document.getElementById('messageContainer');
+        const d = document.createElement('div');
+        d.className = `message-item ${type}`;
+        d.innerHTML = `
+            <div class="message-header">
+                <div class="message-type">${type}</div>
+                <div class="message-time">${formatTime()}</div>
+            </div>
+            <div class="message-content">${text}</div>
+            <div class="message-details">${meta}</div>`;
+        c.appendChild(d);
+        scrollToBottom(c);
+    }
+    function displayTextMessage(message, from, to) {
+        const c = document.getElementById('textMessageContainer');
+        const d = document.createElement('div');
+        d.className = from === 'gNB' ? 'text-bubble from-gnb' : 'text-bubble';
+        d.innerHTML = `"${message}"<div class="text-meta">${from} → ${to} | Encrypted with NEA2</div>`;
+        c.appendChild(d);
+        scrollToBottom(c);
+    }
+
+    /* ── manual mode ── */
+    function toggleManualMode() {
+        state.manualMode = !state.manualMode;
+        const btn  = document.getElementById('manualModeToggle');
+        const txt  = document.getElementById('manualModeText');
+        const ueA  = document.getElementById('ueInputArea');
+        const gnbA = document.getElementById('gnbInputArea');
+        if (state.manualMode) {
+            btn.classList.remove('disabled');
+            txt.textContent = 'Manual Messaging ON';
+            ueA.classList.remove('hidden');
+            gnbA.classList.remove('hidden');
+            addLog('info','💬 Manual messaging enabled');
+        } else {
+            btn.classList.add('disabled');
+            txt.textContent = 'Manual Messaging OFF';
+            ueA.classList.add('hidden');
+            gnbA.classList.add('hidden');
+            if (state.manualMessageQueue.length) {
+                addLog('warning',`Cleared ${state.manualMessageQueue.length} queued message(s)`);
+                state.manualMessageQueue = [];
+            }
+            addLog('info','🔇 Manual messaging disabled');
+        }
+    }
+    function handleKeyPress(e, sender) { if (e.key==='Enter') sendManualMessage(sender); }
+    async function sendManualMessage(sender) {
+        if (!state.manualMode) return;
+        const input = document.getElementById(`${sender}Input`);
+        const msg   = input.value.trim();
+        if (!msg) return;
+        input.value = '';
+        state.manualMessageQueue.push({
+            message: msg,
+            from: sender==='ue'?'UE':'gNB',
+            to:   sender==='ue'?'gNB':'UE'
+        });
+        addLog('info',`Manual message queued from ${sender==='ue'?'UE':'gNB'}: "${msg}"`);
+        if (!state.running) await processManualMessage();
+    }
+    async function processManualMessage() {
+        if (!state.manualMessageQueue.length) return;
+        const d = state.manualMessageQueue.shift();
+        await encryptAndTransmit(d.message, d.from, d.to);
+    }
+
+    /* ── core ciphering flow ── */
+    async function encryptAndTransmit(message, from, to) {
+        state.count++;
+        state.direction = from === 'UE' ? 0 : 1;
+
+        document.getElementById('ueEntity').classList.add('active');
+        document.getElementById('gnbEntity').classList.add('active');
+
+        // ─ step 1: inputs ─
+        addLog('security',`Starting ciphering for message from ${from}`);
+        document.getElementById('step1').classList.add('active');
+        animateDiagram(1);
+        document.getElementById('inputParams').innerHTML =
+            `COUNT:&nbsp;&nbsp;&nbsp;&nbsp; 0x${state.count.toString(16).padStart(8,'0').toUpperCase()}<br>` +
+            `BEARER:&nbsp;&nbsp;&nbsp; 0x${state.bearer.toString(16).padStart(2,'0').toUpperCase()}<br>` +
+            `DIRECTION: ${state.direction} (${from==='UE'?'Uplink':'Downlink'})<br>` +
+            `PLAINTEXT: "${message}"`;
+        await sleep(800);
+
+        // ─ step 2: keystream ─
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+        animateDiagram(2);
+        addLog('security','Generating AES-CTR keystream...');
+        const keystream = generateKeystream(state.count, state.bearer, state.direction, state.cipherKey);
+        document.getElementById('keystreamProcess').innerHTML =
+            `CK:&nbsp;&nbsp; 0x${state.cipherKey.substring(0,16)}...<br>` +
+            `COUNT || BEARER || DIRECTION → Counter Block<br>` +
+            `AES-CTR output (first 64 hex):<br>` +
+            `<span style="color:var(--accent-purple)">${keystream.substring(0,32)}...</span>`;
+        await sleep(900);
+
+        // ─ step 3: XOR ─
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step3').classList.add('active');
+        animateDiagram(3);
+        addLog('security','XOR plaintext ⊕ keystream...');
+        const plainHex   = textToHex(message);
+        const cipherHex  = xorHex(plainHex, keystream);
+        document.getElementById('xorProcess').innerHTML =
+            `PLAINTEXT:  <span style="color:var(--accent-blue)">${plainHex.substring(0,40)}${plainHex.length>40?'...':''}</span><br>` +
+            `KEYSTREAM:  <span style="color:var(--accent-purple)">${keystream.substring(0,40)}...</span><br>` +
+            `─────────────────────────────────<br>` +
+            `CIPHERTEXT: <span style="color:var(--accent-cyan)">${cipherHex.substring(0,40)}${cipherHex.length>40?'...':''}</span>`;
+        await sleep(800);
+
+        // ─ step 4: output ─
+        document.getElementById('step3').classList.remove('active');
+        document.getElementById('step4').classList.add('active');
+        animateDiagram(4);
+        document.getElementById('cipherValue').textContent = `0x${cipherHex}`;
+        addLog('success',`Ciphertext: 0x${cipherHex.substring(0,24)}...`);
+        state.encryptedCount++;
+        updateStats();
+        await sleep(800);
+
+        // ─ transmit ─
+        addMessage('encrypted', `0x${cipherHex.substring(0,32)}…`, `${from} → ${to} | NEA2 | COUNT: ${state.count}`);
+        await sleep(600);
+        addLog('info','Transmitting encrypted PDU...');
+        animateDiagram(5);
+        await sleep(800);
+
+        // ─ receiver decrypts ─
+        addLog('security',`Decrypting at ${to}...`);
+        const decrypted = xorHex(cipherHex, keystream);
+        // convert hex back to text
+        let recovered = '';
+        for (let i = 0; i < decrypted.length; i += 2) {
+            const c = parseInt(decrypted.substr(i,2), 16);
+            if (c === 0) break;
+            recovered += String.fromCharCode(c);
+        }
+        await sleep(300);
+        addLog('success',`✅ Decrypted: "${recovered}"`);
+        addMessage('decrypted','Decryption successful',`Recovered: "${recovered}" | Delivered to ${to}`);
+        state.decryptedCount++;
+        updateStats();
+        displayTextMessage(message, from, to);
+
+        // ─ reset viz ─
+        await sleep(550);
+        ['step1','step2','step3','step4'].forEach(id => document.getElementById(id).classList.remove('active'));
+        document.getElementById('ueEntity').classList.remove('active');
+        document.getElementById('gnbEntity').classList.remove('active');
+    }
+
+    /* ── simulation loop ── */
+    async function startSimulation() {
+        if (state.running) return;
+        state.running = true; state.paused = false;
+        document.getElementById('startSimBtn').disabled = true;
+        document.getElementById('pauseSimBtn').disabled = false;
+        document.getElementById('systemStatus').classList.add('active');
+        document.getElementById('systemStatusText').textContent = 'Simulation Running';
+        addLog('info','PDCP Ciphering simulation started');
+        addLog('security',`Using NEA2 (AES-CTR) with CK: 0x${state.cipherKey.substring(0,16)}...`);
+        await sleep(250);
+        await simLoop();
+    }
+    async function simLoop() {
+        while (state.running && !state.paused && state.encryptedCount < state.maxMessages) {
+            if (state.manualMessageQueue.length > 0) {
+                await processManualMessage();
+            } else {
+                const d = state.autoMessages[state.currentAutoMsgIndex % state.autoMessages.length];
+                state.currentAutoMsgIndex++;
+                await encryptAndTransmit(d.message, d.from, d.to);
+            }
+            await sleep(1000);
+        }
+        if (state.encryptedCount >= state.maxMessages) finishSim();
+    }
+    function finishSim() {
+        state.running = false;
+        document.getElementById('startSimBtn').disabled = false;
+        document.getElementById('pauseSimBtn').disabled = true;
+        document.getElementById('systemStatus').classList.remove('active');
+        document.getElementById('systemStatusText').textContent = 'Simulation Complete ✓';
+        addLog('success','🎉 Simulation completed successfully!');
+    }
+    function pauseSimulation() {
+        state.paused = !state.paused;
+        const btn = document.getElementById('pauseSimBtn');
+        btn.textContent = state.paused ? '▶️ Resume' : '⏸️ Pause';
+        if (state.paused) {
+            document.getElementById('systemStatusText').textContent = 'Simulation Paused';
+            addLog('warning','Simulation paused');
+        } else {
+            document.getElementById('systemStatusText').textContent = 'Simulation Running';
+            addLog('info','Simulation resumed');
+            simLoop();
+        }
+    }
+    function resetSimulation() {
+        state.running = false; state.paused = false;
+        state.encryptedCount = 0; state.decryptedCount = 0; state.attackCount = 0;
+        state.count = 0; state.currentAutoMsgIndex = 0;
+        state.manualMessageQueue = [];
+        state.cipherKey = generateHex(32);
+        document.getElementById('startSimBtn').disabled = false;
+        document.getElementById('pauseSimBtn').disabled = true;
+        document.getElementById('pauseSimBtn').textContent = '⏸️ Pause';
+        document.getElementById('systemStatus').classList.remove('active');
+        document.getElementById('systemStatusText').textContent = 'System Ready';
+        document.getElementById('ueEntity').classList.remove('active');
+        document.getElementById('gnbEntity').classList.remove('active');
+        document.getElementById('messageContainer').innerHTML = '';
+        document.getElementById('textMessageContainer').innerHTML = '';
+        document.getElementById('logConsole').innerHTML = '';
+        document.getElementById('ueInput').value = '';
+        document.getElementById('gnbInput').value = '';
+        document.getElementById('inputParams').innerHTML =
+            'COUNT:&nbsp;&nbsp;&nbsp;&nbsp; 0x00000000<br>BEARER:&nbsp;&nbsp;&nbsp; 0x00<br>DIRECTION: 0 (Uplink)<br>PLAINTEXT: Waiting for transmission...';
+        document.getElementById('keystreamProcess').innerHTML =
+            'CK:&nbsp;&nbsp; K_enc (128-bit)<br>Initialising AES-CTR counter block...<br>Generating keystream bits...';
+        document.getElementById('xorProcess').innerHTML =
+            'PLAINTEXT:  (waiting)<br>KEYSTREAM:  (waiting)<br>─────────────────────<br>CIPHERTEXT: (waiting)';
+        document.getElementById('cipherValue').textContent = '0x0000000000000000';
+        ['step1','step2','step3','step4'].forEach(id => document.getElementById(id).classList.remove('active'));
+        updateStats();
+        addLog('info','Simulation reset — Ready to start');
+        addLog('security',`New cipher key generated: 0x${state.cipherKey.substring(0,16)}...`);
+    }
+
+    /* ── attack ── */
+    async function simulateAttack() {
+        if (!state.running && state.encryptedCount === 0) {
+            addLog('warning','Start simulation first before simulating an attack');
+            return;
+        }
+        addLog('warning','⚠️ Simulating eavesdropping attack...');
+        await sleep(250);
+        // attacker intercepts the last ciphertext but has no key
+        const fakeCount = state.count;
+        const plainHex  = textToHex('INTERCEPTED');
+        const ks        = generateKeystream(fakeCount, state.bearer, state.direction, state.cipherKey);
+        const realCipher = xorHex(plainHex, ks);
+        addLog('security',`Attacker captured ciphertext: 0x${realCipher.substring(0,24)}...`);
+        await sleep(450);
+        // attacker tries to decrypt with a wrong key
+        const wrongKey     = generateHex(32);
+        const wrongKs      = generateKeystream(fakeCount, state.bearer, state.direction, wrongKey);
+        const wrongDecrypt = xorHex(realCipher, wrongKs);
+        addLog('error',`🔴 Attacker attempts decryption with stolen key...`);
+        await sleep(550);
+        addLog('error',`❌ Decryption result: 0x${wrongDecrypt.substring(0,24)}... (garbage)`);
+        addLog('success','🛡️ Confidentiality maintained — attacker cannot recover plaintext!');
+        state.attackCount++;
+        updateStats();
+    }
+
+    /* ── event listeners ── */
+    document.getElementById('startSimBtn').addEventListener('click', startSimulation);
+    document.getElementById('pauseSimBtn').addEventListener('click', pauseSimulation);
+    document.getElementById('resetSimBtn').addEventListener('click', resetSimulation);
+
+    /* ── diagram init + animate ── */
+    function initDiagram() {
+        const svg = document.getElementById('flowSvg');
+        if (!svg) return;
+        const ids = ['dIntegrity','dCipher','dKeystream','dXor','dCiphertext','dReceiver'];
+        const els = ids.map(id => document.getElementById(id));
+        if (els.some(e => !e)) return;
+        const D = document.getElementById('diagramContent').getBoundingClientRect();
+        function r(el) { return el.getBoundingClientRect(); }
+        function rm(rect) { return { x: rect.right  - D.left, y: rect.top + rect.height/2 - D.top }; }
+        function lm(rect) { return { x: rect.left   - D.left, y: rect.top + rect.height/2 - D.top }; }
+        function bm(rect) { return { x: rect.left + rect.width/2 - D.left, y: rect.bottom - D.top }; }
+        function tm(rect) { return { x: rect.left + rect.width/2 - D.left, y: rect.top    - D.top }; }
+
+        const [iR, cR, ksR, xR, ctR, rcR] = els.map(e => r(e));
+
+        // a0: Integrity → Cipher
+        setPath('a0', rm(iR), lm(cR));
+        // a1: Cipher → XOR  (horizontal)
+        setPath('a1', rm(cR), lm(xR));
+        // a2: Keystream → XOR (vertical down)
+        setPath('a2', bm(ksR), tm(xR));
+        // a3: XOR → Ciphertext
+        setPath('a3', rm(xR), lm(ctR));
+        // a4: Ciphertext → Receiver
+        setPath('a4', rm(ctR), lm(rcR));
+    }
+    function setPath(id, s, e) {
+        const p = document.getElementById(id);
+        if (p) p.setAttribute('d', `M ${s.x} ${s.y} L ${e.x} ${e.y}`);
+    }
+
+    function lightArrow(id, on) {
+        const p = document.getElementById(id);
+        if (!p) return;
+        p.setAttribute('stroke', on ? 'var(--accent-cyan)' : 'var(--border-medium)');
+        p.setAttribute('marker-end', on ? 'url(#arrowActive)' : 'url(#arrowhead)');
+    }
+
+    async function animateDiagram(step) {
+        const nodes = ['dIntegrity','dCipher','dKeystream','dXor','dCiphertext','dReceiver'];
+        // reset
+        nodes.forEach(id => document.getElementById(id).classList.remove('active'));
+        ['a0','a1','a2','a3','a4'].forEach(id => lightArrow(id, false));
+
+        if (step === 1) {
+            // Integrity protected PDU arrives
+            document.getElementById('dIntegrity').classList.add('active');
+            lightArrow('a0', true);
+            await sleep(300);
+            document.getElementById('dCipher').classList.add('active');
+
+        } else if (step === 2) {
+            // Keystream generated
+            document.getElementById('dCipher').classList.add('active');
+            lightArrow('a1', true);
+            lightArrow('a2', true);
+            await sleep(300);
+            document.getElementById('dKeystream').classList.add('active');
+            await sleep(280);
+            document.getElementById('dXor').classList.add('active');
+
+        } else if (step === 3) {
+            // XOR happening
+            document.getElementById('dXor').classList.add('active');
+            document.getElementById('dKeystream').classList.add('active');
+            lightArrow('a2', true);
+            lightArrow('a1', true);
+
+        } else if (step === 4) {
+            // Ciphertext out
+            document.getElementById('dXor').classList.add('active');
+            lightArrow('a3', true);
+            await sleep(300);
+            document.getElementById('dCiphertext').classList.add('active');
+
+        } else if (step === 5) {
+            // Transmit to receiver
+            document.getElementById('dCiphertext').classList.add('active');
+            lightArrow('a4', true);
+            await sleep(300);
+            document.getElementById('dReceiver').classList.add('active');
+        }
+    }
+
+    /* ── init ── */
+    window.addEventListener('load', () => {
+        addLog('info','5G NR PDCP Ciphering Simulator initialized');
+        addLog('security','Cipher algorithm: NEA2 (AES-CTR)');
+        addLog('security',`CK: 0x${state.cipherKey.substring(0,16)}...`);
+        addLog('info','System ready — Click "Start Simulation" to begin');
+        updateStats();
+        setTimeout(initDiagram, 100);
+        window.addEventListener('resize', initDiagram);
+    });
+    </script>
+</body>
+</html>
