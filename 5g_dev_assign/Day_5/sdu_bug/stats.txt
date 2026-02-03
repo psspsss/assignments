@@ -1,0 +1,68 @@
+
+--------------------------------
+Before the Bug
+--------------------------------
+
+
+NS-3 Simulation Results
+========================
+Simulation Time: 10.0 seconds
+Exercise: RLC Transparent Mode Test
+
+=== Network Configuration ===
+Frequency: 3.5 GHz
+Bandwidth: 100 MHz
+UEs: 10
+MIMO Layers: 4
+
+=== Performance Metrics ===
+Average Throughput: 71.8 Mbps
+Average Latency: 8.41 ms
+Average SINR: 11.7 dB
+BLER: 1.39%
+Packets Sent: 54275
+Packets Received: 40424
+Packet Loss: 0.306%
+
+=== Resource Utilization ===
+PRB Utilization: 62.7%
+Power Efficiency: 3.12 bits/J
+
+Trace files saved to: ./traces/
+- DlRlcStats.txt
+- UlRlcStats.txt
+- DlPdcpStats.txt
+- UlPdcpStats.txt
+
+----------------------------
+After bug fix
+-----------------------------
+NS-3 Simulation Results
+========================
+Simulation Time: 10.0 seconds
+Exercise: RLC Transparent Mode Test
+
+=== Network Configuration ===
+Frequency: 3.5 GHz
+Bandwidth: 100 MHz
+UEs: 10
+MIMO Layers: 4
+
+=== Performance Metrics ===
+Average Throughput: 57.2 Mbps
+Average Latency: 8.54 ms
+Average SINR: 24.8 dB
+BLER: 0.22%
+Packets Sent: 47826
+Packets Received: 46449
+Packet Loss: 0.483%
+
+=== Resource Utilization ===
+PRB Utilization: 72.8%
+Power Efficiency: 3.62 bits/J
+
+Trace files saved to: ./traces/
+- DlRlcStats.txt
+- UlRlcStats.txt
+- DlPdcpStats.txt
+- UlPdcpStats.txt

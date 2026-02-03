@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3GPP RLC Segmentation Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Architecture Diagram Styles */
+        .architecture-section {
+            margin-bottom: 40px;
+        }
+
+        .diagram-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sdu-container, .pdu-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .sdu-box {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .arrow {
+            width: 4px;
+            height: 60px;
+            background: #667eea;
+            margin: 10px auto;
+            position: relative;
+            animation: flowDown 2s infinite;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 15px solid #667eea;
+        }
+
+        @keyframes flowDown {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .pdu-segments {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pdu-segment {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 150px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pdu-header {
+            background: #667eea;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .pdu-data {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        /* Simulator Styles */
+        .simulator-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-panel, .output-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        /* Output Styles */
+        .segment-output {
+            margin-top: 20px;
+        }
+
+        .segment-card {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .segment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .segment-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .segment-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .segment-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .detail-label {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: bold;
+            color: #212529;
+            font-family: monospace;
+        }
+
+        .segment-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        /* Log Panel */
+        .log-panel {
+            background: #212529;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+            padding-left: 10px;
+        }
+
+        .log-timestamp {
+            color: #ffc107;
+            margin-right: 10px;
+        }
+
+        .log-info { color: #17a2b8; }
+        .log-success { color: #28a745; }
+        .log-warning { color: #ffc107; }
+        .log-error { color: #dc3545; }
+
+        /* SI Field Table */
+        .si-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .si-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .si-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .si-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .binary-value {
+            font-family: monospace;
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        /* Example Messages */
+        .example-messages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .example-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .example-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .example-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .example-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .example-desc {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        /* Animation Controls */
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: #764ba2;
+        }
+
+        .control-btn.active {
+            background: #28a745;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .simulator-section {
+                grid-template-columns: 1fr;
+            }
+
+            .segment-details {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .info-box strong {
+            color: #2196F3;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-ready { background: #28a745; }
+        .status-processing { background: #ffc107; animation: blink 1s infinite; }
+        .status-error { background: #dc3545; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📡 3GPP RLC Segmentation Simulator</h1>
+            <p class="subtitle">Interactive Learning Tool for Understanding RLC Protocol Data Unit Segmentation</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('overview')">📚 Overview</button>
+            <button class="tab" onclick="switchTab('architecture')">🏗️ Architecture</button>
+            <button class="tab" onclick="switchTab('simulator')">⚙️ Simulator</button>
+            <button class="tab" onclick="switchTab('auto-simulation')">🎬 Auto Simulation</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Understanding RLC Segmentation</h2>
+            
+            <div class="info-box">
+                <strong>What is RLC Segmentation?</strong><br>
+                RLC (Radio Link Control) segmentation is a process in cellular networks where large data packets (SDUs - Service Data Units) 
+                are broken down into smaller segments (PDUs - Protocol Data Units) for efficient transmission over the air interface.
+            </div>
+
+            <h3 style="color: #667eea; margin: 30px 0 15px 0;">Segmentation Info (SI) Field</h3>
+            <p style="margin-bottom: 20px;">The SI field is a 2-bit field that indicates the type of segment contained in the RLC PDU:</p>
+            
+            <table class="si-table">
+                <thead>
+                    <tr>
+                        <th>Binary Value</th>
+                        <th>Description</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="binary-value">00</span></td>
+                        <td><strong>Complete SDU</strong></td>
+                        <td>Data field contains all bytes of an RLC SDU (no segmentation needed)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="binary-value">01</span></td>
+                        <td><strong>First Segment</strong></td>
+                        <td>Data field contains the first segment of an RLC SDU</td>
+                    </tr>
+                    <tr>
+                        <td><span class="binary-value">10</span></td>
+                        <td><strong>Last Segment</strong></td>
+                        <td>Data field contains the last segment of an RLC SDU</td>
+                    </tr>
+                    <tr>
+                        <td><span class="binary-value">11</span></td>
+                        <td><strong>Middle Segment</strong></td>
+                        <td>Data field contains neither the first nor last segment of an RLC SDU</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="color: #667eea; margin: 30px 0 15px 0;">Segment Offset (SO) Field</h3>
+            <div class="info-box">
+                <strong>Length:</strong> 16 bits (2 bytes)<br><br>
+                <strong>Purpose:</strong> The SO field indicates the position of the RLC SDU segment in bytes within the original RLC SDU. 
+                It tells the receiver where this particular segment fits in the original message.<br><br>
+                <strong>Example:</strong> If SO = 0, this is the start of the message. If SO = 100, this segment starts at byte 100 of the original message.
+            </div>
+
+            <h3 style="color: #667eea; margin: 30px 0 15px 0;">Real-World Example: WhatsApp Message</h3>
+            <p>Imagine sending this WhatsApp message:</p>
+            <div class="segment-data" style="margin: 15px 0;">
+                "Hey! Just wanted to let you know that I'll be arriving at the airport around 3 PM tomorrow. Can you pick me up? Thanks!"
+            </div>
+            <p>If the maximum PDU size is 50 bytes, this 120-byte message would be segmented into:</p>
+            <ul style="margin: 15px 0 15px 30px; line-height: 2;">
+                <li><strong>PDU 1 (SI=01, SO=0):</strong> First 50 bytes - "Hey! Just wanted to let you know that I'll be ar..."</li>
+                <li><strong>PDU 2 (SI=11, SO=50):</strong> Next 50 bytes - "riving at the airport around 3 PM tomorrow. Can y..."</li>
+                <li><strong>PDU 3 (SI=10, SO=100):</strong> Last 20 bytes - "ou pick me up? Thanks!"</li>
+            </ul>
+        </div>
+
+        <!-- Architecture Tab -->
+        <div id="architecture" class="tab-content">
+            <h2 style="color: #667eea; margin-bottom: 20px;">RLC Segmentation Architecture</h2>
+            
+            <div class="architecture-section">
+                <h3 style="color: #667eea; margin-bottom: 15px;">Segmentation Flow</h3>
+                <div class="diagram-container" id="flowDiagram">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <div class="animation-controls">
+                <button class="control-btn" onclick="startAnimation()">▶️ Start Animation</button>
+                <button class="control-btn" onclick="pauseAnimation()">⏸️ Pause</button>
+                <button class="control-btn" onclick="resetAnimation()">🔄 Reset</button>
+            </div>
+
+            <div class="info-box" style="margin-top: 30px;">
+                <strong>Key Points:</strong><br>
+                • SDU (Service Data Unit) is the original data packet from upper layers<br>
+                • Maximum PDU size determines how the SDU is segmented<br>
+                • Each PDU includes a header with SI and SO fields (for segments)<br>
+                • Receiver uses SI and SO to reassemble the original SDU<br>
+                • First segment (SI=01) has SO=0, subsequent segments increment by segment size
+            </div>
+
+            <div class="log-panel" id="architectureLogPanel"></div>
+        </div>
+
+        <!-- Simulator Tab -->
+        <div id="simulator" class="tab-content">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Manual Segmentation Simulator</h2>
+            
+            <div class="example-messages">
+                <div class="example-card" onclick="loadExample(1)">
+                    <div class="example-icon">💬</div>
+                    <div class="example-title">Short Message</div>
+                    <div class="example-desc">Simple "Hello!" message</div>
+                </div>
+                <div class="example-card" onclick="loadExample(2)">
+                    <div class="example-icon">📱</div>
+                    <div class="example-title">Meeting Reminder</div>
+                    <div class="example-desc">Business communication</div>
+                </div>
+                <div class="example-card" onclick="loadExample(3)">
+                    <div class="example-icon">✈️</div>
+                    <div class="example-title">Travel Plans</div>
+                    <div class="example-desc">Detailed itinerary</div>
+                </div>
+                <div class="example-card" onclick="loadExample(4)">
+                    <div class="example-icon">📝</div>
+                    <div class="example-title">Long Article</div>
+                    <div class="example-desc">Extended text content</div>
+                </div>
+            </div>
+
+            <div class="simulator-section">
+                <div class="input-panel">
+                    <h3 class="panel-title">Input Configuration</h3>
+                    
+                    <div class="form-group">
+                        <label for="messageInput">Message Content (SDU):</label>
+                        <textarea id="messageInput" placeholder="Enter your message here...">Hey! Just wanted to let you know that I'll be arriving at the airport around 3 PM tomorrow. Can you pick me up? Thanks!</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxPduSize">Maximum PDU Size (bytes):</label>
+                        <input type="number" id="maxPduSize" value="50" min="10" max="500">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="headerSize">Header Size (bytes):</label>
+                        <input type="number" id="headerSize" value="3" min="2" max="10">
+                        <small style="color: #6c757d; display: block; margin-top: 5px;">
+                            Includes SI field (2 bits), SO field (16 bits), and other header fields
+                        </small>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="performSegmentation()">
+                            🔄 Segment Message
+                        </button>
+                        <button class="btn-secondary" onclick="clearSimulator()">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="output-panel">
+                    <h3 class="panel-title">
+                        <span class="status-indicator status-ready" id="statusIndicator"></span>
+                        Segmentation Results
+                    </h3>
+                    <div id="segmentOutput"></div>
+                </div>
+            </div>
+
+            <div class="log-panel" id="logPanel"></div>
+        </div>
+
+        <!-- Auto Simulation Tab -->
+        <div id="auto-simulation" class="tab-content">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Automatic Simulation</h2>
+            
+            <div class="info-box">
+                <strong>Watch Real-Time Segmentation in Action!</strong><br>
+                This simulation automatically simulates various messaging scenarios, showing how different message sizes 
+                are segmented according to 3GPP specifications.
+            </div>
+
+            <div class="animation-controls">
+                <button class="control-btn" id="autoSimulationBtn" onclick="toggleAutoSimulation()">▶️ Start Auto Simulation</button>
+                <button class="control-btn" onclick="resetAutoSimulation()">🔄 Reset Simulation</button>
+                <select id="simulationSpeed" style="padding: 10px; border-radius: 6px; border: 2px solid #667eea;">
+                    <option value="3000">Slow (3s)</option>
+                    <option value="2000" selected>Normal (2s)</option>
+                    <option value="1000">Fast (1s)</option>
+                </select>
+            </div>
+
+            <div class="simulator-section">
+                <div class="input-panel">
+                    <h3 class="panel-title">Current Simulation Scenario</h3>
+                    <div id="simulationScenario"></div>
+                </div>
+
+                <div class="output-panel">
+                    <h3 class="panel-title">Simulation Results</h3>
+                    <div id="simulationOutput"></div>
+                </div>
+            </div>
+
+            <div class="log-panel" id="simulationLogPanel"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let animationInterval = null;
+        let autoSimulationInterval = null;
+        let autoSimulationRunning = false;
+        let currentSimulationIndex = 0;
+
+        // Example messages database
+        const exampleMessages = [
+            {
+                title: "Short Message",
+                message: "Hello!",
+                pduSize: 20,
+                icon: "💬"
+            },
+            {
+                title: "Meeting Reminder",
+                message: "Hi team, reminder that we have our weekly standup meeting tomorrow at 10 AM. Please come prepared with your updates.",
+                pduSize: 50,
+                icon: "📱"
+            },
+            {
+                title: "Travel Plans",
+                message: "Hey! Just wanted to let you know that I'll be arriving at the airport around 3 PM tomorrow. Can you pick me up? Thanks!",
+                pduSize: 45,
+                icon: "✈️"
+            },
+            {
+                title: "Long Article",
+                message: "In today's rapidly evolving technological landscape, understanding the intricacies of network protocols is crucial. RLC segmentation represents a fundamental aspect of modern cellular communications, enabling efficient data transmission across wireless networks. This process ensures that large data packets can be reliably delivered even under challenging network conditions.",
+                pduSize: 60,
+                icon: "📝"
+            },
+            {
+                title: "Shopping List",
+                message: "Don't forget to pick up: milk, bread, eggs, butter, cheese, tomatoes, lettuce, chicken, rice, pasta, and orange juice from the store on your way home!",
+                pduSize: 40,
+                icon: "🛒"
+            },
+            {
+                title: "Event Invitation",
+                message: "You're invited to Sarah's birthday party this Saturday at 7 PM! It's going to be at the downtown restaurant. Hope you can make it. RSVP by Thursday please!",
+                pduSize: 55,
+                icon: "🎉"
+            }
+        ];
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'architecture') {
+                createArchitectureDiagram();
+                // Clear the architecture log
+                const archLog = document.getElementById('architectureLogPanel');
+                if (archLog) {
+                    archLog.innerHTML = '';
+                }
+            }
+        }
+
+        // Load example message
+        function loadExample(exampleNum) {
+            const example = exampleMessages[exampleNum - 1];
+            document.getElementById('messageInput').value = example.message;
+            document.getElementById('maxPduSize').value = example.pduSize;
+            addLog('info', `Loaded example: ${example.title}`);
+        }
+
+        // Create architecture diagram
+        function createArchitectureDiagram() {
+            const container = document.getElementById('flowDiagram');
+            container.innerHTML = `
+                <div class="sdu-container">
+                    <div class="sdu-box">
+                        RLC SDU (Service Data Unit)<br>
+                        <small>Original Message: "Hey! Just wanted to let you know..."</small>
+                    </div>
+                    <div class="arrow"></div>
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; font-weight: bold; margin: 10px 0;">
+                        ⚙️ Segmentation Process<br>
+                        <small style="font-weight: normal;">Max PDU Size: 50 bytes | Header: 3 bytes</small>
+                    </div>
+                    <div class="arrow"></div>
+                    <div class="pdu-segments">
+                        <div class="pdu-segment">
+                            <div class="pdu-header">
+                                PDU #1<br>
+                                SI: <span class="binary-value">01</span> (First)<br>
+                                SO: 0
+                            </div>
+                            <div class="pdu-data">
+                                "Hey! Just wanted to let you know that I'll be ar..."
+                            </div>
+                        </div>
+                        <div class="pdu-segment">
+                            <div class="pdu-header">
+                                PDU #2<br>
+                                SI: <span class="binary-value">11</span> (Middle)<br>
+                                SO: 50
+                            </div>
+                            <div class="pdu-data">
+                                "riving at the airport around 3 PM tomorrow. Can..."
+                            </div>
+                        </div>
+                        <div class="pdu-segment">
+                            <div class="pdu-header">
+                                PDU #3<br>
+                                SI: <span class="binary-value">10</span> (Last)<br>
+                                SO: 100
+                            </div>
+                            <div class="pdu-data">
+                                "you pick me up? Thanks!"
+                            </div>
+                        </div>
+                    </div>
+                    <div class="arrow"></div>
+                    <div class="sdu-box" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                        📡 Transmitted over Air Interface
+                    </div>
+                </div>
+            `;
+        }
+
+        // Animation controls
+        let isAnimating = false;
+        let animationStep = 0;
+
+        function startAnimation() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            animationStep = 0;
+            addLog('success', 'Architecture animation started');
+            
+            // Clear and start fresh
+            const container = document.getElementById('flowDiagram');
+            container.innerHTML = '';
+            
+            runAnimationStep();
+        }
+
+        function runAnimationStep() {
+            if (!isAnimating) return;
+            
+            const container = document.getElementById('flowDiagram');
+            
+            switch(animationStep) {
+                case 0:
+                    // Show SDU
+                    container.innerHTML = `
+                        <div class="sdu-container">
+                            <div class="sdu-box" style="animation: slideIn 0.5s ease-out;">
+                                RLC SDU (Service Data Unit)<br>
+                                <small>Original Message: "Hey! Just wanted to let you know..."</small>
+                            </div>
+                        </div>
+                    `;
+                    addLog('info', 'Step 1: RLC SDU received from upper layer');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 1500);
+                    break;
+                    
+                case 1:
+                    // Add arrow
+                    container.innerHTML += `<div class="arrow" style="animation: slideIn 0.5s ease-out;"></div>`;
+                    addLog('info', 'Step 2: Preparing for segmentation...');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 1000);
+                    break;
+                    
+                case 2:
+                    // Show segmentation process
+                    container.innerHTML += `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; font-weight: bold; margin: 10px 0; animation: slideIn 0.5s ease-out;">
+                            ⚙️ Segmentation Process<br>
+                            <small style="font-weight: normal;">Max PDU Size: 50 bytes | Header: 3 bytes | Payload: 47 bytes</small>
+                        </div>
+                    `;
+                    addLog('info', 'Step 3: Analyzing SDU size and PDU constraints');
+                    addLog('info', 'SDU Size: 120 bytes, Max Payload: 47 bytes → Need 3 PDUs');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 2000);
+                    break;
+                    
+                case 3:
+                    // Add arrow
+                    container.innerHTML += `<div class="arrow" style="animation: slideIn 0.5s ease-out;"></div>`;
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 800);
+                    break;
+                    
+                case 4:
+                    // Show first PDU
+                    container.innerHTML += `
+                        <div class="pdu-segments">
+                            <div class="pdu-segment" style="animation-delay: 0s;">
+                                <div class="pdu-header">
+                                    PDU #1<br>
+                                    SI: <span class="binary-value">01</span> (First)<br>
+                                    SO: 0
+                                </div>
+                                <div class="pdu-data">
+                                    "Hey! Just wanted to let you know that I'll be ar..."
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    addLog('success', 'Step 4: Created PDU #1 - SI=01 (First segment), SO=0');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 1500);
+                    break;
+                    
+                case 5:
+                    // Add second PDU
+                    const segments = container.querySelector('.pdu-segments');
+                    segments.innerHTML += `
+                        <div class="pdu-segment" style="animation-delay: 0s;">
+                            <div class="pdu-header">
+                                PDU #2<br>
+                                SI: <span class="binary-value">11</span> (Middle)<br>
+                                SO: 47
+                            </div>
+                            <div class="pdu-data">
+                                "riving at the airport around 3 PM tomorrow. Can..."
+                            </div>
+                        </div>
+                    `;
+                    addLog('success', 'Step 5: Created PDU #2 - SI=11 (Middle segment), SO=47');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 1500);
+                    break;
+                    
+                case 6:
+                    // Add third PDU
+                    const segments2 = container.querySelector('.pdu-segments');
+                    segments2.innerHTML += `
+                        <div class="pdu-segment" style="animation-delay: 0s;">
+                            <div class="pdu-header">
+                                PDU #3<br>
+                                SI: <span class="binary-value">10</span> (Last)<br>
+                                SO: 94
+                            </div>
+                            <div class="pdu-data">
+                                " you pick me up? Thanks!"
+                            </div>
+                        </div>
+                    `;
+                    addLog('success', 'Step 6: Created PDU #3 - SI=10 (Last segment), SO=94');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 1500);
+                    break;
+                    
+                case 7:
+                    // Add arrow
+                    container.innerHTML += `<div class="arrow" style="animation: slideIn 0.5s ease-out;"></div>`;
+                    addLog('info', 'Step 7: All PDUs ready for transmission');
+                    setTimeout(() => { animationStep++; runAnimationStep(); }, 1000);
+                    break;
+                    
+                case 8:
+                    // Show transmission
+                    container.innerHTML += `
+                        <div class="sdu-box" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); animation: slideIn 0.5s ease-out;">
+                            📡 Transmitted over Air Interface<br>
+                            <small>3 PDUs sent sequentially</small>
+                        </div>
+                    `;
+                    addLog('success', '✅ Step 8: Segmentation complete! PDUs transmitted successfully');
+                    isAnimating = false;
+                    break;
+            }
+        }
+
+        function pauseAnimation() {
+            isAnimating = false;
+            addLog('warning', 'Architecture animation paused at step ' + (animationStep + 1));
+        }
+
+        function resetAnimation() {
+            isAnimating = false;
+            animationStep = 0;
+            createArchitectureDiagram();
+            addLog('info', 'Architecture animation reset to initial state');
+        }
+
+        // Get SI field value and description
+        function getSIField(index, totalSegments) {
+            if (totalSegments === 1) {
+                return { value: '00', description: 'Complete SDU', type: 'complete' };
+            } else if (index === 0) {
+                return { value: '01', description: 'First Segment', type: 'first' };
+            } else if (index === totalSegments - 1) {
+                return { value: '10', description: 'Last Segment', type: 'last' };
+            } else {
+                return { value: '11', description: 'Middle Segment', type: 'middle' };
+            }
+        }
+
+        // Perform segmentation
+        function performSegmentation() {
+            const messageInput = document.getElementById('messageInput').value;
+            const maxPduSize = parseInt(document.getElementById('maxPduSize').value);
+            const headerSize = parseInt(document.getElementById('headerSize').value);
+            
+            if (!messageInput) {
+                addLog('error', 'No message provided');
+                return;
+            }
+
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.className = 'status-indicator status-processing';
+
+            clearLogs();
+            addLog('info', `Starting segmentation process...`);
+            addLog('info', `SDU Size: ${messageInput.length} bytes`);
+            addLog('info', `Max PDU Size: ${maxPduSize} bytes`);
+            addLog('info', `Header Size: ${headerSize} bytes`);
+            addLog('info', `Payload per PDU: ${maxPduSize - headerSize} bytes`);
+
+            const payloadSize = maxPduSize - headerSize;
+            const segments = [];
+            let offset = 0;
+
+            // Calculate segments
+            while (offset < messageInput.length) {
+                const segmentData = messageInput.slice(offset, offset + payloadSize);
+                const segmentIndex = segments.length;
+                const totalSegments = Math.ceil(messageInput.length / payloadSize);
+                const siField = getSIField(segmentIndex, totalSegments);
+
+                segments.push({
+                    index: segmentIndex,
+                    si: siField,
+                    so: offset,
+                    data: segmentData,
+                    size: segmentData.length
+                });
+
+                addLog('success', `Created PDU #${segmentIndex + 1}: SI=${siField.value} (${siField.description}), SO=${offset}, Size=${segmentData.length} bytes`);
+                
+                offset += payloadSize;
+            }
+
+            // Display results
+            displaySegments(segments, messageInput.length);
+            statusIndicator.className = 'status-indicator status-ready';
+            addLog('success', `✅ Segmentation complete! Total PDUs created: ${segments.length}`);
+        }
+
+        // Display segments
+        function displaySegments(segments, totalSize) {
+            const output = document.getElementById('segmentOutput');
+            let html = `
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>Summary:</strong><br>
+                    Original SDU Size: ${totalSize} bytes<br>
+                    Total PDUs Created: ${segments.length}<br>
+                    Segmentation Required: ${segments.length > 1 ? 'Yes' : 'No'}
+                </div>
+            `;
+
+            segments.forEach((segment, index) => {
+                const borderColor = segment.si.type === 'first' ? '#28a745' : 
+                                   segment.si.type === 'last' ? '#dc3545' : 
+                                   segment.si.type === 'middle' ? '#ffc107' : '#667eea';
+
+                html += `
+                    <div class="segment-card" style="border-left-color: ${borderColor};">
+                        <div class="segment-header">
+                            <div class="segment-title">PDU #${index + 1}</div>
+                            <div class="segment-badge" style="background: ${borderColor};">
+                                ${segment.si.description}
+                            </div>
+                        </div>
+                        <div class="segment-details">
+                            <div class="detail-item">
+                                <div class="detail-label">SI Field (2 bits)</div>
+                                <div class="detail-value">${segment.si.value} - ${segment.si.description}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">SO Field (16 bits)</div>
+                                <div class="detail-value">${segment.so.toString().padStart(5, '0')} bytes (0x${segment.so.toString(16).toUpperCase().padStart(4, '0')})</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Data Length</div>
+                                <div class="detail-value">${segment.size} bytes</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Byte Range</div>
+                                <div class="detail-value">[${segment.so} - ${segment.so + segment.size - 1}]</div>
+                            </div>
+                        </div>
+                        <div class="segment-data">
+                            <strong>Payload:</strong> "${segment.data}"
+                        </div>
+                    </div>
+                `;
+            });
+
+            output.innerHTML = html;
+        }
+
+        // Clear simulator
+        function clearSimulator() {
+            document.getElementById('messageInput').value = '';
+            document.getElementById('segmentOutput').innerHTML = '<p style="color: #6c757d; text-align: center; padding: 40px;">No segmentation performed yet. Enter a message and click "Segment Message".</p>';
+            clearLogs();
+            addLog('info', 'Simulator cleared');
+        }
+
+        // Add log entry
+        function addLog(type, message, targetPanel = 'logPanel') {
+            // Support architecture tab logging
+            if (document.getElementById('architecture').classList.contains('active') && targetPanel === 'logPanel') {
+                targetPanel = 'architectureLogPanel';
+            }
+            
+            const logPanel = document.getElementById(targetPanel);
+            if (!logPanel) return; // Panel doesn't exist yet
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span><span class="log-${type}">${message}</span>`;
+            logPanel.appendChild(entry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        // Clear logs
+        function clearLogs(targetPanel = 'logPanel') {
+            document.getElementById(targetPanel).innerHTML = '';
+        }
+
+        // Toggle auto simulation
+        function toggleAutoSimulation() {
+            const btn = document.getElementById('autoSimulationBtn');
+            
+            if (autoSimulationRunning) {
+                stopAutoSimulation();
+                btn.textContent = '▶️ Start Auto Simulation';
+                btn.classList.remove('active');
+            } else {
+                startAutoSimulation();
+                btn.textContent = '⏸️ Stop Auto Simulation';
+                btn.classList.add('active');
+            }
+        }
+
+        // Start auto simulation
+        function startAutoSimulation() {
+            autoSimulationRunning = true;
+            currentSimulationIndex = 0;
+            clearLogs('simulationLogPanel');
+            addLog('success', 'Auto simulation started', 'simulationLogPanel');
+            runNextSimulation();
+            
+            const speed = parseInt(document.getElementById('simulationSpeed').value);
+            autoSimulationInterval = setInterval(runNextSimulation, speed);
+        }
+
+        // Stop auto simulation
+        function stopAutoSimulation() {
+            autoSimulationRunning = false;
+            if (autoSimulationInterval) {
+                clearInterval(autoSimulationInterval);
+                autoSimulationInterval = null;
+            }
+            addLog('warning', 'Auto simulation stopped', 'simulationLogPanel');
+        }
+
+        // Reset auto simulation
+        function resetAutoSimulation() {
+            stopAutoSimulation();
+            currentSimulationIndex = 0;
+            document.getElementById('autoSimulationBtn').textContent = '▶️ Start Auto Simulation';
+            document.getElementById('autoSimulationBtn').classList.remove('active');
+            document.getElementById('simulationOutput').innerHTML = '<p style="color: #6c757d; text-align: center; padding: 40px;">Click "Start Auto Simulation" to begin automatic simulation.</p>';
+            document.getElementById('simulationScenario').innerHTML = '<p style="color: #6c757d; text-align: center; padding: 40px;">Auto simulation not started yet.</p>';
+            clearLogs('simulationLogPanel');
+            addLog('info', 'Auto simulation reset to initial state', 'simulationLogPanel');
+        }
+
+        // Run next simulation
+        function runNextSimulation() {
+            const example = exampleMessages[currentSimulationIndex];
+            const headerSize = 3;
+            const payloadSize = example.pduSize - headerSize;
+            
+            // Display scenario
+            document.getElementById('simulationScenario').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">${example.icon}</div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">${example.title}</h3>
+                    <div class="segment-data" style="margin: 15px 0;">
+                        "${example.message}"
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px;">
+                        <div class="detail-item">
+                            <div class="detail-label">Message Size</div>
+                            <div class="detail-value">${example.message.length} bytes</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Max PDU Size</div>
+                            <div class="detail-value">${example.pduSize} bytes</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            addLog('info', `Simulation ${currentSimulationIndex + 1}/${exampleMessages.length}: ${example.title}`, 'simulationLogPanel');
+            addLog('info', `Message: "${example.message.substring(0, 50)}${example.message.length > 50 ? '...' : ''}"`, 'simulationLogPanel');
+
+            // Perform segmentation
+            const segments = [];
+            let offset = 0;
+
+            while (offset < example.message.length) {
+                const segmentData = example.message.slice(offset, offset + payloadSize);
+                const segmentIndex = segments.length;
+                const totalSegments = Math.ceil(example.message.length / payloadSize);
+                const siField = getSIField(segmentIndex, totalSegments);
+
+                segments.push({
+                    index: segmentIndex,
+                    si: siField,
+                    so: offset,
+                    data: segmentData,
+                    size: segmentData.length
+                });
+
+                addLog('success', `PDU #${segmentIndex + 1}: SI=${siField.value}, SO=${offset}, Size=${segmentData.length}B`, 'simulationLogPanel');
+                
+                offset += payloadSize;
+            }
+
+            // Display results
+            let html = `
+                <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #28a745;">
+                    <strong>✅ Segmentation Complete</strong><br>
+                    Total PDUs: ${segments.length}<br>
+                    Efficiency: ${((example.message.length / (segments.length * example.pduSize)) * 100).toFixed(1)}%
+                </div>
+            `;
+
+            segments.forEach((segment, index) => {
+                const borderColor = segment.si.type === 'first' ? '#28a745' : 
+                                   segment.si.type === 'last' ? '#dc3545' : 
+                                   segment.si.type === 'middle' ? '#ffc107' : '#667eea';
+
+                html += `
+                    <div class="segment-card" style="border-left-color: ${borderColor}; margin-bottom: 10px;">
+                        <div class="segment-header">
+                            <div class="segment-title" style="font-size: 1em;">PDU #${index + 1}</div>
+                            <div class="segment-badge" style="background: ${borderColor}; font-size: 0.8em;">
+                                SI: ${segment.si.value}
+                            </div>
+                        </div>
+                        <div style="font-family: monospace; font-size: 0.85em; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                            SO: ${segment.so} | Size: ${segment.size}B | "${segment.data.substring(0, 30)}${segment.data.length > 30 ? '...' : ''}"
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('simulationOutput').innerHTML = html;
+
+            // Move to next example
+            currentSimulationIndex = (currentSimulationIndex + 1) % exampleMessages.length;
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            addLog('success', 'RLC Segmentation Simulator initialized');
+            addLog('info', 'Ready to simulate 3GPP RLC segmentation');
+            
+            // Initialize simulation output
+            document.getElementById('segmentOutput').innerHTML = '<p style="color: #6c757d; text-align: center; padding: 40px;">No segmentation performed yet. Enter a message and click "Segment Message".</p>';
+            document.getElementById('simulationOutput').innerHTML = '<p style="color: #6c757d; text-align: center; padding: 40px;">Click "Start Auto Simulation" to begin automatic simulation.</p>';
+            document.getElementById('simulationScenario').innerHTML = '<p style="color: #6c757d; text-align: center; padding: 40px;">Auto simulation not started yet.</p>';
+        };
+    </script>
+</body>
+</html>

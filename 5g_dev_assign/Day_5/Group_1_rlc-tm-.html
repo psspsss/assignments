@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RLC TM Architecture - Interactive Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5f3e 100%);
+            color: #333;
+            overflow-y: auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a472a;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #2d8659 0%, #1a472a 100%);
+            color: white;
+        }
+
+        .content-section {
+            display: none;
+            background: transparent;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .content-section.active {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 10px;
+            animation: fadeIn 0.3s;
+        }
+
+        .content-section h2 {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #1a472a;
+            font-size: 1.4em;
+        }
+
+        .content-section.single-column {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h3 {
+            color: #1a472a;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            border-bottom: 2px solid #2d8659;
+            padding-bottom: 5px;
+        }
+
+        .panel-full {
+            grid-column: 1 / -1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .architecture-diagram {
+            width: 100%;
+            max-width: 700px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .block {
+            fill: #e8f5e9;
+            stroke: #4a5568;
+            stroke-width: 2;
+            transition: all 0.3s;
+        }
+
+        .block:hover {
+            fill: #c8e6c9;
+            cursor: pointer;
+        }
+
+        .block.active {
+            fill: #2d8659;
+            stroke: #1a472a;
+            stroke-width: 3;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .arrow {
+            fill: none;
+            stroke: #4a5568;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+
+        .arrow.active {
+            stroke: #2d8659;
+            stroke-width: 3;
+            animation: flow 2s infinite;
+        }
+
+        @keyframes flow {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -20; }
+        }
+
+        .label {
+            font-size: 13px;
+            font-weight: 600;
+            fill: #2d3748;
+            text-anchor: middle;
+        }
+
+        .channel-label {
+            font-size: 12px;
+            font-weight: bold;
+            fill: #2d8659;
+        }
+
+        .info-panel {
+            background: #f0fdf4;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #2d8659;
+            margin: 8px 0;
+            font-size: 0.9em;
+        }
+
+        .info-panel h3 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .info-panel h4 {
+            color: #4a5568;
+            margin: 10px 0 5px 0;
+            font-size: 1em;
+        }
+
+        .info-panel p, .info-panel li {
+            color: #4a5568;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .info-panel ul {
+            margin-left: 15px;
+        }
+
+        .flow-animation {
+            margin: 10px 0;
+        }
+
+        .pdu-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .pdu-box {
+            width: 100px;
+            height: 70px;
+            background: linear-gradient(135deg, #2d8659 0%, #1a472a 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            font-weight: bold;
+            position: relative;
+            font-size: 0.9em;
+        }
+
+        .pdu-box.animated {
+            animation: moveRight 3s ease-in-out infinite;
+        }
+
+        @keyframes moveRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(150px); }
+        }
+
+        .flow-arrow {
+            width: 80px;
+            height: 3px;
+            background: #2d8659;
+            position: relative;
+        }
+
+        .flow-arrow::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid #2d8659;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #81c784;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+
+        .process-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .process-step {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #2d8659;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .process-step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+        }
+
+        .process-step h4 {
+            color: #2d8659;
+            margin-bottom: 6px;
+            font-size: 1em;
+        }
+
+        .process-step p {
+            margin: 4px 0;
+            font-size: 0.9em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #2d8659 0%, #1a472a 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.85em;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+            padding: 8px;
+            background: #f0fdf4;
+            border-radius: 6px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .content-section.active {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5em; }
+            .tabs { flex-direction: column; }
+            .pdu-flow { flex-direction: column; gap: 15px; }
+        }
+
+        /* Scrollbar styling */
+        .panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .panel::-webkit-scrollbar-thumb {
+            background: #2d8659;
+            border-radius: 10px;
+        }
+
+        .panel::-webkit-scrollbar-thumb:hover {
+            background: #1a472a;
+        }
+
+        /* Simulation specific styles */
+        .sim-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .stat-box {
+            background: #f0fdf4;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d8659;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            font-size: 0.8em;
+            margin-top: 4px;
+        }
+
+        .buffer-display {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            min-height: 50px;
+            border: 1px dashed #cbd5e0;
+        }
+
+        .sdu-item {
+            display: inline-block;
+            background: #2d8659;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin: 4px;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📡 RLC TM (Transparent Mode) Architecture</h1>
+            <p class="subtitle">Interactive Visualization based on 3GPP TS 38.322 Specifications</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('architecture')">🏗️ Architecture</button>
+                <button class="tab" onclick="showTab('transmit')">📤 Transmit Operations</button>
+                <button class="tab" onclick="showTab('receive')">📥 Receive Operations</button>
+                <button class="tab" onclick="showTab('flow')">🔄 Complete Flow</button>
+                <button class="tab" onclick="showTab('simulation')">🎮 Live Simulation</button>
+            </div>
+        </div>
+
+        <!-- Architecture Tab -->
+        <div id="architecture" class="content-section active">
+            <h2>🏗️ RLC TM Entity Architecture</h2>
+            
+            <div class="panel">
+                <h3>Architecture Diagram</h3>
+                <div class="architecture-diagram">
+                    <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
+                        <!-- Define arrowhead marker -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#4a5568"/>
+                            </marker>
+                            <marker id="arrowhead-active" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#2d8659"/>
+                            </marker>
+                        </defs>
+
+                        <!-- TM-RLC Channel at top -->
+                        <line x1="50" y1="30" x2="650" y2="30" stroke="#2d8659" stroke-width="3"/>
+                        <text x="350" y="20" class="channel-label" text-anchor="middle">TM-RLC channel</text>
+                        
+                        <!-- Upper connections -->
+                        <path d="M 150 30 L 150 80" class="arrow" stroke-dasharray="5,5" id="arrow-upper-left"/>
+                        <path d="M 550 30 L 550 80" class="arrow" stroke-dasharray="5,5" id="arrow-upper-right"/>
+
+                        <!-- Main container for Transmitting Side -->
+                        <rect x="50" y="90" width="250" height="220" fill="none" stroke="#4a5568" stroke-width="2" rx="8"/>
+                        <text x="175" y="110" class="label" font-weight="bold">Transmitting TM RLC Entity</text>
+
+                        <!-- Transmission Buffer -->
+                        <rect id="block-tx-buffer" class="block" x="80" y="130" width="190" height="60" rx="5"/>
+                        <text x="175" y="155" class="label">Transmission</text>
+                        <text x="175" y="175" class="label">Buffer</text>
+
+                        <!-- Main container for Receiving Side -->
+                        <rect x="400" y="90" width="250" height="220" fill="none" stroke="#4a5568" stroke-width="2" rx="8"/>
+                        <text x="525" y="110" class="label" font-weight="bold">Receiving TM RLC Entity</text>
+
+                        <!-- Reception (Direct Delivery) -->
+                        <rect id="block-rx-direct" class="block" x="430" y="130" width="190" height="60" rx="5"/>
+                        <text x="525" y="155" class="label">Direct</text>
+                        <text x="525" y="175" class="label">Delivery</text>
+
+                        <!-- Arrows from buffer to lower layer -->
+                        <path d="M 175 190 L 175 250" class="arrow" id="arrow-tx-down"/>
+                        <path d="M 525 190 L 525 250" class="arrow" id="arrow-rx-down"/>
+
+                        <!-- Radio Interface -->
+                        <line x1="175" y1="280" x2="525" y2="280" stroke="#2d8659" stroke-width="4" stroke-dasharray="8,4"/>
+                        <text x="350" y="300" class="channel-label" text-anchor="middle">Radio Interface (Uu/PC5)</text>
+                        <path d="M 300 280 L 420 280" class="arrow" id="arrow-radio" marker-end="url(#arrowhead)"/>
+
+                        <!-- Bottom channels -->
+                        <line x1="50" y1="350" x2="300" y2="350" stroke="#2d8659" stroke-width="3"/>
+                        <line x1="400" y1="350" x2="650" y2="350" stroke="#2d8659" stroke-width="3"/>
+                        
+                        <text x="175" y="340" class="channel-label" text-anchor="middle" font-size="11">BCCH/PCCH/CCCH/SBCCH</text>
+                        <text x="525" y="340" class="channel-label" text-anchor="middle" font-size="11">BCCH/PCCH/CCCH/SBCCH</text>
+
+                        <!-- Bottom connections -->
+                        <path d="M 175 250 L 175 350" class="arrow" id="arrow-tx-channel"/>
+                        <path d="M 525 250 L 525 350" class="arrow" id="arrow-rx-channel"/>
+                        <path d="M 175 350 L 175 320 L 175 280" class="arrow" stroke-dasharray="5,5" id="arrow-tx-up"/>
+                        <path d="M 525 350 L 525 320 L 525 280" class="arrow" stroke-dasharray="5,5" id="arrow-rx-up"/>
+                    </svg>
+                </div>
+
+                <div class="button-group">
+                    <button class="action-btn" onclick="animateArchitecture()">▶️ Animate Data Flow</button>
+                    <button class="action-btn" onclick="resetArchitecture()">🔄 Reset</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Key Characteristics</h3>
+                <div style="overflow-y: auto;">
+                    <div class="info-panel">
+                        <h4>TM Mode Overview</h4>
+                        <p>Transparent Mode (TM) provides the simplest RLC operation with <strong>no protocol overhead</strong>. Data passes through without modification.</p>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li><strong>No RLC Headers:</strong> TMD PDUs contain only the Data field</li>
+                            <li><strong>No Segmentation:</strong> RLC SDUs are not segmented</li>
+                            <li><strong>No ARQ:</strong> No retransmissions or acknowledgments</li>
+                            <li><strong>No Reordering:</strong> SDUs delivered as received</li>
+                            <li><strong>No Sequence Numbers:</strong> No SN field in PDUs</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-panel">
+                        <h4>Supported Logical Channels:</h4>
+                        <ul>
+                            <li>BCCH (Broadcast Control Channel)</li>
+                            <li>PCCH (Paging Control Channel)</li>
+                            <li>CCCH (Common Control Channel)</li>
+                            <li>SBCCH (Sidelink Broadcast Control Channel)</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-panel">
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>System information broadcast</li>
+                            <li>Paging messages</li>
+                            <li>Initial access signaling</li>
+                            <li>Scenarios where overhead must be minimal</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transmit Operations Tab -->
+        <div id="transmit" class="content-section">
+            <h2>📤 Transmit Operations</h2>
+
+            <div class="panel">
+                <h3>Transmission Process</h3>
+                
+                <div class="info-panel">
+                    <h4>TMD PDU Formation (Section 5.2.1.1)</h4>
+                    <p>When submitting a new TMD PDU to lower layer, the transmitting TM RLC entity shall:</p>
+                    <div class="code-block">Submit RLC SDU without any modification
+to lower layer</div>
+                </div>
+
+                <div class="flow-animation">
+                    <div class="pdu-flow">
+                        <div class="pdu-box">
+                            <div>RLC SDU</div>
+                            <div style="font-size: 0.8em;">From Upper Layer</div>
+                        </div>
+                        <div class="flow-arrow"></div>
+                        <div class="pdu-box">
+                            <div>TMD PDU</div>
+                            <div style="font-size: 0.8em;">= RLC SDU</div>
+                        </div>
+                        <div class="flow-arrow"></div>
+                        <div class="pdu-box" style="background: linear-gradient(135deg, #81c784 0%, #4caf50 100%);">
+                            <div>Lower Layer</div>
+                            <div style="font-size: 0.8em;">MAC</div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; color: #4a5568; font-size: 0.9em; margin-top: 10px;">
+                        TMD PDU = RLC SDU (No headers, no modification)
+                    </p>
+                </div>
+
+                <div class="info-panel">
+                    <h4>TMD PDU Structure</h4>
+                    <div style="background: white; padding: 15px; border-radius: 6px; margin: 10px 0; border: 2px solid #2d8659;">
+                        <svg viewBox="0 0 400 80" style="width: 100%; height: auto;">
+                            <rect x="10" y="20" width="380" height="40" fill="#e8f5e9" stroke="#2d8659" stroke-width="2" rx="4"/>
+                            <text x="200" y="45" text-anchor="middle" fill="#1a472a" font-size="14" font-weight="bold">Data Field (RLC SDU)</text>
+                            <text x="200" y="75" text-anchor="middle" fill="#4a5568" font-size="11">No RLC Header - Pure Transparent Transfer</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Transmission Characteristics</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <h4>1. SDU Reception</h4>
+                        <p>Receive RLC SDU from upper layer via TM-RLC channel</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>2. No Processing</h4>
+                        <p><strong>No segmentation:</strong> RLC SDUs are NOT segmented</p>
+                        <p><strong>No headers:</strong> No RLC headers are added</p>
+                        <p><strong>No sequence numbers:</strong> No SN assignment</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>3. Buffer Storage</h4>
+                        <p>Store in transmission buffer until transmission opportunity</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>4. Transmission</h4>
+                        <p>Submit complete, unmodified RLC SDU to lower layer (MAC) when notified</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>5. No Retransmission</h4>
+                        <p>TM mode has <strong>no ARQ mechanism</strong> - no retransmissions possible</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receive Operations Tab -->
+        <div id="receive" class="content-section">
+            <h2>📥 Receive Operations</h2>
+
+            <div class="panel">
+                <h3>Reception Process</h3>
+                
+                <div class="info-panel">
+                    <h4>TMD PDU Reception (Section 5.2.1.2)</h4>
+                    <p>When receiving a new TMD PDU from lower layer, the receiving TM RLC entity shall:</p>
+                    <div class="code-block">Deliver TMD PDU without any modification
+to upper layer</div>
+                </div>
+
+                <div class="flow-animation">
+                    <div class="pdu-flow">
+                        <div class="pdu-box" style="background: linear-gradient(135deg, #81c784 0%, #4caf50 100%);">
+                            <div>Lower Layer</div>
+                            <div style="font-size: 0.8em;">MAC</div>
+                        </div>
+                        <div class="flow-arrow"></div>
+                        <div class="pdu-box">
+                            <div>TMD PDU</div>
+                            <div style="font-size: 0.8em;">No header removal</div>
+                        </div>
+                        <div class="flow-arrow"></div>
+                        <div class="pdu-box">
+                            <div>RLC SDU</div>
+                            <div style="font-size: 0.8em;">To Upper Layer</div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; color: #4a5568; font-size: 0.9em; margin-top: 10px;">
+                        Direct delivery - TMD PDU = RLC SDU (already identical)
+                    </p>
+                </div>
+
+                <div class="info-panel">
+                    <h4>Reception Characteristics</h4>
+                    <ul>
+                        <li><strong>No Header Removal:</strong> TMD PDUs have no headers to remove</li>
+                        <li><strong>No Reassembly:</strong> SDUs are not segmented, so no reassembly needed</li>
+                        <li><strong>No Reordering:</strong> Delivered in received order</li>
+                        <li><strong>No Duplicate Detection:</strong> No mechanism to detect duplicates</li>
+                        <li><strong>No Error Detection:</strong> Relies entirely on lower layers</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Reception Flow</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <h4>1. PDU Reception</h4>
+                        <p>Receive TMD PDU from lower layer via logical channel</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>2. Direct Delivery</h4>
+                        <p>Immediately deliver to upper layer without any processing</p>
+                        <div class="code-block">TMD_PDU → Upper Layer
+(No modification)</div>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>3. No State Updates</h4>
+                        <p>TM mode has <strong>no state variables</strong> to update</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>4. No Timers</h4>
+                        <p>No timers are used in TM mode (no t-Reassembly, etc.)</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>5. Error Handling</h4>
+                        <p>All error detection and correction handled by physical/MAC layers</p>
+                    </div>
+                </div>
+
+                <div class="info-panel" style="margin-top: 15px; background: #fff3cd; border-left-color: #ffc107;">
+                    <h4>⚠️ Important Limitations</h4>
+                    <ul>
+                        <li>No reliability mechanism - lost packets are NOT recovered</li>
+                        <li>No flow control or congestion management</li>
+                        <li>Suitable only for broadcast/control channels where retransmission is not applicable</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Flow Tab -->
+        <div id="flow" class="content-section single-column">
+            <h2>🔄 Complete TM RLC Flow</h2>
+
+            <div class="panel panel-full">
+                <h3>End-to-End TM Data Transfer</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="process-step">
+                        <h4>1. Upper Layer → TX RLC</h4>
+                        <p>RLC SDU arrives from upper layer (e.g., RRC)</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>2. TX Buffer Storage</h4>
+                        <p>Store in transmission buffer (no modifications)</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>3. TX Opportunity</h4>
+                        <p>MAC notifies of transmission opportunity</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>4. TMD PDU Creation</h4>
+                        <p>TMD PDU = RLC SDU (no header added)</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>5. Transmission</h4>
+                        <p>Submit TMD PDU to MAC via logical channel</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>6. Radio Transmission</h4>
+                        <p>MAC/PHY transmits over radio interface</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>7. Radio Reception</h4>
+                        <p>PHY/MAC receives at peer entity</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>8. RX RLC Reception</h4>
+                        <p>Receiving TM RLC entity gets TMD PDU</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>9. Direct Delivery</h4>
+                        <p>Immediately deliver to upper layer (no processing)</p>
+                    </div>
+
+                    <div class="process-step">
+                        <h4>10. Upper Layer Processing</h4>
+                        <p>Upper layer (e.g., RRC) processes received data</p>
+                    </div>
+                </div>
+
+                <div class="flow-animation">
+                    <h4 style="text-align: center; color: #1a472a; margin-bottom: 15px;">Visual Flow Animation</h4>
+                    <div id="flow-visualization" style="min-height: 150px; background: #f0fdf4; border-radius: 8px; padding: 20px; text-align: center; border: 2px dashed #2d8659;">
+                        <p style="color: #4a5568; font-size: 1em;">Click "Start Flow" to see the complete TM RLC data transfer</p>
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 15px;">
+                    <button class="action-btn" onclick="startCompleteFlow()">▶️ Start Flow</button>
+                    <button class="action-btn" onclick="pauseFlow()">⏸️ Pause</button>
+                    <button class="action-btn" onclick="resetFlow()">🔄 Reset</button>
+                </div>
+
+                <div class="info-panel" style="margin-top: 20px;">
+                    <h4>Key Differences from AM/UM Modes</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #c8e6c9;">
+                            <strong style="color: #2d8659;">TM Mode</strong>
+                            <ul style="margin-top: 8px; font-size: 0.85em;">
+                                <li>No headers</li>
+                                <li>No segmentation</li>
+                                <li>No ARQ</li>
+                                <li>No timers</li>
+                                <li>No state variables</li>
+                            </ul>
+                        </div>
+                        <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #bbdefb;">
+                            <strong style="color: #1976d2;">UM Mode</strong>
+                            <ul style="margin-top: 8px; font-size: 0.85em;">
+                                <li>Has headers (SN, SI)</li>
+                                <li>Segmentation supported</li>
+                                <li>No ARQ</li>
+                                <li>t-Reassembly timer</li>
+                                <li>RX state variables</li>
+                            </ul>
+                        </div>
+                        <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #d1c4e9;">
+                            <strong style="color: #673ab7;">AM Mode</strong>
+                            <ul style="margin-top: 8px; font-size: 0.85em;">
+                                <li>Full headers (SN, SI, P)</li>
+                                <li>Segmentation/Re-segmentation</li>
+                                <li>Full ARQ with STATUS</li>
+                                <li>Multiple timers</li>
+                                <li>TX & RX state variables</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulation Tab -->
+        <div id="simulation" class="content-section">
+            <h2>🎮 Live TM RLC Simulation</h2>
+
+            <div class="panel panel-full" style="grid-column: 1 / -1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="margin: 0;">Simulation Controls</h3>
+                    <div class="button-group" style="margin: 0;">
+                        <button class="action-btn" onclick="simInit()">🔄 Initialize</button>
+                        <button class="action-btn" onclick="simSendSDU()">📤 Send SDU</button>
+                        <button class="action-btn" onclick="simSendBurst()">📤📤 Send Burst (5)</button>
+                        <button class="action-btn" onclick="simAutoMode()">🤖 Auto Mode</button>
+                        <button class="action-btn" onclick="simReset()">🔃 Reset All</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Transmission Side</h3>
+                
+                <div class="sim-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="sim-tx-count">0</div>
+                        <div class="stat-label">SDUs Sent</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sim-tx-buffer-count">0</div>
+                        <div class="stat-label">In TX Buffer</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sim-tx-size">0</div>
+                        <div class="stat-label">Total Bytes</div>
+                    </div>
+                </div>
+
+                <h4 style="margin: 15px 0 8px 0; color: #1a472a;">TX Buffer Contents:</h4>
+                <div class="buffer-display" id="sim-tx-buffer">
+                    <em style="color: #718096;">Empty - awaiting SDUs from upper layer</em>
+                </div>
+
+                <div class="info-panel" style="margin-top: 15px; background: #e8f5e9;">
+                    <h4>TX Characteristics</h4>
+                    <ul style="font-size: 0.85em;">
+                        <li>No sequence numbers assigned</li>
+                        <li>No segmentation performed</li>
+                        <li>SDUs transmitted as-is</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Reception Side</h3>
+                
+                <div class="sim-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="sim-rx-count">0</div>
+                        <div class="stat-label">PDUs Received</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sim-rx-delivered">0</div>
+                        <div class="stat-label">SDUs Delivered</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sim-rx-size">0</div>
+                        <div class="stat-label">Total Bytes</div>
+                    </div>
+                </div>
+
+                <h4 style="margin: 15px 0 8px 0; color: #1a472a;">Delivered SDUs:</h4>
+                <div class="buffer-display" id="sim-rx-delivered-list">
+                    <em style="color: #718096;">None received yet</em>
+                </div>
+
+                <div class="info-panel" style="margin-top: 15px; background: #e8f5e9;">
+                    <h4>RX Characteristics</h4>
+                    <ul style="font-size: 0.85em;">
+                        <li>No header removal needed</li>
+                        <li>No reassembly performed</li>
+                        <li>Immediate delivery to upper layer</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel panel-full" style="grid-column: 1 / -1;">
+                <h3>Data Flow Visualization</h3>
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <svg id="sim-flow-svg" viewBox="0 0 600 140" style="width: 100%; height: auto;">
+                        <!-- TX Entity -->
+                        <rect x="20" y="30" width="140" height="80" rx="10" fill="#c8e6c9" opacity="0.5" stroke="#2d8659" stroke-width="2"/>
+                        <text x="90" y="60" text-anchor="middle" fill="#1a472a" font-weight="bold" font-size="18">TX TM</text>
+                        <text x="90" y="80" text-anchor="middle" fill="#4a5568" font-size="12">Transmitter</text>
+
+                        <!-- RX Entity -->
+                        <rect x="440" y="30" width="140" height="80" rx="10" fill="#c8e6c9" opacity="0.5" stroke="#2d8659" stroke-width="2"/>
+                        <text x="510" y="60" text-anchor="middle" fill="#1a472a" font-weight="bold" font-size="18">RX TM</text>
+                        <text x="510" y="80" text-anchor="middle" fill="#4a5568" font-size="12">Receiver</text>
+
+                        <!-- Forward Path -->
+                        <path d="M 165 60 L 435 60" stroke="#2d8659" stroke-width="3" stroke-dasharray="5,5" fill="none" marker-end="url(#arrowhead)"/>
+                        <text x="300" y="50" text-anchor="middle" fill="#1a472a" font-size="11" font-weight="600">TMD PDU →</text>
+
+                        <!-- Animation container -->
+                        <g id="sim-pdu-animations"></g>
+                    </svg>
+                </div>
+
+                <h4 style="margin: 15px 0 8px 0; color: #1a472a;">Event Log:</h4>
+                <div id="sim-event-log" style="background: #2d3748; color: #81c784; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.75em; max-height: 200px; overflow-y: auto; line-height: 1.5;">
+                    <div style="color: #a0aec0;">[System] TM RLC ready. Click 'Initialize' to begin simulation.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global simulation state
+        const simState = {
+            txBuffer: [],
+            rxDelivered: [],
+            txCount: 0,
+            rxCount: 0,
+            rxDeliveredCount: 0,
+            txTotalBytes: 0,
+            rxTotalBytes: 0,
+            autoModeActive: false,
+            autoModeInterval: null,
+            sduCounter: 1
+        };
+
+        // Tab switching
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const sections = document.querySelectorAll('.content-section');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            sections.forEach(section => section.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Architecture animation
+        function animateArchitecture() {
+            const sequence = [
+                'arrow-upper-left',
+                'block-tx-buffer',
+                'arrow-tx-down',
+                'arrow-tx-channel',
+                'arrow-radio',
+                'arrow-rx-channel',
+                'arrow-rx-up',
+                'block-rx-direct',
+                'arrow-upper-right'
+            ];
+            
+            let index = 0;
+            
+            function animateNext() {
+                if (index > 0) {
+                    const prevId = sequence[index - 1];
+                    const prevElement = document.getElementById(prevId);
+                    if (prevElement) prevElement.classList.remove('active');
+                }
+                
+                if (index < sequence.length) {
+                    const currentId = sequence[index];
+                    const currentElement = document.getElementById(currentId);
+                    if (currentElement) currentElement.classList.add('active');
+                    index++;
+                    setTimeout(animateNext, 600);
+                } else {
+                    setTimeout(resetArchitecture, 2000);
+                }
+            }
+            
+            animateNext();
+        }
+
+        function resetArchitecture() {
+            const elements = document.querySelectorAll('.block, .arrow');
+            elements.forEach(el => el.classList.remove('active'));
+        }
+
+        // Complete Flow Animation
+        let flowStep = 0;
+        let flowInterval;
+        let flowPaused = false;
+
+        function startCompleteFlow() {
+            const viz = document.getElementById('flow-visualization');
+            flowStep = 0;
+            flowPaused = false;
+            
+            const steps = [
+                '📥 Step 1: RLC SDU arrives from upper layer (e.g., RRC for system info)',
+                '📦 Step 2: Store SDU in transmission buffer (no modification)',
+                '⏰ Step 3: Wait for transmission opportunity from MAC layer',
+                '📝 Step 4: Create TMD PDU (TMD PDU = RLC SDU, no header)',
+                '📤 Step 5: Submit TMD PDU to MAC via logical channel (BCCH/PCCH/etc.)',
+                '📡 Step 6: MAC/PHY transmits over radio interface',
+                '📶 Step 7: Radio transmission to receiving entity',
+                '📨 Step 8: PHY/MAC receives and delivers to RLC',
+                '📥 Step 9: Receiving TM RLC gets TMD PDU',
+                '✅ Step 10: Immediately deliver to upper layer (no processing)',
+                '🎯 Step 11: Upper layer receives and processes RLC SDU',
+                '🎉 Complete! TM transfer finished (no ACK, no retransmission)'
+            ];
+            
+            viz.innerHTML = '<p style="font-size: 1.1em; color: #2d8659; font-weight: 600;">Starting TM RLC Flow...</p>';
+            
+            flowInterval = setInterval(() => {
+                if (!flowPaused && flowStep < steps.length) {
+                    viz.innerHTML = `<p style="font-size: 1em; color: #2d3748; font-weight: 600; line-height: 1.6;">${steps[flowStep]}</p>`;
+                    flowStep++;
+                } else if (flowStep >= steps.length) {
+                    clearInterval(flowInterval);
+                }
+            }, 2200);
+        }
+
+        function pauseFlow() {
+            flowPaused = !flowPaused;
+            event.target.textContent = flowPaused ? '▶️ Resume' : '⏸️ Pause';
+        }
+
+        function resetFlow() {
+            clearInterval(flowInterval);
+            flowStep = 0;
+            flowPaused = false;
+            document.getElementById('flow-visualization').innerHTML = '<p style="color: #4a5568; font-size: 1em;">Click "Start Flow" to see the complete TM RLC data transfer</p>';
+            const pauseBtn = document.querySelector('#flow .button-group button:nth-child(2)');
+            if (pauseBtn) pauseBtn.textContent = '⏸️ Pause';
+        }
+
+        // Simulation Functions
+        function simInit() {
+            simLog('🔄 Initializing TM RLC entities...', '#2d8659');
+            simState.txBuffer = [];
+            simState.rxDelivered = [];
+            simState.txCount = 0;
+            simState.rxCount = 0;
+            simState.rxDeliveredCount = 0;
+            simState.txTotalBytes = 0;
+            simState.rxTotalBytes = 0;
+            simState.sduCounter = 1;
+            
+            simUpdateDisplay();
+            simLog('✅ TM RLC initialized. No state variables (stateless operation)', '#2d8659');
+            simLog('📊 Ready to transmit. TM mode = transparent pass-through', '#4a5568');
+        }
+
+        function simSendSDU() {
+            const sduSize = 50 + Math.floor(Math.random() * 100); // Random size 50-150 bytes
+            const sdu = {
+                id: simState.sduCounter++,
+                size: sduSize,
+                timestamp: Date.now()
+            };
+            
+            simState.txBuffer.push(sdu);
+            simState.txCount++;
+            simState.txTotalBytes += sduSize;
+            
+            simLog(`📤 TX: RLC SDU #${sdu.id} received from upper layer (${sduSize} bytes)`, '#2d8659');
+            simLog(`   └─ Stored in TX buffer (no modification, no header)`, '#a0aec0');
+            
+            simUpdateDisplay();
+            
+            // Simulate transmission after brief delay
+            setTimeout(() => {
+                simTransmitPDU(sdu);
+            }, 800);
+        }
+
+        function simTransmitPDU(sdu) {
+            // Remove from TX buffer
+            const index = simState.txBuffer.findIndex(s => s.id === sdu.id);
+            if (index !== -1) {
+                simState.txBuffer.splice(index, 1);
+            }
+            
+            simLog(`📡 TX: Transmitting TMD PDU #${sdu.id} (TMD PDU = RLC SDU, ${sdu.size} bytes)`, '#2d8659');
+            simLog(`   └─ No RLC header added, submitted to MAC layer`, '#a0aec0');
+            
+            simAnimatePDU(sdu.id);
+            simUpdateDisplay();
+            
+            // Simulate reception
+            setTimeout(() => {
+                simReceivePDU(sdu);
+            }, 1500);
+        }
+
+        function simReceivePDU(sdu) {
+            simState.rxCount++;
+            simState.rxTotalBytes += sdu.size;
+            
+            simLog(`📥 RX: TMD PDU #${sdu.id} received from MAC (${sdu.size} bytes)`, '#2d8659');
+            simLog(`   └─ No header to remove - TMD PDU is pure data`, '#a0aec0');
+            
+            // Immediate delivery (no buffering in TM mode)
+            simDeliverSDU(sdu);
+        }
+
+        function simDeliverSDU(sdu) {
+            simState.rxDelivered.push(sdu);
+            simState.rxDeliveredCount++;
+            
+            simLog(`✅ RX: RLC SDU #${sdu.id} delivered to upper layer immediately`, '#2d8659');
+            simLog(`   └─ Direct delivery - no reassembly, no reordering`, '#a0aec0');
+            
+            simUpdateDisplay();
+        }
+
+        function simSendBurst() {
+            simLog('📤📤 Sending burst of 5 SDUs...', '#2d8659');
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => simSendSDU(), i * 400);
+            }
+        }
+
+        function simAutoMode() {
+            if (simState.autoModeActive) {
+                clearInterval(simState.autoModeInterval);
+                simState.autoModeActive = false;
+                simLog('⏸️ Auto mode stopped', '#718096');
+                event.target.textContent = '🤖 Auto Mode';
+                return;
+            }
+            
+            simLog('🤖 Auto mode activated - continuous SDU transmission', '#2d8659');
+            simState.autoModeActive = true;
+            event.target.textContent = '⏸️ Stop Auto';
+            
+            simState.autoModeInterval = setInterval(() => {
+                simSendSDU();
+            }, 2500);
+        }
+
+        function simReset() {
+            simLog('🔃 Resetting simulation...', '#718096');
+            
+            if (simState.autoModeActive) {
+                clearInterval(simState.autoModeInterval);
+                simState.autoModeActive = false;
+            }
+            
+            simInit();
+            
+            // Clear animations
+            document.getElementById('sim-pdu-animations').innerHTML = '';
+        }
+
+        function simUpdateDisplay() {
+            // TX stats
+            document.getElementById('sim-tx-count').textContent = simState.txCount;
+            document.getElementById('sim-tx-buffer-count').textContent = simState.txBuffer.length;
+            document.getElementById('sim-tx-size').textContent = simState.txTotalBytes;
+            
+            // RX stats
+            document.getElementById('sim-rx-count').textContent = simState.rxCount;
+            document.getElementById('sim-rx-delivered').textContent = simState.rxDeliveredCount;
+            document.getElementById('sim-rx-size').textContent = simState.rxTotalBytes;
+            
+            // TX Buffer display
+            const txBufferDiv = document.getElementById('sim-tx-buffer');
+            if (simState.txBuffer.length === 0) {
+                txBufferDiv.innerHTML = '<em style="color: #718096;">Empty - awaiting SDUs from upper layer</em>';
+            } else {
+                let html = '';
+                simState.txBuffer.forEach(sdu => {
+                    html += `<div class="sdu-item">SDU #${sdu.id} (${sdu.size}B)</div>`;
+                });
+                txBufferDiv.innerHTML = html;
+            }
+            
+            // RX Delivered display
+            const rxDeliveredDiv = document.getElementById('sim-rx-delivered-list');
+            if (simState.rxDelivered.length === 0) {
+                rxDeliveredDiv.innerHTML = '<em style="color: #718096;">None received yet</em>';
+            } else {
+                let html = '';
+                simState.rxDelivered.slice(-10).forEach(sdu => {
+                    html += `<div class="sdu-item">SDU #${sdu.id} (${sdu.size}B)</div>`;
+                });
+                rxDeliveredDiv.innerHTML = html;
+            }
+        }
+
+        function simAnimatePDU(sduId) {
+            const svg = document.getElementById('sim-pdu-animations');
+            const pduGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const id = 'pdu-' + Date.now();
+            pduGroup.setAttribute('id', id);
+            
+            const startX = 165;
+            const endX = 435;
+            const y = 60;
+            
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', startX);
+            rect.setAttribute('y', y - 10);
+            rect.setAttribute('width', '60');
+            rect.setAttribute('height', '20');
+            rect.setAttribute('rx', '4');
+            rect.setAttribute('fill', '#2d8659');
+            rect.setAttribute('opacity', '0.9');
+            
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', startX + 30);
+            text.setAttribute('y', y + 3);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', 'white');
+            text.setAttribute('font-size', '10');
+            text.setAttribute('font-weight', 'bold');
+            text.textContent = `#${sduId}`;
+            
+            pduGroup.appendChild(rect);
+            pduGroup.appendChild(text);
+            svg.appendChild(pduGroup);
+            
+            // Animate
+            let pos = startX;
+            const step = (endX - startX) / 30;
+            
+            const animInterval = setInterval(() => {
+                pos += step;
+                rect.setAttribute('x', pos);
+                text.setAttribute('x', pos + 30);
+                
+                if (pos >= endX) {
+                    clearInterval(animInterval);
+                    setTimeout(() => {
+                        pduGroup.remove();
+                    }, 500);
+                }
+            }, 50);
+        }
+
+        function simLog(message, color = '#81c784') {
+            const log = document.getElementById('sim-event-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.innerHTML = `<span style="color: #a0aec0;">[${timestamp}]</span> ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            simInit();
+        });
+    </script>
+</body>
+</html>
