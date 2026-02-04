@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR Frame Structure Explorer | Vinayak Majhi</title>
+    <!-- Using JetBrains Mono for the full Gruvbox/Terminal aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Gruvbox Dark Palette */
+            --bg-hard: #1d2021;
+            --bg-soft: #32302f;
+            --bg0: #282828;
+            --bg1: #3c3836;
+            --bg2: #504945;
+            --fg: #ebdbb2;
+            --fg-0: #fbf1c7;
+            --fg-1: #d5c4a1;
+            --gray: #928374;
+            
+            /* Accents */
+            --red: #fb4934;
+            --green: #b8bb26;
+            --yellow: #fabd2f;
+            --blue: #83a598;
+            --purple: #d3869b;
+            --aqua: #8ec07c;
+            --orange: #fe8019;
+
+            --font-main: 'JetBrains Mono', monospace;
+            
+            --border-radius: 6px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-hard);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Scanline effect for retro feel (Optional, kept subtle) */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.05) 50%,
+                rgba(0,0,0,0.05)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.3;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg0);
+            border-bottom: 2px solid var(--bg2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--orange);
+            color: var(--bg0);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            border: 2px solid var(--fg);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--fg-0);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 40px 0 60px 0;
+            border-bottom: 1px dashed var(--bg2);
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--yellow);
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: var(--fg-1);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            background: var(--bg1);
+            border: 2px solid var(--bg2);
+            border-radius: var(--border-radius);
+            color: var(--gray);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-main);
+            font-size: 13px;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg2);
+            color: var(--fg);
+            border-color: var(--gray);
+        }
+
+        .nav-tab.active {
+            background: var(--bg0);
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        /* Content Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg0);
+            border: 2px solid var(--bg2);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--bg2);
+            padding-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg2);
+            color: var(--aqua);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        /* Frame Structure Visualization */
+        .frame-visual {
+            background: var(--bg-hard);
+            border: 2px solid var(--bg1);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            overflow-x: auto;
+        }
+
+        .hierarchy-label {
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hierarchy-label .badge {
+            background: var(--bg2);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--fg);
+            border: 1px solid var(--gray);
+        }
+
+        /* Frame Container */
+        .frame-container {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 30px;
+            min-width: max-content;
+        }
+
+        .subframe {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border: 1px solid var(--bg2);
+            padding: 2px;
+            background: var(--bg-soft);
+        }
+
+        .subframe-header {
+            background: var(--purple);
+            color: var(--bg0);
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .slots-container {
+            display: flex;
+            gap: 2px;
+        }
+
+        .slot {
+            width: 60px;
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            padding: 10px 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slot:hover {
+            background: var(--bg2);
+            border-color: var(--aqua);
+        }
+
+        .slot.selected {
+            background: var(--bg2);
+            border-color: var(--orange);
+            box-shadow: inset 0 0 0 1px var(--orange);
+        }
+
+        .slot-label {
+            font-size: 10px;
+            color: var(--gray);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .symbols-mini {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .symbol-mini {
+            height: 4px;
+            background: var(--blue);
+            opacity: 0.4;
+        }
+
+        .symbol-mini:first-child {
+            background: var(--yellow);
+            opacity: 1;
+        }
+
+        /* Detailed Slot View */
+        .slot-detail {
+            background: var(--bg-hard);
+            border: 1px solid var(--bg2);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .slot-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .slot-detail-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--orange);
+        }
+
+        .symbols-grid {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .symbol {
+            aspect-ratio: 1;
+            min-height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            color: var(--fg);
+        }
+
+        .symbol:hover {
+            transform: translateY(-2px);
+            border-color: var(--fg);
+        }
+
+        .symbol.data { background: var(--blue); color: var(--bg0); }
+        .symbol.dmrs { background: var(--orange); color: var(--bg0); }
+        .symbol.guard { background: var(--bg2); color: var(--gray); }
+        .symbol.sss { background: var(--green); color: var(--bg0); }
+        .symbol.pss { background: var(--aqua); color: var(--bg0); }
+        .symbol.pbch { background: var(--yellow); color: var(--bg0); }
+
+        /* Resource Block Grid */
+        .rb-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .rb-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2px;
+            background: var(--bg-hard);
+            padding: 20px;
+            border: 2px solid var(--bg2);
+            border-radius: var(--border-radius);
+            flex: 1;
+        }
+
+        .re {
+            aspect-ratio: 1;
+            min-width: 25px;
+            min-height: 25px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            background: var(--bg1);
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
+        .re:hover { transform: scale(1.1); border-color: var(--fg); z-index: 10; }
+        .re.data-re { background: var(--blue); }
+        .re.dmrs-re { background: var(--orange); }
+        .re.ptrs-re { background: var(--red); }
+        .re.csi-re { background: var(--purple); }
+
+        .rb-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 150px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.3);
+        }
+
+        /* Calculator Section */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .calc-card {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            border-radius: var(--border-radius);
+            padding: 25px;
+        }
+
+        .calc-card h3 {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: var(--aqua);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calc-input-group { margin-bottom: 15px; }
+
+        .calc-input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .calc-input-group select,
+        .calc-input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-hard);
+            border: 1px solid var(--bg2);
+            border-radius: 4px;
+            color: var(--fg);
+            font-family: var(--font-main);
+            font-size: 14px;
+        }
+
+        .calc-input-group select:focus,
+        .calc-input-group input:focus {
+            outline: none;
+            border-color: var(--orange);
+            background: var(--bg0);
+        }
+
+        .calc-result {
+            background: var(--bg0);
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--bg2);
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .calc-result-label { font-size: 11px; color: var(--gray); margin-bottom: 5px; text-transform: uppercase; }
+        .calc-result-value { font-size: 24px; font-weight: 700; color: var(--yellow); }
+
+        /* Info Boxes */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-box {
+            background: var(--bg1);
+            border: 1px solid var(--bg2);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border-left: 4px solid var(--blue);
+        }
+
+        .info-box.orange { border-left-color: var(--orange); }
+
+        .info-box h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--fg);
+        }
+
+        .info-box p { color: var(--gray); font-size: 13px; line-height: 1.6; }
+        
+        .info-box .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--fg-0);
+            margin: 10px 0;
+        }
+
+        /* Formula Box */
+        .formula-box {
+            background: var(--bg-hard);
+            border: 1px dashed var(--gray);
+            padding: 20px;
+            margin: 20px 0;
+            color: var(--fg-1);
+        }
+
+        .formula { color: var(--aqua); font-size: 14px; }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: var(--bg1);
+            padding: 12px;
+            text-align: left;
+            color: var(--orange);
+            border: 1px solid var(--bg2);
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid var(--bg2);
+            color: var(--fg-1);
+        }
+
+        .data-table tr:hover td { background: var(--bg1); }
+
+        /* Animation */
+        .animation-container {
+            position: relative;
+            background: var(--bg-hard);
+            border: 2px solid var(--bg2);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .time-marker {
+            position: absolute;
+            top: -25px;
+            width: 2px;
+            height: calc(100% + 50px);
+            background: var(--red);
+            z-index: 20;
+            animation: timeMove 10s linear infinite;
+        }
+
+        @keyframes timeMove { 0% { left: 0; } 100% { left: 100%; } }
+
+        .play-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 20px;
+            background: var(--bg0);
+            border: 1px solid var(--aqua);
+            border-radius: 4px;
+            color: var(--aqua);
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-main);
+            z-index: 30;
+        }
+
+        .play-btn:hover { background: var(--aqua); color: var(--bg0); }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: var(--bg0);
+            border: 1px solid var(--yellow);
+            padding: 10px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            max-width: 300px;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+        }
+        .tooltip.visible { opacity: 1; }
+        .tooltip-title { font-weight: 700; color: var(--yellow); margin-bottom: 5px; font-size: 12px; }
+        .tooltip-content { font-size: 11px; color: var(--fg); }
+
+        /* Comparison */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+        @media (max-width: 900px) { .comparison-grid { grid-template-columns: 1fr; } }
+
+        .comparison-card {
+            background: var(--bg1);
+            border: 2px solid var(--bg2);
+            border-radius: var(--border-radius);
+            padding: 25px;
+        }
+        
+        .comparison-card.lte { border-color: var(--orange); }
+        .comparison-card.nr { border-color: var(--blue); }
+
+        .comparison-badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--bg0);
+        }
+        .comparison-badge.lte { background: var(--orange); }
+        .comparison-badge.nr { background: var(--blue); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px;
+            border-top: 2px solid var(--bg2);
+            margin-top: 60px;
+            background: var(--bg0);
+        }
+        footer p { color: var(--gray); font-size: 12px; }
+        footer a { color: var(--orange); text-decoration: none; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-hard); }
+        ::-webkit-scrollbar-thumb { background: var(--bg2); border: 2px solid var(--bg-hard); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray); }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">VM</div>
+            <div>
+                <div class="logo-text">Vinayak Majhi</div>
+                <div class="logo-subtitle">Technical Training Tool</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>5G NR Frame Structure</h1>
+            <p>Interactive visualization to understand the hierarchical time-domain structure of 5G New Radio: Frame → Subframe → Slot → Symbol → Resource Element</p>
+        </section>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-section="overview">Overview</button>
+            <button class="nav-tab" data-section="hierarchy">Hierarchy</button>
+            <button class="nav-tab" data-section="resource-grid">Resource Grid</button>
+            <button class="nav-tab" data-section="calculator">Calculator</button>
+            <button class="nav-tab" data-section="comparison">LTE vs NR</button>
+        </nav>
+
+        <!-- OVERVIEW SECTION -->
+        <section id="overview" class="section active">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">#</div>
+                    <h2 class="card-title">5G NR Time Domain Structure</h2>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h4>Radio Frame</h4>
+                        <div class="value">10 ms</div>
+                        <p>The largest time unit in 5G NR. Each frame contains <strong>10 subframes</strong>. Frame duration is always fixed at 10ms.</p>
+                    </div>
+                    <div class="info-box orange">
+                        <h4>Subframe</h4>
+                        <div class="value">1 ms</div>
+                        <p>Each subframe is exactly 1ms. A subframe contains <strong>1, 2, 4, 8, or 16 slots</strong> depending on the numerology.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>Slot</h4>
+                        <div class="value">14 Symbols</div>
+                        <p>The basic scheduling unit in 5G NR. Each slot contains <strong>14 OFDM symbols</strong> (12 for extended CP).</p>
+                    </div>
+                    <div class="info-box orange">
+                        <h4>OFDM Symbol</h4>
+                        <div class="value">Variable</div>
+                        <p>Duration depends on SCS. Contains CP + useful symbol. Formula: <strong>1/(14 × 2^μ) ms</strong>.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>Resource Block (RB)</h4>
+                        <div class="value">12 SC</div>
+                        <p>Smallest frequency allocation. One RB spans <strong>12 consecutive subcarriers</strong> in frequency domain.</p>
+                    </div>
+                    <div class="info-box orange">
+                        <h4>Resource Element (RE)</h4>
+                        <div class="value">1x1</div>
+                        <p>One RE = <strong>1 subcarrier × 1 OFDM symbol</strong>. Carries one modulation symbol.</p>
+                    </div>
+                </div>
+
+                <div class="formula-box">
+                    <div class="formula">
+                        // Frame Structure Logic<br>
+                        Slots_per_Subframe = 2^μ (where μ = numerology: 0, 1, 2, 3, 4)<br>
+                        Slots_per_Frame = 10 × 2^μ<br>
+                        Slot_Duration = 1 / 2^μ ms<br>
+                        SCS = 15 × 2^μ kHz
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Hierarchy -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">/</div>
+                    <h2 class="card-title">Visual Hierarchy</h2>
+                </div>
+                
+                <svg viewBox="0 0 1000 400" style="width: 100%; height: auto; background: var(--bg-hard); border-radius: 4px;">
+                    <!-- Frame -->
+                    <rect x="50" y="30" width="900" height="60" rx="4" fill="#504945" stroke="#83a598" stroke-width="2"/>
+                    <text x="500" y="65" fill="#ebdbb2" font-family="JetBrains Mono" font-size="14" font-weight="bold" text-anchor="middle">RADIO FRAME (10 ms)</text>
+                    
+                    <!-- Subframes -->
+                    <g transform="translate(50, 110)">
+                        <text x="0" y="-10" fill="#928374" font-size="12" font-family="JetBrains Mono">Subframes (1ms):</text>
+                        <rect x="0" y="0" width="88" height="40" rx="4" fill="#b16286" stroke="#282828" stroke-width="1"/>
+                        <text x="44" y="25" fill="#fbf1c7" font-size="11" text-anchor="middle" font-family="JetBrains Mono">SF0</text>
+                        <rect x="90" y="0" width="88" height="40" rx="4" fill="#b16286" stroke="#282828" stroke-width="1"/>
+                        <text x="134" y="25" fill="#fbf1c7" font-size="11" text-anchor="middle" font-family="JetBrains Mono">SF1</text>
+                        <rect x="180" y="0" width="88" height="40" rx="4" fill="#3c3836" stroke="#504945" stroke-width="1"/>
+                        <text x="224" y="25" fill="#928374" font-size="11" text-anchor="middle" font-family="JetBrains Mono">SF2</text>
+                        <rect x="270" y="0" width="88" height="40" rx="4" fill="#3c3836" stroke="#504945" stroke-width="1"/>
+                        <text x="314" y="25" fill="#928374" font-size="11" text-anchor="middle" font-family="JetBrains Mono">SF3</text>
+                        <text x="380" y="25" fill="#928374" font-size="14" font-family="JetBrains Mono">...</text>
+                        <rect x="410" y="0" width="88" height="40" rx="4" fill="#3c3836" stroke="#504945" stroke-width="1"/>
+                        <text x="454" y="25" fill="#928374" font-size="11" text-anchor="middle" font-family="JetBrains Mono">SF9</text>
+                    </g>
+                    
+                    <!-- Arrow -->
+                    <path d="M 94 160 L 94 180" stroke="#83a598" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    
+                    <!-- Slots -->
+                    <g transform="translate(50, 200)">
+                        <text x="0" y="-10" fill="#928374" font-size="12" font-family="JetBrains Mono">Slots (μ=1, 30kHz):</text>
+                        <rect x="0" y="0" width="43" height="35" rx="4" fill="#d65d0e" stroke="#282828" stroke-width="1"/>
+                        <text x="21" y="22" fill="#fbf1c7" font-size="10" text-anchor="middle" font-family="JetBrains Mono">S0</text>
+                        <rect x="45" y="0" width="43" height="35" rx="4" fill="#d65d0e" stroke="#282828" stroke-width="1"/>
+                        <text x="66" y="22" fill="#fbf1c7" font-size="10" text-anchor="middle" font-family="JetBrains Mono">S1</text>
+                    </g>
+                    
+                    <!-- Arrow -->
+                    <path d="M 71 245 L 71 265" stroke="#fe8019" stroke-width="2" marker-end="url(#arrowhead2)"/>
+                    
+                    <!-- Symbols -->
+                    <g transform="translate(50, 285)">
+                        <text x="0" y="-10" fill="#928374" font-size="12" font-family="JetBrains Mono">Symbols (14 per slot):</text>
+                        <g>
+                            <rect x="0" y="0" width="28" height="30" rx="2" fill="#fabd2f" stroke="#282828" stroke-width="1"/>
+                            <text x="14" y="20" fill="#282828" font-size="8" text-anchor="middle" font-family="JetBrains Mono">0</text>
+                            <rect x="30" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <text x="44" y="20" fill="#fbf1c7" font-size="8" text-anchor="middle" font-family="JetBrains Mono">1</text>
+                            <rect x="60" y="0" width="28" height="30" rx="2" fill="#fe8019" stroke="#282828" stroke-width="1"/>
+                            <text x="74" y="20" fill="#fbf1c7" font-size="8" text-anchor="middle" font-family="JetBrains Mono">2</text>
+                            <!-- Remaining symbols simplified loop -->
+                            <rect x="90" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="120" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="150" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="180" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="210" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="240" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="270" y="0" width="28" height="30" rx="2" fill="#fe8019" stroke="#282828" stroke-width="1"/>
+                            <rect x="300" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="330" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="360" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                            <rect x="390" y="0" width="28" height="30" rx="2" fill="#458588" stroke="#282828" stroke-width="1"/>
+                        </g>
+                    </g>
+                    
+                    <!-- Legend -->
+                    <g transform="translate(600, 285)">
+                        <text x="0" y="0" fill="#ebdbb2" font-size="12" font-weight="bold" font-family="JetBrains Mono">Types:</text>
+                        <rect x="0" y="10" width="12" height="12" rx="2" fill="#fabd2f"/>
+                        <text x="20" y="20" fill="#928374" font-size="11" font-family="JetBrains Mono">Long CP (Sym 0)</text>
+                        <rect x="0" y="30" width="12" height="12" rx="2" fill="#fe8019"/>
+                        <text x="20" y="40" fill="#928374" font-size="11" font-family="JetBrains Mono">DMRS</text>
+                        <rect x="0" y="50" width="12" height="12" rx="2" fill="#458588"/>
+                        <text x="20" y="60" fill="#928374" font-size="11" font-family="JetBrains Mono">Data</text>
+                    </g>
+                    
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#83a598"/>
+                        </marker>
+                        <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#fe8019"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <!-- Numerology Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">T</div>
+                    <h2 class="card-title">Numerology Reference (μ)</h2>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>μ</th>
+                            <th>SCS (kHz)</th>
+                            <th>Slots/SF</th>
+                            <th>Slots/Frame</th>
+                            <th>Slot Dur.</th>
+                            <th>Sym Dur.</th>
+                            <th>Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>0</td><td>15</td><td>1</td><td>10</td><td>1 ms</td><td>66.67 μs</td><td>FR1</td></tr>
+                        <tr><td>1</td><td>30</td><td>2</td><td>20</td><td>0.5 ms</td><td>33.33 μs</td><td>FR1 (Main)</td></tr>
+                        <tr><td>2</td><td>60</td><td>4</td><td>40</td><td>0.25 ms</td><td>16.67 μs</td><td>FR1 / FR2</td></tr>
+                        <tr><td>3</td><td>120</td><td>8</td><td>80</td><td>0.125 ms</td><td>8.33 μs</td><td>FR2</td></tr>
+                        <tr><td>4</td><td>240</td><td>16</td><td>160</td><td>0.0625 ms</td><td>4.17 μs</td><td>FR2 (SSB)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- HIERARCHY EXPLORER SECTION -->
+        <section id="hierarchy" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">{ }</div>
+                    <h2 class="card-title">Hierarchy Explorer</h2>
+                </div>
+                
+                <div class="calc-input-group" style="max-width: 300px; margin-bottom: 30px;">
+                    <label>Select Numerology (μ)</label>
+                    <select id="numerologySelect" onchange="updateFrameView()">
+                        <option value="0">μ=0 (SCS 15 kHz) - 1 slot/subframe</option>
+                        <option value="1" selected>μ=1 (SCS 30 kHz) - 2 slots/subframe</option>
+                        <option value="2">μ=2 (SCS 60 kHz) - 4 slots/subframe</option>
+                        <option value="3">μ=3 (SCS 120 kHz) - 8 slots/subframe</option>
+                    </select>
+                </div>
+
+                <div class="frame-visual">
+                    <div class="hierarchy-label">
+                        <span class="badge">FRAME</span>
+                        <span>10 ms | 10 Subframes</span>
+                    </div>
+                    
+                    <div id="frameContainer" class="frame-container">
+                        <!-- Dynamically generated -->
+                    </div>
+
+                    <div class="hierarchy-label" style="margin-top: 20px;">
+                        <span class="badge">INFO</span>
+                        <span id="slotInfo">Click slot for details</span>
+                    </div>
+
+                    <div id="slotDetail" class="slot-detail" style="display: none;">
+                        <div class="slot-detail-header">
+                            <div class="slot-detail-title" id="slotDetailTitle">Slot 0</div>
+                            <div style="display: flex; gap: 10px;">
+                                <span style="background: var(--yellow); padding: 4px 12px; border-radius: 4px; font-size: 11px; color: var(--bg0);">Long CP</span>
+                                <span style="background: var(--blue); padding: 4px 12px; border-radius: 4px; font-size: 11px; color: var(--bg0);">Data</span>
+                                <span style="background: var(--orange); padding: 4px 12px; border-radius: 4px; font-size: 11px; color: var(--bg0);">DMRS</span>
+                            </div>
+                        </div>
+                        <div id="symbolsGrid" class="symbols-grid">
+                            <!-- Dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Animation Section -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">>_</div>
+                    <h2 class="card-title">Time Domain Animation</h2>
+                </div>
+                
+                <div class="animation-container">
+                    <button class="play-btn" id="playBtn" onclick="toggleAnimation()">▶ Play</button>
+                    <div id="timeMarker" class="time-marker" style="animation-play-state: paused;"></div>
+                    
+                    <div style="display: flex; gap: 2px; padding-top: 20px;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="background: var(--bg1); padding: 15px; border-radius: 4px; margin-bottom: 5px; border: 1px solid var(--bg2);">
+                                <div style="font-size: 12px; color: var(--gray);">SF0</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="background: var(--bg1); padding: 15px; border-radius: 4px; margin-bottom: 5px; border: 1px solid var(--bg2);">
+                                <div style="font-size: 12px; color: var(--gray);">SF1</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="background: var(--bg1); padding: 15px; border-radius: 4px; margin-bottom: 5px; border: 1px solid var(--bg2);">
+                                <div style="font-size: 12px; color: var(--gray);">SF2</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="background: var(--bg1); padding: 15px; border-radius: 4px; margin-bottom: 5px; border: 1px solid var(--bg2);">
+                                <div style="font-size: 12px; color: var(--gray);">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESOURCE GRID SECTION -->
+        <section id="resource-grid" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">#</div>
+                    <h2 class="card-title">Resource Grid (RB/RE)</h2>
+                </div>
+
+                <div class="info-grid" style="margin-bottom: 30px;">
+                    <div class="info-box">
+                        <h4>Resource Block (RB)</h4>
+                        <p><strong>12 subcarriers</strong> × <strong>1 slot</strong><br>
+                        Total REs = 12 × 14 = <strong>168 REs</strong></p>
+                    </div>
+                    <div class="info-box orange">
+                        <h4>Resource Element (RE)</h4>
+                        <p><strong>1 SC</strong> × <strong>1 Symbol</strong><br>
+                        Carries 1 modulation symbol.</p>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-hard); border-radius: 4px; padding: 30px; border: 1px solid var(--bg2);">
+                    <h3 style="margin-bottom: 20px; color: var(--blue);">1 RB Grid (12 SC × 14 Sym)</h3>
+                    
+                    <div class="rb-container">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; color: var(--gray); height: 200px; display: flex; align-items: center;">
+                                    ← Freq (12 SC) →
+                                </div>
+                                <div>
+                                    <div id="rbGrid" class="rb-grid">
+                                        <!-- Dynamically generated -->
+                                    </div>
+                                    <div style="text-align: center; font-size: 11px; color: var(--gray); margin-top: 10px;">
+                                        ← Time (14 Sym) →
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="rb-legend">
+                            <h4 style="color: var(--fg); margin-bottom: 10px;">Legend</h4>
+                            <div class="legend-item"><div class="legend-color" style="background: var(--blue);"></div><span>Data</span></div>
+                            <div class="legend-item"><div class="legend-color" style="background: var(--orange);"></div><span>DMRS</span></div>
+                            <div class="legend-item"><div class="legend-color" style="background: var(--red);"></div><span>PT-RS</span></div>
+                            <div class="legend-item"><div class="legend-color" style="background: var(--purple);"></div><span>CSI-RS</span></div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: var(--bg0); border: 1px solid var(--bg2); border-radius: 4px;">
+                                <div id="reInfo" style="font-size: 12px; color: var(--aqua);">Select an RE</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CALCULATOR SECTION -->
+        <section id="calculator" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">+</div>
+                    <h2 class="card-title">Calculator</h2>
+                </div>
+
+                <div class="calculator-grid">
+                    <!-- Numerology -->
+                    <div class="calc-card">
+                        <h3>Numerology</h3>
+                        <div class="calc-input-group">
+                            <label>Numerology (μ)</label>
+                            <select id="calcNumerology" onchange="calculateParams()">
+                                <option value="0">μ = 0</option>
+                                <option value="1" selected>μ = 1</option>
+                                <option value="2">μ = 2</option>
+                                <option value="3">μ = 3</option>
+                            </select>
+                        </div>
+                        <div id="calcResults" style="margin-top: 20px;"></div>
+                    </div>
+
+                    <!-- Throughput -->
+                    <div class="calc-card">
+                        <h3>Data Rate Estimator</h3>
+                        <div class="calc-input-group">
+                            <label>Bandwidth</label>
+                            <select id="bandwidth">
+                                <option value="50">50 MHz</option>
+                                <option value="100" selected>100 MHz</option>
+                                <option value="200">200 MHz</option>
+                            </select>
+                        </div>
+                        <div class="calc-input-group">
+                            <label>SCS</label>
+                            <select id="scsSelect">
+                                <option value="30" selected>30 kHz</option>
+                                <option value="60">60 kHz</option>
+                            </select>
+                        </div>
+                        <div class="calc-input-group">
+                            <label>MIMO Layers</label>
+                            <select id="layers">
+                                <option value="2">2 Layers</option>
+                                <option value="4" selected>4 Layers</option>
+                            </select>
+                        </div>
+                        <div class="calc-result" id="throughputResult">
+                            <div class="calc-result-label">Peak Data Rate</div>
+                            <div class="calc-result-value" id="throughputValue">0 Gbps</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMPARISON SECTION -->
+        <section id="comparison" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">vs</div>
+                    <h2 class="card-title">LTE vs NR</h2>
+                </div>
+
+                <div class="comparison-grid">
+                    <div class="comparison-card lte">
+                        <div class="comparison-header">
+                            <div class="comparison-badge lte">LTE</div>
+                        </div>
+                        <table class="data-table">
+                            <tr><td>Frame</td><td>10 ms</td></tr>
+                            <tr><td>Subframes</td><td>10 (Fixed)</td></tr>
+                            <tr><td>Slots/SF</td><td>2 (Fixed)</td></tr>
+                            <tr><td>Symbols/Slot</td><td>7</td></tr>
+                            <tr><td>SCS</td><td>15 kHz</td></tr>
+                            <tr><td>Max BW</td><td>20 MHz</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="comparison-card nr">
+                        <div class="comparison-header">
+                            <div class="comparison-badge nr">5G NR</div>
+                        </div>
+                        <table class="data-table">
+                            <tr><td>Frame</td><td>10 ms</td></tr>
+                            <tr><td>Subframes</td><td>10 (Fixed)</td></tr>
+                            <tr><td>Slots/SF</td><td>Variable (1-16)</td></tr>
+                            <tr><td>Symbols/Slot</td><td>14</td></tr>
+                            <tr><td>SCS</td><td>15 - 240 kHz</td></tr>
+                            <tr><td>Max BW</td><td>400 MHz</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Vinayak Majhi &copy; 2026</p>
+        <p>Technical Reference Tool | Based on 3GPP TS 38.211</p>
+    </footer>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip">
+        <div class="tooltip-title"></div>
+        <div class="tooltip-content"></div>
+    </div>
+
+    <script>
+        // Tab Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+            });
+        });
+
+        // Numerology data
+        const numerologyData = {
+            0: { scs: 15, slotsPerSubframe: 1, slotDuration: 1, symbolDuration: 66.67, cpDuration: 4.69 },
+            1: { scs: 30, slotsPerSubframe: 2, slotDuration: 0.5, symbolDuration: 33.33, cpDuration: 2.34 },
+            2: { scs: 60, slotsPerSubframe: 4, slotDuration: 0.25, symbolDuration: 16.67, cpDuration: 1.17 },
+            3: { scs: 120, slotsPerSubframe: 8, slotDuration: 0.125, symbolDuration: 8.33, cpDuration: 0.59 },
+            4: { scs: 240, slotsPerSubframe: 16, slotDuration: 0.0625, symbolDuration: 4.17, cpDuration: 0.29 }
+        };
+
+        // Update Frame View
+        function updateFrameView() {
+            const mu = parseInt(document.getElementById('numerologySelect').value);
+            const data = numerologyData[mu];
+            const container = document.getElementById('frameContainer');
+            container.innerHTML = '';
+
+            for (let sf = 0; sf < 5; sf++) {
+                const subframeDiv = document.createElement('div');
+                subframeDiv.className = 'subframe';
+                subframeDiv.innerHTML = `<div class="subframe-header">SF ${sf}</div>`;
+                
+                const slotsContainer = document.createElement('div');
+                slotsContainer.className = 'slots-container';
+                
+                for (let s = 0; s < data.slotsPerSubframe; s++) {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.className = 'slot';
+                    slotDiv.innerHTML = `
+                        <div class="slot-label">${sf * data.slotsPerSubframe + s}</div>
+                        <div class="symbols-mini">
+                            ${Array(14).fill(0).map((_, i) => `<div class="symbol-mini"></div>`).join('')}
+                        </div>
+                    `;
+                    slotDiv.onclick = () => showSlotDetail(sf * data.slotsPerSubframe + s, mu);
+                    slotsContainer.appendChild(slotDiv);
+                }
+                
+                subframeDiv.appendChild(slotsContainer);
+                container.appendChild(subframeDiv);
+            }
+
+            document.getElementById('slotInfo').textContent = `μ=${mu}, SCS=${data.scs}kHz, ${data.slotsPerSubframe} slots/sf`;
+        }
+
+        // Show Slot Detail
+        function showSlotDetail(slotNum, mu) {
+            const data = numerologyData[mu];
+            document.getElementById('slotDetail').style.display = 'block';
+            document.getElementById('slotDetailTitle').textContent = `Slot ${slotNum}`;
+            
+            const grid = document.getElementById('symbolsGrid');
+            grid.innerHTML = '';
+            
+            const dmrsPositions = [2, 9];
+            
+            for (let i = 0; i < 14; i++) {
+                const symbol = document.createElement('div');
+                let type = 'data';
+                if (dmrsPositions.includes(i)) type = 'dmrs';
+                if (i===0) type = 'pbch'; // Visual diff for first symbol (Long CP)
+
+                symbol.className = `symbol ${type}`;
+                symbol.textContent = i;
+                symbol.onmouseenter = (e) => showSymbolInfo(i, type, data, e);
+                symbol.onmouseleave = hideTooltip;
+                grid.appendChild(symbol);
+            }
+
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+            event.target.closest('.slot').classList.add('selected');
+        }
+
+        function showSymbolInfo(index, type, data, event) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.querySelector('.tooltip-title').textContent = `Symbol ${index}`;
+            tooltip.querySelector('.tooltip-content').innerHTML = `
+                Dur: ${data.symbolDuration} μs<br>
+                CP: ${index === 0 ? (data.cpDuration * 1.07).toFixed(2) : data.cpDuration} μs
+            `;
+            
+            tooltip.style.left = event.pageX + 15 + 'px';
+            tooltip.style.top = event.pageY + 15 + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        // Animation control
+        let animationPlaying = false;
+        function toggleAnimation() {
+            const marker = document.getElementById('timeMarker');
+            const btn = document.getElementById('playBtn');
+            animationPlaying = !animationPlaying;
+            marker.style.animationPlayState = animationPlaying ? 'running' : 'paused';
+            btn.textContent = animationPlaying ? '⏸ Pause' : '▶ Play';
+        }
+
+        // Resource Block Grid
+        function initRBGrid() {
+            const grid = document.getElementById('rbGrid');
+            grid.innerHTML = '';
+            
+            const dmrsSymbols = [2, 9];
+            const dmrsSubcarriers = [0, 2, 4, 6, 8, 10];
+            const ptrsSymbol = [3, 4, 5, 6, 7, 8];
+            const ptrsSubcarrier = 0;
+            const csirSymbol = 12;
+            const csirSubcarriers = [2, 8];
+            
+            for (let sc = 0; sc < 12; sc++) {
+                for (let sym = 0; sym < 14; sym++) {
+                    const re = document.createElement('div');
+                    let type = 'data-re';
+                    let typeName = 'Data';
+                    
+                    if (dmrsSymbols.includes(sym) && dmrsSubcarriers.includes(sc)) {
+                        type = 'dmrs-re'; typeName = 'DMRS';
+                    } else if (ptrsSymbol.includes(sym) && sc === ptrsSubcarrier) {
+                        type = 'ptrs-re'; typeName = 'PT-RS';
+                    } else if (sym === csirSymbol && csirSubcarriers.includes(sc)) {
+                        type = 'csi-re'; typeName = 'CSI-RS';
+                    }
+                    
+                    re.className = `re ${type}`;
+                    re.onclick = () => {
+                        document.getElementById('reInfo').innerHTML = `
+                            <strong>SC:</strong> ${sc} | <strong>Sym:</strong> ${sym}<br>
+                            <strong>Type:</strong> ${typeName}
+                        `;
+                    };
+                    grid.appendChild(re);
+                }
+            }
+        }
+
+        function calculateParams() {
+            const mu = parseInt(document.getElementById('calcNumerology').value);
+            const data = numerologyData[mu];
+            
+            document.getElementById('calcResults').innerHTML = `
+                <div style="display: grid; gap: 10px; font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg0); border-radius: 4px;">
+                        <span>SCS</span><strong style="color: var(--blue);">${data.scs} kHz</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg0); border-radius: 4px;">
+                        <span>Slot Dur.</span><strong style="color: var(--blue);">${data.slotDuration} ms</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg0); border-radius: 4px;">
+                        <span>Sym Dur.</span><strong style="color: var(--blue);">${data.symbolDuration} μs</strong>
+                    </div>
+                </div>
+            `;
+            calculateThroughput();
+        }
+
+        function calculateThroughput() {
+            const bw = parseInt(document.getElementById('bandwidth').value);
+            const scs = parseInt(document.getElementById('scsSelect').value);
+            const layers = parseInt(document.getElementById('layers').value);
+            
+            // Simplified approximation logic
+            const rbMap = { '50-30': 133, '100-30': 273, '200-60': 264 };
+            const rbs = rbMap[`${bw}-${scs}`] || 273;
+            const slotsPerMs = scs / 15;
+            const resPerSlot = rbs * 12 * 14;
+            const dataRateMbps = layers * 8 * resPerSlot * slotsPerMs * 0.85 / 1000;
+            
+            document.getElementById('throughputValue').textContent = `${(dataRateMbps/1000).toFixed(2)} Gbps`;
+        }
+
+        document.getElementById('bandwidth').addEventListener('change', calculateThroughput);
+        document.getElementById('scsSelect').addEventListener('change', calculateThroughput);
+        document.getElementById('layers').addEventListener('change', calculateThroughput);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFrameView();
+            initRBGrid();
+            calculateParams();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR PBCH in Resource Block Structure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            color: #764ba2;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .visualization-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .canvas-container {
+            position: relative;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .info-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .info-box ul {
+            list-style-position: inside;
+            line-height: 1.8;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #e8eaf6;
+            border-radius: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .specs-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .specs-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .specs-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .specs-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .process-steps {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+
+        .process-steps li {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding-left: 50px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .process-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .note {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .animation-status {
+            text-align: center;
+            padding: 10px;
+            background: #4caf50;
+            color: white;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>5G NR PBCH Structure</h1>
+        <p class="subtitle">Physical Broadcast Channel in Synchronization Signal Block (SSB)</p>
+
+        <!-- Introduction Section -->
+        <div class="section">
+            <h2 class="section-title">Overview</h2>
+            <div class="info-box">
+                <h3>What is PBCH?</h3>
+                <p>The <strong>Physical Broadcast Channel</strong> is a critical component of the 5G New Radio (NR) downlink. It sits within the Synchronization Signal Block (SSB) and carries the <strong>Master Information Block (MIB)</strong>, which provides the User Equipment (UE) with the essential parameters needed to access the network.</p>
+            </div>
+        </div>
+
+        <!-- Main Visualization -->
+        <div class="section">
+            <h2 class="section-title">Resource Grid Visualization</h2>
+            <p>The diagram below represents one SSB block. An SSB occupies <strong>240 subcarriers</strong> (Frequency domain) and <strong>4 OFDM symbols</strong> (Time domain).</p>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6b6b;"></div>
+                    <span>PSS (Symbol 0)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4ecdc4;"></div>
+                    <span>SSS (Symbol 2)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffe66d;"></div>
+                    <span>PBCH (Payload)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #333; opacity: 0.3"></div>
+                    <span>DMRS (Ref Signal)</span>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button onclick="startAnimation()">Start Transmission Flow</button>
+                <button onclick="stopAnimation()">Stop</button>
+                <button onclick="resetAnimation()">Reset</button>
+            </div>
+
+            <div id="animStatus" class="animation-status">
+                Processing: Transmitting MIB Payload via PBCH...
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="pbchCanvas" width="1000" height="500"></canvas>
+            </div>
+        </div>
+
+        <!-- Detailed Explanation -->
+        <div class="section">
+            <div class="grid-container">
+                <div class="visualization-box">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">PBCH Technical Specs</h3>
+                    <table class="specs-table">
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Frequency Span</td>
+                            <td>20 RBs (240 Subcarriers)</td>
+                        </tr>
+                        <tr>
+                            <td>Time Span</td>
+                            <td>3 OFDM Symbols (within SSB)</td>
+                        </tr>
+                        <tr>
+                            <td>Periodicity</td>
+                            <td>Default 20ms</td>
+                        </tr>
+                        <tr>
+                            <td>Payload</td>
+                            <td>MIB (Master Information Block)</td>
+                        </tr>
+                        <tr>
+                            <td>Modulation</td>
+                            <td>QPSK</td>
+                        </tr>
+                        <tr>
+                            <td>Reference Signal</td>
+                            <td>DMRS (embedded in PBCH)</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="visualization-box">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">How It Works</h3>
+                    <ol class="process-steps">
+                        <li><strong>MIB Generation:</strong> The network generates the Master Information Block (Frame number, subcarrier spacing, etc.).</li>
+                        <li><strong>Encoding:</strong> MIB is CRC attached and Polar Encoded for robustness.</li>
+                        <li><strong>Mapping:</strong> Data is mapped to the Resource Grid. Note that <strong>DMRS</strong> (Demodulation Reference Signal) is interleaved with PBCH data to help the phone decode the signal.</li>
+                        <li><strong>Transmission:</strong> The SSB (containing PBCH) is broadcasted periodically (default 20ms) to allow phones to sync.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Visualization -->
+        <div class="section">
+            <h2 class="section-title">Timeline & Periodicity</h2>
+            <p>PBCH is not continuous; it is transmitted in bursts. This timeline shows the periodic nature of the Synchronization Signal Block.</p>
+            <div class="canvas-container">
+                <canvas id="timelineCanvas" width="1000" height="200"></canvas>
+            </div>
+            <div class="note">
+                <strong>Key Insight:</strong> Unlike LTE where reference signals were always on, 5G uses an "always off" design. PBCH is only sent during these specific SSB bursts to save energy and reduce interference.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Canvas 1: Resource Grid ---
+        const canvas = document.getElementById('pbchCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // --- Canvas 2: Timeline ---
+        const tCanvas = document.getElementById('timelineCanvas');
+        const tCtx = tCanvas.getContext('2d');
+
+        // State
+        let isAnimating = false;
+        let animFrame = 0;
+        let reqId;
+
+        // Constants
+        const COLORS = {
+            pss: '#ff6b6b', // Redish
+            sss: '#4ecdc4', // Teal
+            pbch: '#ffe66d', // Yellow
+            dmrs: '#2d3436', // Dark
+            bg: '#ffffff',
+            grid: '#e0e0e0',
+            text: '#2d3436'
+        };
+
+        const GRID = {
+            startX: 60,
+            startY: 40,
+            rbHeight: 18, // Height of one Resource Block
+            symWidth: 200, // Width of one Symbol
+            numRBs: 20,
+            numSym: 4
+        };
+
+        // --- DRAWING FUNCTIONS ---
+
+        function drawGridSystem() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Labels
+            ctx.fillStyle = COLORS.text;
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText("Freq (20 RBs)", 10, 20);
+            ctx.fillText("Time (4 Symbols)", GRID.startX + (GRID.symWidth * 2), GRID.startY + (GRID.numRBs * GRID.rbHeight) + 40);
+
+            // Draw Y-Axis (RBs)
+            for(let i=0; i<=GRID.numRBs; i++) {
+                let y = GRID.startY + (i * GRID.rbHeight);
+                
+                // Line
+                ctx.beginPath();
+                ctx.strokeStyle = GRID.grid;
+                ctx.moveTo(GRID.startX, y);
+                ctx.lineTo(GRID.startX + (GRID.numSym * GRID.symWidth), y);
+                ctx.stroke();
+
+                // Label
+                if(i < GRID.numRBs && i % 2 === 0) {
+                    ctx.fillText(`RB ${20-i-1}`, 5, y + 14);
+                }
+            }
+
+            // Draw X-Axis (Symbols)
+            for(let i=0; i<=GRID.numSym; i++) {
+                let x = GRID.startX + (i * GRID.symWidth);
+                
+                // Line
+                ctx.beginPath();
+                ctx.strokeStyle = GRID.grid;
+                ctx.moveTo(x, GRID.startY);
+                ctx.lineTo(x, GRID.startY + (GRID.numRBs * GRID.rbHeight));
+                ctx.stroke();
+
+                // Label
+                if(i < GRID.numSym) {
+                    ctx.font = 'bold 16px Arial';
+                    ctx.fillText(`Symbol ${i}`, x + 60, GRID.startY - 10);
+                }
+            }
+        }
+
+        function drawBlock(symIndex, rbStart, rbCount, color, label) {
+            // Note: RBs are drawn top-down, so RB 0 is at bottom visually in charts, 
+            // but for canvas Y coords, 0 is top.
+            // Let's assume standard visual representation: RB 0 at bottom.
+            // Canvas Y for RB x: startY + (totalRBs - 1 - x) * height
+            
+            const x = GRID.startX + (symIndex * GRID.symWidth);
+            const y = GRID.startY + ((GRID.numRBs - rbStart - rbCount) * GRID.rbHeight);
+            const w = GRID.symWidth;
+            const h = rbCount * GRID.rbHeight;
+
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+            
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.strokeRect(x,y,w,h);
+
+            if(label) {
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, x + w/2, y + h/2 + 5);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function drawDMRS(symIndex) {
+            // Visualize DMRS as stripes within the PBCH
+            const xBase = GRID.startX + (symIndex * GRID.symWidth);
+            
+            ctx.fillStyle = COLORS.dmrs;
+            ctx.globalAlpha = 0.2;
+
+            // Draw "dots" or stripes to represent DMRS subcarriers
+            for(let r=0; r<GRID.numRBs; r++) {
+                let y = GRID.startY + (r * GRID.rbHeight);
+                // DMRS usually every 4th subcarrier. visualizing as a stripe per RB
+                ctx.fillRect(xBase + 10, y + 4, 10, 10); 
+                ctx.fillRect(xBase + 50, y + 4, 10, 10); 
+                ctx.fillRect(xBase + 90, y + 4, 10, 10); 
+                ctx.fillRect(xBase + 130, y + 4, 10, 10); 
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawSSBStructure() {
+            // --- Symbol 0: PSS ---
+            // PSS occupies middle 127 subcarriers. 20 RBs = 240 sc.
+            // 240 - 127 = 113. 113/2 = 56.5 sc offset ~ 4.7 RBs offset.
+            // Rounding for viz: Start RB 5, Span 10 RBs.
+            drawBlock(0, 5, 10, COLORS.pss, "PSS");
+
+            // --- Symbol 1: PBCH + DMRS ---
+            // Full 20 RBs
+            drawBlock(1, 0, 20, COLORS.pbch, "PBCH (Data)");
+            drawDMRS(1);
+
+            // --- Symbol 2: PBCH + SSS + PBCH ---
+            // SSS in middle (same as PSS size)
+            // PBCH fills the gaps above and below SSS
+            drawBlock(2, 5, 10, COLORS.sss, "SSS"); // Middle
+            drawBlock(2, 0, 5, COLORS.pbch, "PBCH"); // Bottom gap
+            drawBlock(2, 15, 5, COLORS.pbch, "PBCH"); // Top gap
+            
+            // --- Symbol 3: PBCH + DMRS ---
+            // Full 20 RBs
+            drawBlock(3, 0, 20, COLORS.pbch, "PBCH (Data)");
+            drawDMRS(3);
+        }
+
+        function drawPacketFlow() {
+            if(!isAnimating) return;
+
+            const time = Date.now() / 1000;
+            const flowX = (time * 150) % (GRID.symWidth * 4); 
+            
+            // Draw a "scanning" line moving through symbols
+            ctx.strokeStyle = '#6c5ce7';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(GRID.startX + flowX, GRID.startY);
+            ctx.lineTo(GRID.startX + flowX, GRID.startY + (GRID.numRBs * GRID.rbHeight));
+            ctx.stroke();
+
+            // Highlight the active block
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = '#fff';
+            
+            let activeSym = Math.floor(flowX / GRID.symWidth);
+            if(activeSym >= 0 && activeSym < 4) {
+                let x = GRID.startX + (activeSym * GRID.symWidth);
+                ctx.fillRect(x, GRID.startY, GRID.symWidth, GRID.numRBs * GRID.rbHeight);
+            }
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // --- TIMELINE FUNCTIONS ---
+
+        function drawTimeline() {
+            tCtx.clearRect(0, 0, tCanvas.width, tCanvas.height);
+            
+            const midY = 100;
+            const width = 800;
+            const startX = 50;
+
+            // Main line
+            tCtx.beginPath();
+            tCtx.strokeStyle = '#b2bec3';
+            tCtx.lineWidth = 4;
+            tCtx.moveTo(startX, midY);
+            tCtx.lineTo(startX + width, midY);
+            tCtx.stroke();
+
+            // Draw Bursts (SSBs)
+            const bursts = 5;
+            const gap = width / bursts;
+
+            for(let i=0; i<bursts; i++) {
+                let bx = startX + (i * gap) + 20;
+                
+                // Block
+                tCtx.fillStyle = COLORS.pbch;
+                tCtx.fillRect(bx, midY - 20, 30, 40);
+                tCtx.strokeRect(bx, midY - 20, 30, 40);
+
+                // Label
+                tCtx.fillStyle = '#333';
+                tCtx.font = '12px Arial';
+                tCtx.fillText("SSB", bx, midY - 30);
+                tCtx.fillText((i*20) + "ms", bx, midY + 40);
+
+                // Animation Highlight
+                if(isAnimating) {
+                    const time = (Date.now() / 2000) % 1; // 0 to 1 loop
+                    const pos = time * width;
+                    
+                    // If the scanner is over this block
+                    if(pos > (i*gap) && pos < (i*gap) + 50) {
+                        tCtx.fillStyle = '#e17055';
+                        tCtx.fillRect(bx, midY - 20, 30, 40);
+                    }
+                }
+            }
+
+            // Moving Playhead
+            if(isAnimating) {
+                const time = (Date.now() / 2000) % 1; 
+                const x = startX + (time * width);
+                
+                tCtx.beginPath();
+                tCtx.strokeStyle = '#d63031';
+                tCtx.moveTo(x, midY - 30);
+                tCtx.lineTo(x, midY + 30);
+                tCtx.stroke();
+            }
+        }
+
+        // --- CONTROLLER ---
+
+        function animate() {
+            if(!isAnimating) return;
+
+            // Draw base
+            drawGridSystem();
+            drawSSBStructure();
+            
+            // Draw overlay
+            drawPacketFlow();
+            drawTimeline();
+
+            requestAnimationFrame(animate);
+        }
+
+        function startAnimation() {
+            if(isAnimating) return;
+            isAnimating = true;
+            document.getElementById('animStatus').style.display = 'block';
+            animate();
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            document.getElementById('animStatus').style.display = 'none';
+            // Redraw static state
+            drawGridSystem();
+            drawSSBStructure();
+            drawTimeline();
+        }
+
+        function resetAnimation() {
+            stopAnimation();
+            drawGridSystem();
+            drawSSBStructure();
+            drawTimeline();
+        }
+
+        // Init
+        drawGridSystem();
+        drawSSBStructure();
+        drawTimeline();
+
+    </script>
+</body>
+</html>
