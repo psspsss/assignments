@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PBCH — Two Scrambling Stages Explained</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #060B14;
+  --bg-card: #0C1524;
+  --bg-card2: #101D30;
+  --border: #1A2D48;
+  --border-glow: #2A5A8F;
+  --text-primary: #E0E8F0;
+  --text-secondary: #7A93AD;
+  --text-dim: #4A6580;
+  --accent-orange: #FF7B3A;
+  --accent-orange-dim: #C05520;
+  --accent-blue: #3B9EFF;
+  --accent-blue-dim: #1A5A9E;
+  --accent-cyan: #00D4AA;
+  --accent-cyan-dim: #008866;
+  --accent-gold: #FFB845;
+  --accent-gold-dim: #A07020;
+  --accent-red: #FF4D6A;
+  --accent-purple: #9B6DFF;
+  --accent-green: #4ADE80;
+  --scramble1: #FF7B3A;
+  --scramble2: #3B9EFF;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Outfit', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Animated background grid */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(59,158,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,158,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 24px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== HEADER ===== */
+.hero {
+  text-align: center;
+  padding: 50px 0 40px;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 20px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(59,158,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-blue-dim), var(--accent-cyan-dim));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  padding: 6px 20px;
+  border-radius: 30px;
+  margin-bottom: 20px;
+  animation: fadeSlideDown 0.6s ease-out;
+}
+.hero h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  animation: fadeSlideDown 0.7s ease-out 0.1s both;
+}
+.hero h1 .scr1 { color: var(--scramble1); }
+.hero h1 .scr2 { color: var(--scramble2); }
+.hero p {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 16px auto 0;
+  animation: fadeSlideDown 0.7s ease-out 0.2s both;
+}
+
+/* ===== OVERVIEW CARDS ===== */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 40px 0;
+}
+.ov-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+  animation: fadeSlideUp 0.6s ease-out both;
+}
+.ov-card:nth-child(1) { animation-delay: 0.3s; }
+.ov-card:nth-child(2) { animation-delay: 0.45s; }
+.ov-card:hover { transform: translateY(-3px); }
+.ov-card.s1 { border-color: var(--accent-orange-dim); }
+.ov-card.s1:hover { border-color: var(--scramble1); }
+.ov-card.s2 { border-color: var(--accent-blue-dim); }
+.ov-card.s2:hover { border-color: var(--scramble2); }
+.ov-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  opacity: 0.08;
+}
+.ov-card.s1::before { background: var(--scramble1); }
+.ov-card.s2::before { background: var(--scramble2); }
+.ov-card .tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+.ov-card.s1 .tag { background: rgba(255,123,58,0.15); color: var(--scramble1); }
+.ov-card.s2 .tag { background: rgba(59,158,255,0.15); color: var(--scramble2); }
+.ov-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.ov-card.s1 h3 { color: var(--scramble1); }
+.ov-card.s2 h3 { color: var(--scramble2); }
+.ov-card .ref { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+.ov-card .desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+.ov-card .desc strong { color: var(--text-primary); }
+
+/* ===== KEY DIFFERENCE BANNER ===== */
+.diff-banner {
+  background: linear-gradient(135deg, rgba(255,123,58,0.08), rgba(59,158,255,0.08));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px 30px;
+  margin: 10px 0 45px;
+  text-align: center;
+  animation: fadeSlideUp 0.6s ease-out 0.55s both;
+}
+.diff-banner h4 {
+  font-size: 14px;
+  color: var(--accent-gold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.diff-banner p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 800px;
+  margin: 0 auto;
+}
+.diff-banner p em { color: var(--accent-gold); font-style: normal; font-weight: 600; }
+
+/* ===== SECTION HEADERS ===== */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 55px 0 28px;
+}
+.section-num {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.section-num.s1 { background: rgba(255,123,58,0.15); color: var(--scramble1); }
+.section-num.s2 { background: rgba(59,158,255,0.15); color: var(--scramble2); }
+.section-num.s3 { background: rgba(0,212,170,0.15); color: var(--accent-cyan); }
+.section-header h2 { font-size: 28px; font-weight: 800; }
+.section-header .spec { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); display: block; }
+
+/* ===== CONTENT BLOCKS ===== */
+.content-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 22px;
+}
+.content-block h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.content-block h4 .icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.content-block p, .content-block li {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+.content-block li { margin-bottom: 6px; }
+.content-block ul { list-style: none; padding-left: 0; }
+.content-block ul li::before {
+  content: '▸';
+  color: var(--accent-cyan);
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+/* ===== EQUATION BOX ===== */
+.equation-box {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin: 18px 0;
+  font-family: var(--font-mono);
+}
+.equation-box.s1 { border-left-color: var(--scramble1); }
+.equation-box.s2 { border-left-color: var(--scramble2); }
+.equation-box .eq-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.equation-box .eq-main {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.equation-box.s1 .eq-main { color: var(--scramble1); }
+.equation-box.s2 .eq-main { color: var(--scramble2); }
+.equation-box .eq-where {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+  line-height: 1.9;
+}
+.equation-box .eq-where .hl { color: var(--accent-gold); font-weight: 600; }
+
+/* ===== ANIMATED XOR VISUALIZER ===== */
+.xor-viz {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 30px;
+  margin: 22px 0;
+  overflow: hidden;
+}
+.xor-viz h5 {
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.xor-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+.xor-row .label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  width: 100px;
+  text-align: right;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+.bit-cell {
+  width: 30px; height: 30px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s;
+  animation: bitPop 0.4s ease-out both;
+}
+.bit-cell.data { background: rgba(255,123,58,0.15); color: var(--scramble1); border: 1px solid rgba(255,123,58,0.3); }
+.bit-cell.seq { background: rgba(59,158,255,0.15); color: var(--scramble2); border: 1px solid rgba(59,158,255,0.3); }
+.bit-cell.result { background: rgba(0,212,170,0.15); color: var(--accent-cyan); border: 1px solid rgba(0,212,170,0.3); }
+.bit-cell.xor-op { background: rgba(255,184,69,0.15); color: var(--accent-gold); border: 1px solid rgba(255,184,69,0.3); width: auto; padding: 0 10px; font-size: 11px; }
+.xor-operator {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin: 6px 0;
+  text-align: center;
+}
+
+/* ===== ANIMATED PIPELINE ===== */
+.pipeline {
+  position: relative;
+  padding: 30px 0;
+  margin: 30px 0;
+}
+.pipe-stage {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0;
+  opacity: 0;
+  animation: pipeSlide 0.5s ease-out forwards;
+}
+.pipe-stage:nth-child(1) { animation-delay: 0.1s; }
+.pipe-stage:nth-child(2) { animation-delay: 0.3s; }
+.pipe-stage:nth-child(3) { animation-delay: 0.5s; }
+.pipe-stage:nth-child(4) { animation-delay: 0.7s; }
+.pipe-stage:nth-child(5) { animation-delay: 0.9s; }
+.pipe-stage:nth-child(6) { animation-delay: 1.1s; }
+.pipe-stage:nth-child(7) { animation-delay: 1.3s; }
+.pipe-box {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 140px;
+  text-align: center;
+}
+.pipe-box.input { background: rgba(255,123,58,0.12); border: 1px solid rgba(255,123,58,0.3); color: var(--scramble1); }
+.pipe-box.process { background: rgba(155,109,255,0.12); border: 1px solid rgba(155,109,255,0.3); color: var(--accent-purple); }
+.pipe-box.process2 { background: rgba(59,158,255,0.12); border: 1px solid rgba(59,158,255,0.3); color: var(--scramble2); }
+.pipe-box.output { background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.3); color: var(--accent-cyan); }
+.pipe-arrow {
+  color: var(--text-dim);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.pipe-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* ===== GOLD SEQUENCE ANIMATION ===== */
+.gold-seq-container {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  margin: 22px 0;
+  text-align: center;
+}
+.gold-seq-container h5 {
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.lfsr-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 10px 0;
+  padding: 12px 18px;
+  background: rgba(155,109,255,0.08);
+  border: 1px solid rgba(155,109,255,0.25);
+  border-radius: 10px;
+}
+.lfsr-cell {
+  width: 26px; height: 26px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(155,109,255,0.15);
+  color: var(--accent-purple);
+  border: 1px solid rgba(155,109,255,0.3);
+  animation: lfsrShift 2s ease-in-out infinite;
+}
+.lfsr-cell:nth-child(odd) { animation-delay: 0.1s; }
+.lfsr-cell:nth-child(even) { animation-delay: 0.3s; }
+.lfsr-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 6px 0 0;
+}
+
+/* ===== v-PARAMETER TABLE ===== */
+.v-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.v-table th {
+  background: var(--bg-card2);
+  color: var(--accent-gold);
+  padding: 10px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+.v-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.v-table tr:hover td { background: rgba(59,158,255,0.04); }
+.v-table .mono { font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 600; }
+
+/* ===== COMPARISON TABLE ===== */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.compare-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+.compare-table th:first-child { color: var(--text-dim); background: var(--bg-card2); }
+.compare-table th:nth-child(2) { color: var(--scramble1); background: rgba(255,123,58,0.06); }
+.compare-table th:nth-child(3) { color: var(--scramble2); background: rgba(59,158,255,0.06); }
+.compare-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+.compare-table td:nth-child(2) { background: rgba(255,123,58,0.02); }
+.compare-table td:nth-child(3) { background: rgba(59,158,255,0.02); }
+.compare-table tr:hover td { filter: brightness(1.15); }
+
+/* ===== FLOW DIAGRAM ===== */
+.flow-container {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 30px 20px;
+  margin: 30px 0;
+  overflow-x: auto;
+}
+.flow-chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: max-content;
+}
+.flow-node {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
+  opacity: 0;
+  animation: nodeAppear 0.4s ease-out forwards;
+  position: relative;
+}
+.flow-node .sub { font-weight: 400; font-size: 9px; display: block; opacity: 0.7; }
+.flow-node.tb { background: rgba(255,123,58,0.12); border: 1px solid rgba(255,123,58,0.35); color: var(--scramble1); }
+.flow-node.scr1 {
+  background: rgba(255,123,58,0.2); border: 2px solid var(--scramble1); color: #fff;
+  box-shadow: 0 0 20px rgba(255,123,58,0.2);
+  animation: nodeAppear 0.4s ease-out forwards, scramblePulse1 3s ease-in-out infinite 1.5s;
+}
+.flow-node.mid { background: rgba(155,109,255,0.12); border: 1px solid rgba(155,109,255,0.35); color: var(--accent-purple); }
+.flow-node.scr2 {
+  background: rgba(59,158,255,0.2); border: 2px solid var(--scramble2); color: #fff;
+  box-shadow: 0 0 20px rgba(59,158,255,0.2);
+  animation: nodeAppear 0.4s ease-out forwards, scramblePulse2 3s ease-in-out infinite 2s;
+}
+.flow-node.end { background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.35); color: var(--accent-cyan); }
+.flow-arr {
+  color: var(--text-dim);
+  font-size: 16px;
+  opacity: 0;
+  animation: nodeAppear 0.3s ease-out forwards;
+}
+
+/* staggered animation */
+.flow-chain > :nth-child(1) { animation-delay: 0.1s; }
+.flow-chain > :nth-child(2) { animation-delay: 0.2s; }
+.flow-chain > :nth-child(3) { animation-delay: 0.3s; }
+.flow-chain > :nth-child(4) { animation-delay: 0.4s; }
+.flow-chain > :nth-child(5) { animation-delay: 0.5s; }
+.flow-chain > :nth-child(6) { animation-delay: 0.6s; }
+.flow-chain > :nth-child(7) { animation-delay: 0.7s; }
+.flow-chain > :nth-child(8) { animation-delay: 0.8s; }
+.flow-chain > :nth-child(9) { animation-delay: 0.9s; }
+.flow-chain > :nth-child(10) { animation-delay: 1.0s; }
+.flow-chain > :nth-child(11) { animation-delay: 1.1s; }
+.flow-chain > :nth-child(12) { animation-delay: 1.2s; }
+.flow-chain > :nth-child(13) { animation-delay: 1.3s; }
+.flow-chain > :nth-child(14) { animation-delay: 1.4s; }
+.flow-chain > :nth-child(15) { animation-delay: 1.5s; }
+.flow-chain > :nth-child(16) { animation-delay: 1.6s; }
+.flow-chain > :nth-child(17) { animation-delay: 1.7s; }
+
+/* ===== WHY BOX ===== */
+.why-box {
+  border-radius: 12px;
+  padding: 22px 26px;
+  margin: 18px 0;
+}
+.why-box.s1 { background: rgba(255,123,58,0.06); border: 1px solid rgba(255,123,58,0.2); }
+.why-box.s2 { background: rgba(59,158,255,0.06); border: 1px solid rgba(59,158,255,0.2); }
+.why-box h5 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.why-box.s1 h5 { color: var(--scramble1); }
+.why-box.s2 h5 { color: var(--scramble2); }
+.why-box p, .why-box li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+.why-box ul { list-style: none; padding-left: 0; }
+.why-box ul li::before { content: '◆'; margin-right: 8px; font-size: 8px; }
+.why-box.s1 ul li::before { color: var(--scramble1); }
+.why-box.s2 ul li::before { color: var(--scramble2); }
+
+/* ===== CINIT BREAKDOWN ===== */
+.cinit-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.cinit-part {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  animation: cInitGlow 2.5s ease-in-out infinite;
+}
+.cinit-part.nid { background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.3); color: var(--accent-cyan); }
+.cinit-part.sfn { background: rgba(255,184,69,0.12); border: 1px solid rgba(255,184,69,0.3); color: var(--accent-gold); }
+.cinit-part.hrf { background: rgba(255,77,106,0.12); border: 1px solid rgba(255,77,106,0.3); color: var(--accent-red); }
+.cinit-part.op { font-size: 18px; color: var(--text-dim); background: none; border: none; }
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center;
+  padding: 40px 0 20px;
+  border-top: 1px solid var(--border);
+  margin-top: 50px;
+}
+.footer p { font-size: 12px; color: var(--text-dim); }
+.footer a { color: var(--accent-cyan); text-decoration: none; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bitPop {
+  0% { opacity: 0; transform: scale(0.5); }
+  70% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pipeSlide {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes nodeAppear {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes scramblePulse1 {
+  0%, 100% { box-shadow: 0 0 15px rgba(255,123,58,0.2); }
+  50% { box-shadow: 0 0 30px rgba(255,123,58,0.45); }
+}
+@keyframes scramblePulse2 {
+  0%, 100% { box-shadow: 0 0 15px rgba(59,158,255,0.2); }
+  50% { box-shadow: 0 0 30px rgba(59,158,255,0.45); }
+}
+@keyframes lfsrShift {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; transform: translateX(2px); }
+}
+@keyframes cInitGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+@keyframes scanLine {
+  0% { left: 0; }
+  100% { left: 100%; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .overview-grid { grid-template-columns: 1fr; }
+  .xor-row .label { width: 70px; font-size: 9px; }
+  .bit-cell { width: 24px; height: 24px; font-size: 11px; }
+  .flow-chain { justify-content: flex-start; }
+  .compare-table { font-size: 11px; }
+  .compare-table th, .compare-table td { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== HERO ===== -->
+  <div class="hero">
+    <div class="hero-badge">3GPP TS 38.212 &amp; TS 38.211</div>
+    <h1><span class="scr1">Scrambling₁</span> &amp; <span class="scr2">Scrambling₂</span><br>in 5G NR PBCH</h1>
+    <p>PBCH has <strong>two distinct scrambling operations</strong> at different protocol layers — one at the <em>channel coding layer</em> and one at the <em>physical layer</em>. Here's the complete animated breakdown.</p>
+  </div>
+
+  <!-- ===== OVERVIEW CARDS ===== -->
+  <div class="overview-grid">
+    <div class="ov-card s1">
+      <div class="tag">Layer: Channel Coding</div>
+      <h3>Scrambling #1 — Payload Scrambling</h3>
+      <div class="ref">TS 38.212 §7.1.1</div>
+      <div class="desc">
+        Applied <strong>before CRC &amp; Polar encoding</strong>. The 32-bit PBCH payload (MIB + timing bits) is XORed with a <strong>cell &amp; time-specific</strong> scrambling sequence. This embeds <strong>SFN, half-frame, and SSB index</strong> information directly into the payload bits — so the UE can blindly decode these timing parameters from PBCH.
+      </div>
+    </div>
+    <div class="ov-card s2">
+      <div class="tag">Layer: Physical</div>
+      <h3>Scrambling #2 — Physical Layer Scrambling</h3>
+      <div class="ref">TS 38.211 §7.3.3.1</div>
+      <div class="desc">
+        Applied <strong>after rate matching &amp; interleaving</strong>, right before QPSK modulation. All 864 bits are XORed with a Gold sequence initialized by <strong>N<sub>ID</sub><sup>cell</sup></strong> and offset by <strong>v·M<sub>bit</sub></strong>. This provides <strong>cell-specific randomization</strong> to reduce inter-cell interference on the broadcast channel.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KEY DIFFERENCE ===== -->
+  <div class="diff-banner">
+    <h4>⚡ The Critical Difference</h4>
+    <p>Scrambling #1 carries <em>timing information</em> (SFN, half-frame, SSB index) — the UE <strong>recovers</strong> this info by descrambling with candidate hypotheses.<br>Scrambling #2 is purely for <em>interference randomization</em> — the UE already knows N<sub>ID</sub><sup>cell</sup> from PSS/SSS decoding.</p>
+  </div>
+
+  <!-- ===== WHERE THEY SIT IN THE CHAIN ===== -->
+  <div class="section-header">
+    <div class="section-num s3">⛓</div>
+    <div>
+      <h2>Where the Two Scramblings Sit</h2>
+      <span class="spec">Complete PBCH Processing Chain</span>
+    </div>
+  </div>
+
+  <div class="flow-container">
+    <div class="flow-chain">
+      <div class="flow-node tb">MIB<span class="sub">24 bits</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node tb">+ Timing<span class="sub">→ 32 bits</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node scr1">SCRAMBLE #1<span class="sub">Payload (32b)</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node mid">CRC24C<span class="sub">→ 56 bits</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node mid">Polar Encode<span class="sub">→ 512 bits</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node mid">Rate Match<span class="sub">→ 864 bits</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node mid">Interleave<span class="sub">864 bits</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node scr2">SCRAMBLE #2<span class="sub">Physical (864b)</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node end">QPSK<span class="sub">432 symbols</span></div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SCRAMBLING #1 DEEP DIVE                                          -->
+  <!-- ================================================================ -->
+  <div class="section-header">
+    <div class="section-num s1">1</div>
+    <div>
+      <h2 style="color:var(--scramble1)">Scrambling #1 — Payload Scrambling</h2>
+      <span class="spec">TS 38.212 §7.1.1 — Applied to 32-bit PBCH payload BEFORE CRC attachment</span>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h4><span class="icon" style="background:rgba(255,123,58,0.15);color:var(--scramble1)">🎯</span> What Gets Scrambled?</h4>
+    <p>The 32-bit payload consists of: <strong>24-bit MIB</strong> + <strong>4 bits SFN LSBs</strong> + <strong>1 bit half-frame indicator</strong> + <strong>3 bits (for L̄_max > 4) or 1 MSB of k_SSB + 2 spare (for L̄_max = 4)</strong>. Not all 32 bits are scrambled — only <strong>specific bits</strong> are XORed depending on L̄_max configuration.</p>
+  </div>
+
+  <div class="equation-box s1">
+    <div class="eq-label">Scrambling #1 Equation</div>
+    <div class="eq-main">
+      Scrambled payload bits generated using:<br>
+      a&#x0305;(j) = a(j) ⊕ s(j)
+    </div>
+    <div class="eq-where">
+      where <span class="hl">s(j)</span> = scrambling sequence derived from:<br>
+      <span class="hl">• v</span> = candidate SS/PBCH block index within the half-frame<br>
+      <span class="hl">• SFN bits</span> (2nd &amp; 3rd LSB of system frame number)<br>
+      <span class="hl">• N<sub>ID</sub><sup>cell</sup></span> = Physical cell ID (0–1007)
+    </div>
+  </div>
+
+  <div class="why-box s1">
+    <h5>🤔 Why Scramble at Payload Level?</h5>
+    <ul>
+      <li>The MIB content <strong>changes very slowly</strong> (only SFN and half-frame change). If we transmitted it unscrambled, different SSB beams carrying the same MIB would be identical — no way for the UE to tell which SSB beam index it decoded.</li>
+      <li>By scrambling with <strong>SSB index (v)</strong>, each beam's PBCH becomes unique. The UE tries descrambling with all candidate v values — the one that produces valid CRC tells the UE which SSB beam it received.</li>
+      <li>Similarly, scrambling with <strong>SFN bits</strong> lets the UE determine the system frame number by hypothesis testing — essential for initial timing acquisition.</li>
+      <li><strong>Key insight:</strong> The UE doesn't know v, SFN LSBs, or half-frame yet — it discovers them by trying all hypotheses and checking which one gives a valid CRC after Polar decoding.</li>
+    </ul>
+  </div>
+
+  <!-- Scrambling #1 XOR Animation -->
+  <div class="xor-viz">
+    <h5>Animated XOR — Scrambling #1 (Payload Level)</h5>
+    <div class="xor-row">
+      <div class="label" style="color:var(--scramble1)">Payload a(j):</div>
+      <div class="bit-cell data" style="animation-delay:0.1s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.15s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.2s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.25s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.3s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.35s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.4s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.45s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.5s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.55s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.6s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.65s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.7s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.75s">0</div>
+      <div class="bit-cell data" style="animation-delay:0.8s">1</div>
+      <div class="bit-cell data" style="animation-delay:0.85s">1</div>
+    </div>
+    <div class="xor-operator">⊕ &nbsp;XOR with s(j) derived from {v, SFN₂₋₃, N_ID^cell}</div>
+    <div class="xor-row">
+      <div class="label" style="color:var(--accent-gold)">Seq s(j):</div>
+      <div class="bit-cell seq" style="animation-delay:0.9s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:0.95s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.0s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.05s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.1s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.15s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.2s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.25s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.3s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.35s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.4s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.45s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.5s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.55s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.6s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.65s;background:rgba(255,184,69,0.15);color:var(--accent-gold);border-color:rgba(255,184,69,0.3)">1</div>
+    </div>
+    <div class="xor-operator">═══════════════════════</div>
+    <div class="xor-row">
+      <div class="label" style="color:var(--accent-cyan)">Output ā(j):</div>
+      <div class="bit-cell result" style="animation-delay:1.7s">1</div>
+      <div class="bit-cell result" style="animation-delay:1.75s">1</div>
+      <div class="bit-cell result" style="animation-delay:1.8s">0</div>
+      <div class="bit-cell result" style="animation-delay:1.85s">1</div>
+      <div class="bit-cell result" style="animation-delay:1.9s">1</div>
+      <div class="bit-cell result" style="animation-delay:1.95s">0</div>
+      <div class="bit-cell result" style="animation-delay:2.0s">0</div>
+      <div class="bit-cell result" style="animation-delay:2.05s">1</div>
+      <div class="bit-cell result" style="animation-delay:2.1s">1</div>
+      <div class="bit-cell result" style="animation-delay:2.15s">0</div>
+      <div class="bit-cell result" style="animation-delay:2.2s">0</div>
+      <div class="bit-cell result" style="animation-delay:2.25s">1</div>
+      <div class="bit-cell result" style="animation-delay:2.3s">1</div>
+      <div class="bit-cell result" style="animation-delay:2.35s">1</div>
+      <div class="bit-cell result" style="animation-delay:2.4s">1</div>
+      <div class="bit-cell result" style="animation-delay:2.45s">0</div>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:14px;">
+      ↑ These 32 scrambled bits then go into CRC attachment → Polar encoding → Rate matching → Interleaving
+    </p>
+  </div>
+
+  <div class="content-block">
+    <h4><span class="icon" style="background:rgba(255,123,58,0.15);color:var(--scramble1)">🔍</span> UE Blind Detection Process (How UE Recovers v, SFN, Half-frame)</h4>
+    <p>Since the UE doesn't know the SSB index, SFN, or half-frame before decoding PBCH, it must perform <strong>hypothesis testing</strong>:</p>
+    <div class="pipeline">
+      <div class="pipe-stage">
+        <div class="pipe-box input">UE receives PBCH</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-desc">After PSS/SSS → N_ID^cell is known</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-box process">Try v = 0,1,2,3</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-desc">For L̄_max=4: test 4 hypotheses (2 LSBs)</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-box process">Try v = 0…7</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-desc">For L̄_max>4: test 8 hypotheses (3 LSBs)</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-box process2">Descramble → Polar Decode → CRC Check</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-desc">For each hypothesis, check CRC24C</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-box output">CRC Pass ✓ → Correct hypothesis!</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-desc">UE now knows v, SFN, half-frame</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SCRAMBLING #2 DEEP DIVE                                          -->
+  <!-- ================================================================ -->
+  <div class="section-header">
+    <div class="section-num s2">2</div>
+    <div>
+      <h2 style="color:var(--scramble2)">Scrambling #2 — Physical Layer Scrambling</h2>
+      <span class="spec">TS 38.211 §7.3.3.1 — Applied to 864 bits AFTER interleaving, BEFORE QPSK modulation</span>
+    </div>
+  </div>
+
+  <div class="equation-box s2">
+    <div class="eq-label">Scrambling #2 Equation</div>
+    <div class="eq-main">
+      b̃(i) = [ b(i) + c(i + v · M<sub>bit</sub>) ] mod 2
+    </div>
+    <div class="eq-where">
+      where:<br>
+      <span class="hl">c(i)</span> = Gold sequence (TS 38.211 §5.2.1) with <span class="hl">c<sub>init</sub> = N<sub>ID</sub><sup>cell</sup></span><br>
+      <span class="hl">M<sub>bit</sub></span> = 864 (total bits transmitted on PBCH)<br>
+      <span class="hl">v</span> = SSB block index dependent:<br>
+      &nbsp;&nbsp;&nbsp;• For <span class="hl">L̄_max = 4</span>: v = <strong>2 LSBs</strong> of candidate SS/PBCH block index<br>
+      &nbsp;&nbsp;&nbsp;• For <span class="hl">L̄_max > 4</span>: v = <strong>3 LSBs</strong> of candidate SS/PBCH block index<br>
+      <span class="hl">i</span> = 0, 1, 2, … , M<sub>bit</sub> - 1 (i.e., 0 to 863)
+    </div>
+  </div>
+
+  <!-- Scrambling #2 XOR Animation -->
+  <div class="xor-viz">
+    <h5>Animated XOR — Scrambling #2 (Physical Layer — 864 bits)</h5>
+    <div class="xor-row">
+      <div class="label" style="color:var(--scramble2)">b(i) input:</div>
+      <div class="bit-cell data" style="animation-delay:0.05s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.1s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.15s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.2s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.25s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.3s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.35s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.4s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.45s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.5s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.55s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.6s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.65s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.7s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+      <div class="bit-cell data" style="animation-delay:0.75s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+      <div class="bit-cell data" style="animation-delay:0.8s;background:rgba(59,158,255,0.12);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+    </div>
+    <div class="xor-operator">⊕ &nbsp;XOR with Gold sequence c(i + v·864), c_init = N_ID^cell</div>
+    <div class="xor-row">
+      <div class="label" style="color:var(--accent-purple)">c(i+v·864):</div>
+      <div class="bit-cell seq" style="animation-delay:0.85s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:0.9s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:0.95s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.0s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.05s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.1s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.15s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.2s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.25s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.3s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.35s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.4s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.45s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.5s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+      <div class="bit-cell seq" style="animation-delay:1.55s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">1</div>
+      <div class="bit-cell seq" style="animation-delay:1.6s;background:rgba(155,109,255,0.15);color:var(--accent-purple);border-color:rgba(155,109,255,0.3)">0</div>
+    </div>
+    <div class="xor-operator">═══════════════════════</div>
+    <div class="xor-row">
+      <div class="label" style="color:var(--accent-green)">b̃(i) output:</div>
+      <div class="bit-cell result" style="animation-delay:1.65s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:1.7s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:1.75s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:1.8s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:1.85s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:1.9s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:1.95s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.0s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.05s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.1s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.15s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:2.2s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.25s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">1</div>
+      <div class="bit-cell result" style="animation-delay:2.3s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.35s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+      <div class="bit-cell result" style="animation-delay:2.4s;background:rgba(74,222,128,0.15);color:var(--accent-green);border-color:rgba(74,222,128,0.3)">0</div>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:14px;">
+      ↑ These 864 scrambled bits go directly to QPSK modulation → 432 complex symbols → Resource element mapping
+    </p>
+  </div>
+
+  <div class="content-block">
+    <h4><span class="icon" style="background:rgba(59,158,255,0.15);color:var(--scramble2)">🔑</span> c<sub>init</sub> and the Gold Sequence Generator</h4>
+    <p>The scrambling sequence c(n) is generated by the Gold sequence (length-31 m-sequences) defined in TS 38.211 §5.2.1:</p>
+
+    <div class="gold-seq-container">
+      <h5>Gold Sequence Generator (Two Length-31 LFSRs XORed)</h5>
+      <div>
+        <div class="lfsr-label">x₁(n) — LFSR 1 (fixed init: x₁(0)=1, rest=0)</div>
+        <div class="lfsr-box">
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">0</div>
+          <div class="lfsr-cell">1</div>
+          <div class="lfsr-cell">1</div>
+        </div>
+      </div>
+      <div style="font-size:20px;color:var(--accent-gold);margin:8px 0;">⊕</div>
+      <div>
+        <div class="lfsr-label">x₂(n) — LFSR 2 (init from c_init = N_ID^cell)</div>
+        <div class="lfsr-box" style="background:rgba(59,158,255,0.08);border-color:rgba(59,158,255,0.25);">
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">1</div>
+          <div class="lfsr-cell" style="background:rgba(59,158,255,0.15);color:var(--scramble2);border-color:rgba(59,158,255,0.3)">0</div>
+        </div>
+      </div>
+      <div style="font-size:14px;color:var(--accent-gold);margin:10px 0;">= c(n) = [ x₁(n + N_c) + x₂(n + N_c) ] mod 2, &nbsp; N_c = 1600</div>
+    </div>
+  </div>
+
+  <div class="why-box s2">
+    <h5>🤔 Why Scramble Again at Physical Layer?</h5>
+    <ul>
+      <li><strong>Inter-cell interference randomization</strong> — adjacent cells with different N_ID^cell produce different scrambling sequences, so PBCH from neighboring cells looks like random noise rather than coherent interference.</li>
+      <li><strong>The v·M_bit offset</strong> ensures different SSB beams within the same cell use different portions of the Gold sequence — further decorrelating the signals across beams.</li>
+      <li>This scrambling is <strong>transparent</strong> to the UE — it knows N_ID^cell from PSS/SSS and can immediately descramble without hypothesis testing.</li>
+      <li>Without this, multiple cells broadcasting similar MIB content would create strong coherent interference on PBCH REs.</li>
+    </ul>
+  </div>
+
+  <!-- v parameter details -->
+  <div class="content-block">
+    <h4><span class="icon" style="background:rgba(255,184,69,0.15);color:var(--accent-gold)">📊</span> The v-Parameter in Scrambling #2</h4>
+    <table class="v-table">
+      <thead>
+        <tr>
+          <th>L̄_max</th>
+          <th>Frequency Range</th>
+          <th>v Derivation</th>
+          <th>v Values</th>
+          <th>Sequence Offset</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">4</td>
+          <td>FR1 ≤ 3 GHz</td>
+          <td>2 LSBs of SSB index</td>
+          <td class="mono">0, 1, 2, 3</td>
+          <td class="mono">v × 864</td>
+        </tr>
+        <tr>
+          <td class="mono">8</td>
+          <td>FR1: 3–6 GHz</td>
+          <td>3 LSBs of SSB index</td>
+          <td class="mono">0, 1, 2, …, 7</td>
+          <td class="mono">v × 864</td>
+        </tr>
+        <tr>
+          <td class="mono">64</td>
+          <td>FR2 (mmWave)</td>
+          <td>3 LSBs of SSB index</td>
+          <td class="mono">0, 1, 2, …, 7</td>
+          <td class="mono">v × 864</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:10px;">The offset v·M_bit means: for SSB index 0 → use c(0)…c(863); for SSB index 1 → use c(864)…c(1727); etc. This makes each beam's physical-layer scrambling unique.</p>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SIDE-BY-SIDE COMPARISON                                          -->
+  <!-- ================================================================ -->
+  <div class="section-header">
+    <div class="section-num s3">⚖</div>
+    <div>
+      <h2>Head-to-Head Comparison</h2>
+      <span class="spec">Scrambling #1 vs Scrambling #2 — All differences at a glance</span>
+    </div>
+  </div>
+
+  <div class="content-block" style="padding:0;overflow:hidden;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th style="width:22%">Aspect</th>
+          <th style="width:39%">Scrambling #1 (Payload)</th>
+          <th style="width:39%">Scrambling #2 (Physical)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>3GPP Spec</strong></td>
+          <td style="font-family:var(--font-mono);font-size:12px;">TS 38.212 §7.1.1</td>
+          <td style="font-family:var(--font-mono);font-size:12px;">TS 38.211 §7.3.3.1</td>
+        </tr>
+        <tr>
+          <td><strong>Position in Chain</strong></td>
+          <td>Before CRC, before Polar encode</td>
+          <td>After interleaving, before QPSK</td>
+        </tr>
+        <tr>
+          <td><strong>Input Size</strong></td>
+          <td style="font-family:var(--font-mono);">32 bits (payload)</td>
+          <td style="font-family:var(--font-mono);">864 bits (coded &amp; interleaved)</td>
+        </tr>
+        <tr>
+          <td><strong>Sequence Init (c_init)</strong></td>
+          <td>Function of N_ID^cell, SFN bits, half-frame, SSB index</td>
+          <td style="font-family:var(--font-mono);">c_init = N_ID^cell (simple!)</td>
+        </tr>
+        <tr>
+          <td><strong>v-Parameter Role</strong></td>
+          <td>Part of the scrambling seed — changes the entire sequence</td>
+          <td>Offsets into the Gold sequence by v·864 bits</td>
+        </tr>
+        <tr>
+          <td><strong>Primary Purpose</strong></td>
+          <td>Embed timing info (SFN, half-frame, SSB index) for UE blind detection</td>
+          <td>Cell-specific interference randomization</td>
+        </tr>
+        <tr>
+          <td><strong>UE Descrambling</strong></td>
+          <td>Blind hypothesis testing (4 or 8 attempts per timing combination)</td>
+          <td>Direct — N_ID^cell already known from PSS/SSS</td>
+        </tr>
+        <tr>
+          <td><strong>Why Needed?</strong></td>
+          <td>MIB doesn't contain SSB index or full SFN — scrambling encodes it implicitly</td>
+          <td>Prevents coherent interference from neighboring cells broadcasting similar PBCH</td>
+        </tr>
+        <tr>
+          <td><strong>Applies to</strong></td>
+          <td>Only specific bits of payload (not all 32 bits are scrambled for L̄_max=4)</td>
+          <td>All 864 bits — every single bit is scrambled</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== SUMMARY ===== -->
+  <div class="content-block" style="border-color:var(--accent-cyan-dim);margin-top:30px;">
+    <h4><span class="icon" style="background:rgba(0,212,170,0.15);color:var(--accent-cyan)">📝</span> Key Takeaway</h4>
+    <p style="font-size:15px;line-height:1.9;">
+      Think of it this way: <strong style="color:var(--scramble1)">Scrambling #1</strong> is an <em>information-carrying</em> scrambling — it's how the network secretly tells the UE "you decoded SSB beam #3 in half-frame 0 of SFN 42" without explicitly putting those bits in the MIB. The UE cracks this code by trying all possibilities until CRC passes.
+      <br><br>
+      <strong style="color:var(--scramble2)">Scrambling #2</strong> is a classic <em>randomization</em> scrambling — same concept used in PDSCH, PDCCH, and every other physical channel. It simply makes each cell's PBCH look like random noise to neighboring cells, improving robustness at the RF level.
+      <br><br>
+      Together, they solve two completely different problems: <strong style="color:var(--scramble1)">timing acquisition</strong> and <strong style="color:var(--scramble2)">interference management</strong>.
+    </p>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>5G NR PBCH Scrambling — 3GPP TS 38.212 &amp; TS 38.211 &nbsp;|&nbsp; <a href="https://www.cafetele.com" target="_blank">CafeTele Telecom Training</a></p>
+  </div>
+</div>
+</body>
+</html>

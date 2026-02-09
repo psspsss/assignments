@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PBCH Block Interleaving — Interactive Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060A12;--bg2:#0A1020;--bg3:#0E1830;--bg4:#121E3A;
+  --bdr:#162040;--bdr2:#1E3060;
+  --t1:#E8EEF4;--t2:#8CA0B8;--t3:#506880;--t4:#304060;
+  --orange:#FF7E33;--orange-d:rgba(255,126,51,0.12);--orange-b:rgba(255,126,51,0.25);
+  --blue:#3E9FFF;--blue-d:rgba(62,159,255,0.12);--blue-b:rgba(62,159,255,0.25);
+  --cyan:#00D4A8;--cyan-d:rgba(0,212,168,0.12);--cyan-b:rgba(0,212,168,0.25);
+  --gold:#FFD060;--gold-d:rgba(255,208,96,0.12);--gold-b:rgba(255,208,96,0.25);
+  --red:#FF4B6E;--red-d:rgba(255,75,110,0.12);--red-b:rgba(255,75,110,0.25);
+  --purple:#9B6EFF;--purple-d:rgba(155,110,255,0.12);--purple-b:rgba(155,110,255,0.25);
+  --green:#4ADE80;--green-d:rgba(74,222,128,0.12);--green-b:rgba(74,222,128,0.25);
+  --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.6;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(62,159,255,0.02) 59px,rgba(62,159,255,0.02) 60px),repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(62,159,255,0.02) 59px,rgba(62,159,255,0.02) 60px);pointer-events:none;z-index:0;}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 20px 80px;position:relative;z-index:1;}
+
+/* Header */
+.hdr{text-align:center;padding:40px 0 30px;}
+.hdr-badge{display:inline-block;background:linear-gradient(135deg,var(--cyan-d),var(--blue-d));border:1px solid var(--cyan-b);color:var(--cyan);font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:5px 18px;border-radius:30px;margin-bottom:16px;}
+.hdr h1{font-size:clamp(26px,4.5vw,48px);font-weight:800;letter-spacing:-0.5px;line-height:1.15;}
+.hdr h1 .c-c{color:var(--cyan);}
+.hdr h1 .c-b{color:var(--blue);}
+.hdr h1 .c-o{color:var(--orange);}
+.hdr p{color:var(--t2);font-size:15px;max-width:720px;margin:12px auto 0;}
+
+/* Nav pills */
+.nav-pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:24px 0 36px;position:sticky;top:8px;z-index:50;background:rgba(6,10,18,0.92);backdrop-filter:blur(12px);padding:10px;border-radius:14px;border:1px solid var(--bdr);}
+.nav-pill{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.nav-pill:hover{border-color:var(--cyan-b);color:var(--cyan);}
+.nav-pill.active{background:var(--cyan-d);border-color:var(--cyan);color:var(--cyan);}
+
+/* Stage container */
+.stage{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;margin-bottom:28px;overflow:hidden;transition:all 0.3s;opacity:0;transform:translateY(20px);}
+.stage.vis{opacity:1;transform:translateY(0);}
+.stage:hover{border-color:var(--bdr2);}
+.stage-hdr{display:flex;align-items:center;gap:14px;padding:22px 28px;border-bottom:1px solid var(--bdr);user-select:none;}
+.stage-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0;}
+.stage-hdr h2{font-size:18px;font-weight:700;flex:1;}
+.stage-hdr .spec{font-family:var(--mono);font-size:10px;color:var(--t3);display:block;margin-top:2px;}
+.stage-hdr .bits-tag{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:6px;font-weight:600;flex-shrink:0;}
+.stage-body{padding:24px 28px;}
+
+/* Color variants */
+.s-orange .stage-num{background:var(--orange-d);color:var(--orange);}
+.s-orange .bits-tag{background:var(--orange-d);color:var(--orange);border:1px solid var(--orange-b);}
+.s-red .stage-num{background:var(--red-d);color:var(--red);}
+.s-red .bits-tag{background:var(--red-d);color:var(--red);border:1px solid var(--red-b);}
+.s-blue .stage-num{background:var(--blue-d);color:var(--blue);}
+.s-blue .bits-tag{background:var(--blue-d);color:var(--blue);border:1px solid var(--blue-b);}
+.s-purple .stage-num{background:var(--purple-d);color:var(--purple);}
+.s-purple .bits-tag{background:var(--purple-d);color:var(--purple);border:1px solid var(--purple-b);}
+.s-green .stage-num{background:var(--green-d);color:var(--green);}
+.s-green .bits-tag{background:var(--green-d);color:var(--green);border:1px solid var(--green-b);}
+.s-gold .stage-num{background:var(--gold-d);color:var(--gold);}
+.s-gold .bits-tag{background:var(--gold-d);color:var(--gold);border:1px solid var(--gold-b);}
+.s-cyan .stage-num{background:var(--cyan-d);color:var(--cyan);}
+.s-cyan .bits-tag{background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);}
+
+/* Calc box */
+.calc-box{background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:20px 22px;margin:14px 0;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;}
+.calc-box .cl{color:var(--t3);}
+.calc-box .hl{font-weight:700;}
+.calc-box .v-o{color:var(--orange);}
+.calc-box .v-b{color:var(--blue);}
+.calc-box .v-c{color:var(--cyan);}
+.calc-box .v-g{color:var(--gold);}
+.calc-box .v-r{color:var(--red);}
+.calc-box .v-p{color:var(--purple);}
+.calc-box .v-gr{color:var(--green);}
+.calc-box .op{color:var(--t2);}
+.calc-box .eq{color:var(--gold);font-weight:700;}
+
+/* Interactive controls */
+.ctrl-panel{background:var(--bg3);border:1px solid var(--bdr);border-radius:10px;padding:16px;margin:16px 0;}
+.ctrl-row{display:flex;gap:12px;margin:8px 0;flex-wrap:wrap;align-items:center;}
+.ctrl-label{font-size:12px;font-weight:600;color:var(--t2);min-width:140px;}
+.ctrl-input{background:var(--bg);border:1px solid var(--bdr2);border-radius:6px;padding:6px 12px;color:var(--t1);font-family:var(--mono);font-size:12px;flex:1;max-width:180px;}
+.ctrl-input:focus{outline:none;border-color:var(--cyan);}
+.ctrl-btn{padding:7px 18px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--cyan-b);background:var(--cyan-d);color:var(--cyan);cursor:pointer;transition:all 0.2s;}
+.ctrl-btn:hover{background:var(--cyan);color:var(--bg);}
+.ctrl-btn:active{transform:scale(0.95);}
+
+/* Matrix visualization */
+.matrix-container{margin:20px 0;overflow-x:auto;}
+.matrix{display:inline-grid;gap:3px;padding:10px;background:var(--bg);border:2px solid var(--bdr2);border-radius:8px;}
+.matrix-cell{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:4px;transition:all 0.3s;cursor:pointer;position:relative;}
+.matrix-cell:hover{transform:scale(1.15);z-index:10;box-shadow:0 0 12px rgba(0,212,168,0.4);}
+.matrix-cell.input{background:var(--blue-d);color:var(--blue);border:1px solid var(--blue-b);}
+.matrix-cell.output{background:var(--orange-d);color:var(--orange);border:1px solid var(--orange-b);}
+.matrix-cell.active{animation:pulse 0.6s ease;box-shadow:0 0 16px var(--cyan);}
+.matrix-cell.trace{background:var(--cyan-d);border:2px solid var(--cyan);color:var(--cyan);}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Arrow visualization */
+.arrow-container{margin:20px 0;padding:20px;background:var(--bg);border:1px solid var(--bdr);border-radius:10px;overflow-x:auto;}
+.arrow-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+.arrow-box{padding:10px 16px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;min-width:60px;text-align:center;border:1px solid;}
+.arrow-box.write{background:var(--blue-d);color:var(--blue);border-color:var(--blue-b);}
+.arrow-box.read{background:var(--orange-d);color:var(--orange);border-color:var(--orange-b);}
+.arrow-sym{color:var(--t3);font-size:20px;font-weight:700;}
+
+/* Sequence display */
+.seq-display{background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:16px;margin:14px 0;}
+.seq-label{font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:8px;font-family:var(--mono);}
+.seq-bits{display:flex;flex-wrap:wrap;gap:3px;}
+.seq-bit{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;border-radius:4px;transition:all 0.3s;}
+.seq-bit.b-in{background:var(--blue-d);color:var(--blue);border:1px solid var(--blue-b);}
+.seq-bit.b-out{background:var(--orange-d);color:var(--orange);border:1px solid var(--orange-b);}
+.seq-bit:hover{transform:scale(1.1);}
+
+/* Info boxes */
+.info-box{background:linear-gradient(135deg,var(--blue-d),var(--cyan-d));border:1px solid var(--blue-b);border-radius:10px;padding:14px 18px;margin:14px 0;font-size:13px;}
+.info-box strong{color:var(--cyan);}
+.warn-box{background:linear-gradient(135deg,var(--orange-d),var(--red-d));border:1px solid var(--orange-b);border-radius:10px;padding:14px 18px;margin:14px 0;font-size:13px;}
+.warn-box strong{color:var(--orange);}
+.tip-box{background:linear-gradient(135deg,var(--green-d),var(--cyan-d));border:1px solid var(--green-b);border-radius:10px;padding:14px 18px;margin:14px 0;font-size:13px;}
+.tip-box strong{color:var(--green);}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0;}
+.stat-card{background:var(--bg3);border:1px solid var(--bdr);border-radius:10px;padding:14px;text-align:center;}
+.stat-value{font-size:28px;font-weight:800;color:var(--cyan);font-family:var(--mono);margin:6px 0;}
+.stat-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;}
+
+/* Process steps */
+.process-steps{margin:20px 0;}
+.pstep{background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin:10px 0;position:relative;transition:all 0.3s;}
+.pstep:hover{border-color:var(--cyan-b);background:var(--bg4);}
+.pstep-num{position:absolute;left:14px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.pstep-content{padding-left:50px;}
+.pstep-title{font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:6px;}
+.pstep-desc{font-size:12px;color:var(--t2);}
+
+/* Comparison table */
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;background:var(--bg);border-radius:8px;overflow:hidden;}
+.comp-table th{background:var(--cyan-d);color:var(--cyan);padding:12px;text-align:left;font-size:12px;border:1px solid var(--cyan-b);}
+.comp-table td{padding:12px;font-size:12px;border:1px solid var(--bdr);color:var(--t2);}
+.comp-table tr:hover{background:var(--bg3);}
+
+/* Responsive */
+@media (max-width:768px){
+  .ctrl-row{flex-direction:column;align-items:flex-start;}
+  .ctrl-label{min-width:auto;}
+  .ctrl-input{max-width:100%;width:100%;}
+  .matrix-cell{width:32px;height:32px;font-size:10px;}
+  .stats-grid{grid-template-columns:1fr;}
+  .arrow-flow{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Header -->
+<header class="hdr">
+  <div class="hdr-badge">3GPP TS 38.212 Section 5.4.1.1</div>
+  <h1>
+    <span class="c-c">5G NR</span> <span class="c-b">Block Interleaving</span><br>
+    <span class="c-o">Interactive Simulation</span>
+  </h1>
+  <p>Explore sub-block interleaving for polar-coded PBCH channels: write by rows, read by columns</p>
+</header>
+
+<!-- Navigation -->
+<nav class="nav-pills">
+  <a href="#concept" class="nav-pill">Concept</a>
+  <a href="#algorithm" class="nav-pill">Algorithm</a>
+  <a href="#example" class="nav-pill">Worked Example</a>
+  <a href="#interactive" class="nav-pill">Interactive</a>
+  <a href="#analysis" class="nav-pill">Analysis</a>
+</nav>
+
+<!-- Section 1: Concept -->
+<section id="concept" class="stage s-cyan">
+  <div class="stage-hdr">
+    <div class="stage-num">1</div>
+    <div style="flex:1;">
+      <h2>Block Interleaving Concept</h2>
+      <span class="spec">Why We Need Interleaving</span>
+    </div>
+  </div>
+  <div class="stage-body">
+    <p style="color:var(--t2);margin-bottom:20px;"><strong>Block interleaving</strong> is a technique that reorders bits to improve error resilience in wireless channels. For 5G NR PBCH, it's applied after polar encoding and before rate matching.</p>
+    
+    <div class="info-box">
+      <strong>Purpose:</strong> Burst errors in wireless channels (caused by fading, interference) can corrupt consecutive bits. Interleaving spreads these burst errors across the codeword, making them appear as independent errors that the decoder can correct more effectively.
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">The Problem: Burst Errors</h3>
+    <div class="arrow-container">
+      <div style="text-align:center;margin-bottom:15px;color:var(--t2);">
+        <strong>Without Interleaving:</strong> Burst error corrupts adjacent coded bits
+      </div>
+      <div class="seq-display">
+        <div class="seq-bits" style="justify-content:center;">
+          <div class="seq-bit b-in">0</div>
+          <div class="seq-bit b-in">1</div>
+          <div class="seq-bit b-in">1</div>
+          <div class="seq-bit" style="background:var(--red-d);color:var(--red);border:2px solid var(--red);">✗</div>
+          <div class="seq-bit" style="background:var(--red-d);color:var(--red);border:2px solid var(--red);">✗</div>
+          <div class="seq-bit" style="background:var(--red-d);color:var(--red);border:2px solid var(--red);">✗</div>
+          <div class="seq-bit b-in">0</div>
+          <div class="seq-bit b-in">1</div>
+          <div class="seq-bit b-in">0</div>
+        </div>
+        <p style="text-align:center;margin-top:10px;color:var(--red);font-size:12px;">3 consecutive errors → Hard for decoder to correct</p>
+      </div>
+    </div>
+
+    <div class="arrow-container">
+      <div style="text-align:center;margin-bottom:15px;color:var(--t2);">
+        <strong>With Interleaving:</strong> Same burst error affects non-adjacent bits
+      </div>
+      <div class="seq-display">
+        <div class="seq-bits" style="justify-content:center;">
+          <div class="seq-bit b-out">0</div>
+          <div class="seq-bit" style="background:var(--red-d);color:var(--red);border:2px solid var(--red);">✗</div>
+          <div class="seq-bit b-out">1</div>
+          <div class="seq-bit b-out">1</div>
+          <div class="seq-bit" style="background:var(--red-d);color:var(--red);border:2px solid var(--red);">✗</div>
+          <div class="seq-bit b-out">0</div>
+          <div class="seq-bit b-out">1</div>
+          <div class="seq-bit" style="background:var(--red-d);color:var(--red);border:2px solid var(--red);">✗</div>
+          <div class="seq-bit b-out">0</div>
+        </div>
+        <p style="text-align:center;margin-top:10px;color:var(--green);font-size:12px;">3 scattered errors → Decoder can correct independently</p>
+      </div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Key Characteristics</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Interleaver Type</div>
+        <div class="stat-value" style="font-size:18px;">Block</div>
+        <p style="font-size:11px;color:var(--t2);margin-top:8px;">Matrix-based row/column reordering</p>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Write Pattern</div>
+        <div class="stat-value" style="font-size:18px;">By Rows</div>
+        <p style="font-size:11px;color:var(--t2);margin-top:8px;">Fill matrix row by row</p>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Read Pattern</div>
+        <div class="stat-value" style="font-size:18px;">By Columns</div>
+        <p style="font-size:11px;color:var(--t2);margin-top:8px;">Read matrix column by column</p>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>Implementation:</strong> Block interleaving uses a matrix structure. Bits are written into the matrix row-by-row (left to right, top to bottom), then read out column-by-column (top to bottom, left to right). This simple permutation effectively disperses burst errors.
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Algorithm -->
+<section id="algorithm" class="stage s-blue">
+  <div class="stage-hdr">
+    <div class="stage-num">2</div>
+    <div style="flex:1;">
+      <h2>Interleaving Algorithm</h2>
+      <span class="spec">Mathematical Definition</span>
+    </div>
+  </div>
+  <div class="stage-body">
+    <h3 style="color:var(--gold);margin:0 0 16px;">Matrix Dimensions</h3>
+    <p style="color:var(--t2);margin-bottom:20px;">For a sequence of <strong>N</strong> bits, we define a matrix with <strong>R</strong> rows and <strong>C</strong> columns where:</p>
+    
+    <div class="calc-box">
+      <span class="cl">// ─── Matrix Size Calculation ───</span><br>
+      N <span class="eq">=</span> <span class="v-b">Total number of bits</span><br>
+      R <span class="eq">=</span> <span class="v-o">Number of rows</span> (interleaver depth)<br>
+      C <span class="eq">=</span> <span class="v-c">Number of columns</span><br><br>
+      
+      <span class="hl">Constraint:</span> R × C <span class="eq">≥</span> N<br><br>
+      
+      <span class="cl">// For PBCH (typical parameters):</span><br>
+      N <span class="eq">=</span> 864 bits<br>
+      R <span class="eq">=</span> 32 rows<br>
+      C <span class="eq">=</span> ceil(N / R) <span class="eq">=</span> ceil(864 / 32) <span class="eq">=</span> 27 columns<br>
+      Matrix size <span class="eq">=</span> 32 × 27 <span class="eq">=</span> 864 positions
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 16px;">Interleaving Process</h3>
+    <div class="process-steps">
+      <div class="pstep">
+        <div class="pstep-num">1</div>
+        <div class="pstep-content">
+          <div class="pstep-title">Initialize Matrix</div>
+          <div class="pstep-desc">Create an R×C matrix (initially empty or with null values)</div>
+        </div>
+      </div>
+
+      <div class="pstep">
+        <div class="pstep-num">2</div>
+        <div class="pstep-content">
+          <div class="pstep-title">Write by Rows</div>
+          <div class="pstep-desc">Write input bits sequentially into matrix: left-to-right, top-to-bottom (row-major order)</div>
+        </div>
+      </div>
+
+      <div class="pstep">
+        <div class="pstep-num">3</div>
+        <div class="pstep-content">
+          <div class="pstep-title">Read by Columns</div>
+          <div class="pstep-desc">Read output bits sequentially from matrix: top-to-bottom, left-to-right (column-major order)</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 16px;">Mathematical Formulation</h3>
+    <div class="calc-box">
+      <span class="cl">// ─── Input Sequence ───</span><br>
+      d[n] <span class="op">for</span> n <span class="eq">=</span> 0, 1, 2, ..., N-1<br><br>
+      
+      <span class="cl">// ─── Write to Matrix (Row-Major) ───</span><br>
+      <span class="op">for</span> n <span class="eq">=</span> 0 <span class="op">to</span> N-1:<br>
+      &nbsp;&nbsp;row <span class="eq">=</span> floor(n / C)<br>
+      &nbsp;&nbsp;col <span class="eq">=</span> n <span class="op">mod</span> C<br>
+      &nbsp;&nbsp;matrix[row][col] <span class="eq">=</span> d[n]<br><br>
+      
+      <span class="cl">// ─── Read from Matrix (Column-Major) ───</span><br>
+      m <span class="eq">=</span> 0<br>
+      <span class="op">for</span> col <span class="eq">=</span> 0 <span class="op">to</span> C-1:<br>
+      &nbsp;&nbsp;<span class="op">for</span> row <span class="eq">=</span> 0 <span class="op">to</span> R-1:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="op">if</span> matrix[row][col] is valid:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y[m] <span class="eq">=</span> matrix[row][col]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m <span class="eq">=</span> m + 1<br><br>
+      
+      <span class="cl">// ─── Permutation Formula ───</span><br>
+      Input position: n<br>
+      Output position: π(n) <span class="eq">=</span> (n <span class="op">mod</span> C) × R + floor(n / C)
+    </div>
+
+    <div class="info-box">
+      <strong>Interleaving Depth:</strong> The parameter R controls the interleaving depth. Larger R spreads bits further apart, providing better protection against longer burst errors, but requires more memory.
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Worked Example -->
+<section id="example" class="stage s-orange">
+  <div class="stage-hdr">
+    <div class="stage-num">3</div>
+    <div style="flex:1;">
+      <h2>Worked Example</h2>
+      <span class="spec">4×4 Matrix Demonstration</span>
+    </div>
+    <span class="bits-tag">16 bits</span>
+  </div>
+  <div class="stage-body">
+    <p style="color:var(--t2);margin-bottom:20px;">Let's demonstrate with a simple 4×4 matrix (16 bits) to clearly visualize the interleaving process.</p>
+
+    <h3 style="color:var(--gold);margin:0 0 12px;">Configuration</h3>
+    <div class="calc-box">
+      <span class="cl">// ─── Example Parameters ───</span><br>
+      N <span class="eq">=</span> <span class="v-b hl">16</span> bits<br>
+      R <span class="eq">=</span> <span class="v-o hl">4</span> rows<br>
+      C <span class="eq">=</span> <span class="v-c hl">4</span> columns<br><br>
+      
+      <span class="cl">// ─── Input Sequence ───</span><br>
+      d[0..15] <span class="eq">=</span> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Step 1: Input Sequence</h3>
+    <div class="seq-display">
+      <div class="seq-label">Input bits (sequential order):</div>
+      <div class="seq-bits" id="example-input"></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Step 2: Write by Rows</h3>
+    <p style="color:var(--t2);margin-bottom:16px;">Fill the matrix row by row, left to right:</p>
+    <div class="matrix-container">
+      <div class="matrix" id="example-write" style="grid-template-columns:repeat(4, 40px);grid-template-rows:repeat(4, 40px);"></div>
+    </div>
+    <div class="arrow-container">
+      <div class="arrow-flow" id="write-sequence"></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Step 3: Read by Columns</h3>
+    <p style="color:var(--t2);margin-bottom:16px;">Read the matrix column by column, top to bottom:</p>
+    <div class="matrix-container">
+      <div class="matrix" id="example-read" style="grid-template-columns:repeat(4, 40px);grid-template-rows:repeat(4, 40px);"></div>
+    </div>
+    <div class="arrow-container">
+      <div class="arrow-flow" id="read-sequence"></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Step 4: Output Sequence</h3>
+    <div class="seq-display">
+      <div class="seq-label">Output bits (interleaved order):</div>
+      <div class="seq-bits" id="example-output"></div>
+    </div>
+
+    <div class="tip-box">
+      <strong>Observation:</strong> Notice how bit 0 stays at position 0, but bit 1 moves to position 4, bit 2 to position 8, etc. Consecutive input bits are now separated by R positions in the output, effectively dispersing burst errors.
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Permutation Mapping</h3>
+    <div class="calc-box" id="example-mapping"></div>
+  </div>
+</section>
+
+<!-- Section 4: Interactive Simulator -->
+<section id="interactive" class="stage s-green">
+  <div class="stage-hdr">
+    <div class="stage-num">4</div>
+    <div style="flex:1;">
+      <h2>Interactive Interleaver Simulator</h2>
+      <span class="spec">Experiment with Different Configurations</span>
+    </div>
+    <span class="bits-tag" id="sim-config">Configure</span>
+  </div>
+  <div class="stage-body">
+    <div class="ctrl-panel">
+      <div class="ctrl-row">
+        <span class="ctrl-label">Number of rows (R):</span>
+        <select id="num-rows" class="ctrl-input">
+          <option value="2">2 rows</option>
+          <option value="4">4 rows</option>
+          <option value="8" selected>8 rows</option>
+          <option value="16">16 rows</option>
+          <option value="32">32 rows</option>
+        </select>
+        <span style="color:var(--t3);font-size:11px;font-family:var(--mono);">Interleaving depth</span>
+      </div>
+      
+      <div class="ctrl-row">
+        <span class="ctrl-label">Number of columns (C):</span>
+        <select id="num-cols" class="ctrl-input">
+          <option value="2">2 columns</option>
+          <option value="4">4 columns</option>
+          <option value="8" selected>8 columns</option>
+          <option value="16">16 columns</option>
+        </select>
+        <span style="color:var(--t3);font-size:11px;font-family:var(--mono);">Matrix width</span>
+      </div>
+      
+      <div class="ctrl-row">
+        <button class="ctrl-btn" onclick="runInterleaving()">Run Interleaving</button>
+        <button class="ctrl-btn" onclick="animateWrite()" style="background:var(--blue-d);border-color:var(--blue-b);color:var(--blue);">Animate Write</button>
+        <button class="ctrl-btn" onclick="animateRead()" style="background:var(--orange-d);border-color:var(--orange-b);color:var(--orange);">Animate Read</button>
+        <button class="ctrl-btn" onclick="showMapping()" style="background:var(--purple-d);border-color:var(--purple-b);color:var(--purple);">Show Mapping</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Matrix Size</div>
+        <div class="stat-value" id="matrix-size">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Bits</div>
+        <div class="stat-value" id="total-bits">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Burst Protection</div>
+        <div class="stat-value" id="burst-protect">-</div>
+      </div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Input Sequence</h3>
+    <div class="seq-display">
+      <div class="seq-label">Original order (before interleaving):</div>
+      <div class="seq-bits" id="sim-input"></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Interleaving Matrix</h3>
+    <div class="matrix-container" style="text-align:center;">
+      <div class="matrix" id="sim-matrix"></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Output Sequence</h3>
+    <div class="seq-display">
+      <div class="seq-label">Interleaved order (after interleaving):</div>
+      <div class="seq-bits" id="sim-output"></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 12px;">Permutation Details</h3>
+    <div class="calc-box" id="sim-permutation">
+      <span class="cl">// Configure parameters and run interleaving to see permutation</span>
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Performance Analysis -->
+<section id="analysis" class="stage s-purple">
+  <div class="stage-hdr">
+    <div class="stage-num">5</div>
+    <div style="flex:1;">
+      <h2>Performance Analysis</h2>
+      <span class="spec">Benefits and Trade-offs</span>
+    </div>
+  </div>
+  <div class="stage-body">
+    <h3 style="color:var(--gold);margin:0 0 16px;">Burst Error Protection</h3>
+    <p style="color:var(--t2);margin-bottom:16px;">Block interleaving with R rows can disperse burst errors up to length R into R independent single-bit errors (in ideal conditions).</p>
+
+    <div class="calc-box">
+      <span class="cl">// ─── Burst Error Analysis ───</span><br>
+      R <span class="eq">=</span> Number of rows (interleaving depth)<br>
+      Burst length <span class="eq">≤</span> R <span class="op">→</span> <span class="v-gr">Completely dispersed</span><br>
+      Burst length <span class="op">></span> R <span class="op">→</span> <span class="v-o">Partially dispersed</span><br><br>
+      
+      <span class="cl">// Example: R = 8</span><br>
+      Burst of 4 consecutive errors <span class="op">→</span> 4 errors separated by ≥8 positions<br>
+      Burst of 10 consecutive errors <span class="op">→</span> Some errors still adjacent<br><br>
+      
+      <span class="cl">// ─── Practical PBCH Example ───</span><br>
+      N <span class="eq">=</span> 864 bits, R <span class="eq">=</span> 32, C <span class="eq">=</span> 27<br>
+      Protection: Up to <span class="v-gr hl">32 consecutive bit errors</span> dispersed<br>
+      Separation: Consecutive bits separated by <span class="v-c hl">32 positions</span>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 16px;">Comparison: With vs Without Interleaving</h3>
+    <table class="comp-table">
+      <tr>
+        <th>Aspect</th>
+        <th>Without Interleaving</th>
+        <th>With Block Interleaving</th>
+      </tr>
+      <tr>
+        <td><strong>Burst Error Impact</strong></td>
+        <td style="color:var(--red);">Corrupts adjacent coded bits → Decoder struggles</td>
+        <td style="color:var(--green);">Disperses across codeword → Independent errors</td>
+      </tr>
+      <tr>
+        <td><strong>Decoding Performance</strong></td>
+        <td style="color:var(--red);">Poor for burst errors (common in wireless)</td>
+        <td style="color:var(--green);">Much better for typical channel conditions</td>
+      </tr>
+      <tr>
+        <td><strong>Latency</strong></td>
+        <td style="color:var(--green);">Minimal (no reordering)</td>
+        <td style="color:var(--orange);">Added delay (wait for full block)</td>
+      </tr>
+      <tr>
+        <td><strong>Memory</strong></td>
+        <td style="color:var(--green);">None required</td>
+        <td style="color:var(--orange);">R × C matrix storage needed</td>
+      </tr>
+      <tr>
+        <td><strong>Complexity</strong></td>
+        <td style="color:var(--green);">Zero (no processing)</td>
+        <td style="color:var(--orange);">Low (simple permutation)</td>
+      </tr>
+      <tr>
+        <td><strong>Overall</strong></td>
+        <td style="color:var(--red);">Vulnerable to real-world channels</td>
+        <td style="color:var(--green);">Essential for reliable communication</td>
+      </tr>
+    </table>
+
+    <h3 style="color:var(--gold);margin:24px 0 16px;">Design Considerations</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Interleaving Depth (R)</div>
+        <div class="stat-value" style="font-size:20px;color:var(--blue);">Trade-off</div>
+        <p style="font-size:11px;color:var(--t2);margin-top:8px;">Larger R → Better protection but more latency/memory</p>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Matrix Width (C)</div>
+        <div class="stat-value" style="font-size:20px;color:var(--cyan);">Flexible</div>
+        <p style="font-size:11px;color:var(--t2);margin-top:8px;">Chosen to fit total bits: C = ceil(N/R)</p>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Implementation</div>
+        <div class="stat-value" style="font-size:20px;color:var(--green);">Efficient</div>
+        <p style="font-size:11px;color:var(--t2);margin-top:8px;">Simple address calculation, no complex operations</p>
+      </div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:24px 0 16px;">Key Takeaways</h3>
+    <div class="calc-box" style="line-height:1.8;">
+      <span class="v-c hl">✓ Essential Protection:</span><br>
+      &nbsp;&nbsp;• Block interleaving is critical for wireless channels<br>
+      &nbsp;&nbsp;• Transforms burst errors into dispersed errors<br>
+      &nbsp;&nbsp;• Significantly improves decoder performance<br><br>
+      
+      <span class="v-b hl">✓ Simple Yet Effective:</span><br>
+      &nbsp;&nbsp;• Matrix-based approach is easy to implement<br>
+      &nbsp;&nbsp;• Write by rows, read by columns<br>
+      &nbsp;&nbsp;• Deterministic permutation (reversible at receiver)<br><br>
+      
+      <span class="v-o hl">✓ Parameter Selection:</span><br>
+      &nbsp;&nbsp;• R determines burst protection capability<br>
+      &nbsp;&nbsp;• Typical PBCH uses R=32 for 864-bit codewords<br>
+      &nbsp;&nbsp;• Balance between protection and latency<br><br>
+      
+      <span class="v-gr hl">✓ Standard Compliance:</span><br>
+      &nbsp;&nbsp;• Defined in 3GPP TS 38.212 Section 5.4.1.1<br>
+      &nbsp;&nbsp;• Applied to polar-coded channels (PBCH, PDCCH, PUCCH)<br>
+      &nbsp;&nbsp;• Part of the complete channel coding chain
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="text-align:center;margin-top:60px;padding:30px 0;border-top:1px solid var(--bdr);">
+  <p style="color:var(--t3);font-size:12px;">5G NR Block Interleaving Simulation | Based on 3GPP TS 38.212 Section 5.4.1.1</p>
+  <p style="color:var(--t4);font-size:11px;margin-top:8px;">Interactive Educational Tool for Physical Layer Engineers</p>
+</footer>
+
+</div>
+
+<script>
+// Global variables
+let currentR = 8;
+let currentC = 8;
+let currentN = 64;
+let animationRunning = false;
+
+// Generate worked example (4x4)
+function generateWorkedExample() {
+  const R = 4, C = 4, N = 16;
+  const input = Array.from({length: N}, (_, i) => i);
+  
+  // Input sequence
+  let inputHTML = '';
+  input.forEach(val => {
+    inputHTML += `<div class="seq-bit b-in">${val}</div>`;
+  });
+  document.getElementById('example-input').innerHTML = inputHTML;
+  
+  // Write matrix
+  let writeHTML = '';
+  for (let r = 0; r < R; r++) {
+    for (let c = 0; c < C; c++) {
+      const idx = r * C + c;
+      writeHTML += `<div class="matrix-cell input">${input[idx]}</div>`;
+    }
+  }
+  document.getElementById('example-write').innerHTML = writeHTML;
+  
+  // Write sequence arrows
+  let writeSeq = '<div class="arrow-box write">Row 0: 0→1→2→3</div>';
+  writeSeq += '<div class="arrow-box write">Row 1: 4→5→6→7</div>';
+  writeSeq += '<div class="arrow-box write">Row 2: 8→9→10→11</div>';
+  writeSeq += '<div class="arrow-box write">Row 3: 12→13→14→15</div>';
+  document.getElementById('write-sequence').innerHTML = writeSeq;
+  
+  // Read matrix (show interleaved positions)
+  const output = performInterleaving(input, R, C);
+  let readHTML = '';
+  for (let r = 0; r < R; r++) {
+    for (let c = 0; c < C; c++) {
+      const idx = r * C + c;
+      readHTML += `<div class="matrix-cell output">${input[idx]}</div>`;
+    }
+  }
+  document.getElementById('example-read').innerHTML = readHTML;
+  
+  // Read sequence arrows
+  let readSeq = '<div class="arrow-box read">Col 0: 0→4→8→12</div>';
+  readSeq += '<div class="arrow-box read">Col 1: 1→5→9→13</div>';
+  readSeq += '<div class="arrow-box read">Col 2: 2→6→10→14</div>';
+  readSeq += '<div class="arrow-box read">Col 3: 3→7→11→15</div>';
+  document.getElementById('read-sequence').innerHTML = readSeq;
+  
+  // Output sequence
+  let outputHTML = '';
+  output.forEach(val => {
+    outputHTML += `<div class="seq-bit b-out">${val}</div>`;
+  });
+  document.getElementById('example-output').innerHTML = outputHTML;
+  
+  // Permutation mapping
+  let mappingHTML = '<span class="cl">// ─── Position Mapping ───</span><br>';
+  mappingHTML += '<span class="cl">// Input → Output permutation</span><br><br>';
+  
+  for (let i = 0; i < N; i++) {
+    const row = Math.floor(i / C);
+    const col = i % C;
+    const outputPos = col * R + row;
+    const color = i % 4 === 0 ? 'v-b' : (i % 4 === 1 ? 'v-o' : (i % 4 === 2 ? 'v-c' : 'v-g'));
+    mappingHTML += `Position <span class="${color} hl">${i.toString().padStart(2, ' ')}</span> → Position <span class="${color} hl">${outputPos.toString().padStart(2, ' ')}</span>`;
+    mappingHTML += `  <span class="cl">// matrix[${row}][${col}] → column ${col}, row ${row}</span><br>`;
+    
+    if ((i + 1) % 4 === 0 && i < N - 1) {
+      mappingHTML += '<br>';
+    }
+  }
+  
+  document.getElementById('example-mapping').innerHTML = mappingHTML;
+}
+
+// Perform interleaving
+function performInterleaving(input, R, C) {
+  const N = input.length;
+  const matrix = Array(R).fill(null).map(() => Array(C).fill(null));
+  const output = [];
+  
+  // Write by rows
+  for (let i = 0; i < N; i++) {
+    const row = Math.floor(i / C);
+    const col = i % C;
+    if (row < R && col < C) {
+      matrix[row][col] = input[i];
+    }
+  }
+  
+  // Read by columns
+  for (let c = 0; c < C; c++) {
+    for (let r = 0; r < R; r++) {
+      if (matrix[r][c] !== null) {
+        output.push(matrix[r][c]);
+      }
+    }
+  }
+  
+  return output;
+}
+
+// Run interleaving simulation
+function runInterleaving() {
+  if (animationRunning) return;
+  
+  currentR = parseInt(document.getElementById('num-rows').value);
+  currentC = parseInt(document.getElementById('num-cols').value);
+  currentN = currentR * currentC;
+  
+  // Update stats
+  document.getElementById('matrix-size').textContent = `${currentR} × ${currentC}`;
+  document.getElementById('total-bits').textContent = currentN;
+  document.getElementById('burst-protect').textContent = `Up to ${currentR}`;
+  document.getElementById('sim-config').textContent = `${currentR}×${currentC}`;
+  
+  // Generate input
+  const input = Array.from({length: currentN}, (_, i) => i);
+  
+  // Display input
+  let inputHTML = '';
+  const maxDisplayInput = Math.min(currentN, 64);
+  for (let i = 0; i < maxDisplayInput; i++) {
+    inputHTML += `<div class="seq-bit b-in">${input[i]}</div>`;
+  }
+  if (currentN > maxDisplayInput) {
+    inputHTML += `<div style="padding:8px;color:var(--t3);font-size:11px;">...and ${currentN - maxDisplayInput} more</div>`;
+  }
+  document.getElementById('sim-input').innerHTML = inputHTML;
+  
+  // Display matrix
+  let matrixHTML = '';
+  const maxDisplayRows = Math.min(currentR, 16);
+  const maxDisplayCols = Math.min(currentC, 16);
+  
+  for (let r = 0; r < maxDisplayRows; r++) {
+    for (let c = 0; c < maxDisplayCols; c++) {
+      const idx = r * currentC + c;
+      if (idx < currentN) {
+        matrixHTML += `<div class="matrix-cell input" id="mat-${r}-${c}">${input[idx]}</div>`;
+      }
+    }
+  }
+  
+  document.getElementById('sim-matrix').style.gridTemplateColumns = `repeat(${maxDisplayCols}, 40px)`;
+  document.getElementById('sim-matrix').style.gridTemplateRows = `repeat(${maxDisplayRows}, 40px)`;
+  document.getElementById('sim-matrix').innerHTML = matrixHTML;
+  
+  if (currentR > maxDisplayRows || currentC > maxDisplayCols) {
+    document.getElementById('sim-matrix').innerHTML += `<div style="grid-column:1/-1;padding:8px;color:var(--t3);font-size:11px;text-align:center;">Showing ${maxDisplayRows}×${maxDisplayCols} of full ${currentR}×${currentC} matrix</div>`;
+  }
+  
+  // Perform interleaving
+  const output = performInterleaving(input, currentR, currentC);
+  
+  // Display output
+  let outputHTML = '';
+  const maxDisplayOutput = Math.min(output.length, 64);
+  for (let i = 0; i < maxDisplayOutput; i++) {
+    outputHTML += `<div class="seq-bit b-out">${output[i]}</div>`;
+  }
+  if (output.length > maxDisplayOutput) {
+    outputHTML += `<div style="padding:8px;color:var(--t3);font-size:11px;">...and ${output.length - maxDisplayOutput} more</div>`;
+  }
+  document.getElementById('sim-output').innerHTML = outputHTML;
+  
+  // Generate permutation details
+  let permHTML = '<span class="cl">// ─── Interleaving Permutation ───</span><br>';
+  permHTML += `N <span class="eq">=</span> <span class="v-b hl">${currentN}</span> bits<br>`;
+  permHTML += `R <span class="eq">=</span> <span class="v-o hl">${currentR}</span> rows<br>`;
+  permHTML += `C <span class="eq">=</span> <span class="v-c hl">${currentC}</span> columns<br><br>`;
+  
+  permHTML += '<span class="cl">// ─── Sample Position Mappings ───</span><br>';
+  const samples = [0, 1, 2, currentC, currentC + 1, currentN - 1];
+  samples.forEach(i => {
+    if (i < currentN) {
+      const row = Math.floor(i / currentC);
+      const col = i % currentC;
+      const outputPos = col * currentR + row;
+      permHTML += `Input[<span class="v-b">${i}</span>] → Output[<span class="v-o">${outputPos}</span>]`;
+      permHTML += `  <span class="cl">// matrix[${row}][${col}]</span><br>`;
+    }
+  });
+  
+  permHTML += '<br><span class="cl">// ─── General Formula ───</span><br>';
+  permHTML += '<span class="op">for</span> input_pos <span class="eq">=</span> 0 <span class="op">to</span> N-1:<br>';
+  permHTML += '&nbsp;&nbsp;row <span class="eq">=</span> floor(input_pos / C)<br>';
+  permHTML += '&nbsp;&nbsp;col <span class="eq">=</span> input_pos <span class="op">mod</span> C<br>';
+  permHTML += '&nbsp;&nbsp;output_pos <span class="eq">=</span> col × R + row';
+  
+  document.getElementById('sim-permutation').innerHTML = permHTML;
+}
+
+// Animate write operation
+function animateWrite() {
+  if (animationRunning) return;
+  animationRunning = true;
+  
+  const maxR = Math.min(currentR, 16);
+  const maxC = Math.min(currentC, 16);
+  let idx = 0;
+  
+  function highlightNext() {
+    if (idx >= maxR * maxC) {
+      animationRunning = false;
+      return;
+    }
+    
+    const r = Math.floor(idx / maxC);
+    const c = idx % maxC;
+    const cell = document.getElementById(`mat-${r}-${c}`);
+    
+    if (cell) {
+      cell.classList.add('active');
+      setTimeout(() => {
+        cell.classList.remove('active');
+        cell.classList.add('trace');
+      }, 300);
+    }
+    
+    idx++;
+    setTimeout(highlightNext, 100);
+  }
+  
+  // Clear previous traces
+  document.querySelectorAll('.matrix-cell').forEach(cell => {
+    cell.classList.remove('trace');
+  });
+  
+  highlightNext();
+}
+
+// Animate read operation
+function animateRead() {
+  if (animationRunning) return;
+  animationRunning = true;
+  
+  const maxR = Math.min(currentR, 16);
+  const maxC = Math.min(currentC, 16);
+  let col = 0, row = 0;
+  
+  function highlightNext() {
+    if (col >= maxC) {
+      animationRunning = false;
+      return;
+    }
+    
+    const cell = document.getElementById(`mat-${row}-${col}`);
+    
+    if (cell) {
+      cell.classList.add('active');
+      setTimeout(() => {
+        cell.classList.remove('active');
+        cell.classList.add('trace');
+      }, 300);
+    }
+    
+    row++;
+    if (row >= maxR) {
+      row = 0;
+      col++;
+    }
+    
+    setTimeout(highlightNext, 100);
+  }
+  
+  // Clear previous traces
+  document.querySelectorAll('.matrix-cell').forEach(cell => {
+    cell.classList.remove('trace');
+  });
+  
+  highlightNext();
+}
+
+// Show detailed mapping
+function showMapping() {
+  const input = Array.from({length: currentN}, (_, i) => i);
+  const output = performInterleaving(input, currentR, currentC);
+  
+  let html = '<span class="cl">// ─── Complete Position Mapping ───</span><br>';
+  html += `<span class="cl">// For ${currentR}×${currentC} matrix (${currentN} bits)</span><br><br>`;
+  
+  const maxShow = Math.min(currentN, 32);
+  for (let i = 0; i < maxShow; i++) {
+    const row = Math.floor(i / currentC);
+    const col = i % currentC;
+    const outPos = output.indexOf(i);
+    
+    html += `<span class="v-b">In[${i.toString().padStart(3, ' ')}]</span> → <span class="v-o">Out[${outPos.toString().padStart(3, ' ')}]</span>`;
+    html += `  <span class="cl">// [${row}][${col}]</span>`;
+    
+    if ((i + 1) % 4 === 0) html += '<br>';
+    else html += ' &nbsp; ';
+  }
+  
+  if (currentN > maxShow) {
+    html += `<br><br><span class="cl">// ... and ${currentN - maxShow} more mappings</span>`;
+  }
+  
+  document.getElementById('sim-permutation').innerHTML = html;
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  generateWorkedExample();
+  runInterleaving();
+  
+  // Scroll animations
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('vis');
+    });
+  }, { threshold: 0.08 });
+  
+  document.querySelectorAll('.stage').forEach(s => obs.observe(s));
+  
+  // Nav pill active state
+  const pills = document.querySelectorAll('.nav-pill');
+  const sections = document.querySelectorAll('.stage[id]');
+  const navObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        pills.forEach(p => p.classList.remove('active'));
+        const id = e.target.id;
+        const pill = document.querySelector(`.nav-pill[href="#${id}"]`);
+        if (pill) pill.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
+  
+  sections.forEach(s => navObs.observe(s));
+  
+  // Auto-update on parameter change
+  document.getElementById('num-rows').addEventListener('change', runInterleaving);
+  document.getElementById('num-cols').addEventListener('change', runInterleaving);
+});
+</script>
+</body>
+</html>

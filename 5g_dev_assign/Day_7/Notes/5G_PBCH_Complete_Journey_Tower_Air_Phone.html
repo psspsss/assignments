@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G PBCH — The Complete Journey (Tower → Air → Phone)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky-top: #0B0E1A;
+  --sky-mid: #0F1628;
+  --sky-low: #141E35;
+  --ground: #0A1118;
+  --tower-steel: #3A5068;
+  --tower-light: #5A7A98;
+  --tower-red: #FF4D5A;
+  --wave-blue: #3B9EFF;
+  --wave-cyan: #00D4AA;
+  --phone-body: #1A2A40;
+  --phone-screen: #0D1A2A;
+  --accent-orange: #FF8C42;
+  --accent-gold: #FFD166;
+  --accent-green: #06D6A0;
+  --accent-red: #EF476F;
+  --accent-purple: #9B72FF;
+  --text-w: #F0F4F8;
+  --text-s: #8AA0B8;
+  --text-d: #4A6478;
+  --card-bg: rgba(14,22,38,0.92);
+  --card-border: rgba(59,158,255,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 40%,var(--sky-low) 70%,var(--ground) 100%);
+  background-attachment:fixed;
+  font-family:'Nunito',sans-serif;
+  color:var(--text-w);
+  overflow-x:hidden;
+  min-height:100vh;
+}
+/* Stars */
+.stars{position:fixed;top:0;left:0;width:100%;height:60vh;pointer-events:none;z-index:0;overflow:hidden;}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:twinkle var(--dur) ease-in-out infinite var(--del);}
+@keyframes twinkle{0%,100%{opacity:0.2;}50%{opacity:1;}}
+
+.container{max-width:1100px;margin:0 auto;padding:20px 20px 80px;position:relative;z-index:1;}
+
+/* ===== HERO SCENE ===== */
+.hero-scene{
+  position:relative;
+  height:420px;
+  margin-bottom:30px;
+  overflow:visible;
+}
+
+/* Tower SVG */
+.tower-wrap{position:absolute;left:60px;bottom:0;width:180px;height:400px;animation:towerRise 1.2s ease-out both;}
+@keyframes towerRise{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* Animated Radio Waves from tower */
+.wave-emitter{position:absolute;left:148px;top:48px;}
+.wave-ring{
+  position:absolute;
+  border:2px solid var(--wave-blue);
+  border-radius:50%;
+  opacity:0;
+  animation:waveExpand 3s ease-out infinite;
+}
+.wave-ring:nth-child(1){width:30px;height:30px;top:-15px;left:-15px;animation-delay:0s;}
+.wave-ring:nth-child(2){width:30px;height:30px;top:-15px;left:-15px;animation-delay:0.7s;}
+.wave-ring:nth-child(3){width:30px;height:30px;top:-15px;left:-15px;animation-delay:1.4s;}
+.wave-ring:nth-child(4){width:30px;height:30px;top:-15px;left:-15px;animation-delay:2.1s;}
+@keyframes waveExpand{
+  0%{transform:scale(1);opacity:0.7;}
+  100%{transform:scale(18);opacity:0;}
+}
+
+/* Flying data packets */
+.packet-lane{position:absolute;left:200px;top:80px;width:600px;height:60px;}
+.flying-packet{
+  position:absolute;
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1px;
+  white-space:nowrap;
+  animation:flyPacket 4s linear infinite;
+  opacity:0;
+}
+.flying-packet.p1{background:rgba(255,140,66,0.25);color:var(--accent-orange);border:1px solid rgba(255,140,66,0.4);top:0;animation-delay:0s;}
+.flying-packet.p2{background:rgba(0,212,170,0.2);color:var(--accent-green);border:1px solid rgba(0,212,170,0.35);top:22px;animation-delay:1.2s;}
+.flying-packet.p3{background:rgba(155,114,255,0.2);color:var(--accent-purple);border:1px solid rgba(155,114,255,0.35);top:44px;animation-delay:2.4s;}
+@keyframes flyPacket{
+  0%{left:0;opacity:0;}
+  10%{opacity:1;}
+  85%{opacity:1;}
+  100%{left:100%;opacity:0;}
+}
+
+/* Phone */
+.phone-wrap{position:absolute;right:50px;bottom:20px;animation:phoneSlide 1s ease-out 0.5s both;}
+@keyframes phoneSlide{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* Title overlay */
+.hero-text{
+  position:absolute;
+  bottom:10px;left:50%;
+  transform:translateX(-50%);
+  text-align:center;
+  width:100%;
+  animation:fadeUp 0.8s ease-out 1s both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.hero-text h1{font-size:clamp(24px,4vw,40px);font-weight:900;line-height:1.2;text-shadow:0 4px 30px rgba(0,0,0,0.6);}
+.hero-text h1 .hl-tower{color:var(--accent-orange);}
+.hero-text h1 .hl-air{color:var(--wave-blue);}
+.hero-text h1 .hl-phone{color:var(--accent-green);}
+.hero-text p{font-size:15px;color:var(--text-s);margin-top:8px;}
+
+/* ===== STEP CARDS ===== */
+.step-section{margin:50px 0 30px;}
+.step-section .sec-label{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:18px;
+}
+.sec-label .side-tag{
+  padding:3px 12px;border-radius:20px;font-size:10px;
+}
+.side-tower{background:rgba(255,140,66,0.15);color:var(--accent-orange);border:1px solid rgba(255,140,66,0.3);}
+.side-air{background:rgba(59,158,255,0.15);color:var(--wave-blue);border:1px solid rgba(59,158,255,0.3);}
+.side-phone{background:rgba(6,214,160,0.15);color:var(--accent-green);border:1px solid rgba(6,214,160,0.3);}
+
+/* Step card */
+.step-card{
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  border-radius:20px;
+  padding:32px;
+  margin-bottom:24px;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(10px);
+  transition:border-color 0.3s, transform 0.2s;
+}
+.step-card:hover{border-color:rgba(59,158,255,0.35);transform:translateY(-2px);}
+.step-card::before{
+  content:'';position:absolute;top:-50px;right:-50px;
+  width:160px;height:160px;border-radius:50%;
+  opacity:0.04;pointer-events:none;
+}
+
+/* Step number bubble */
+.step-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:12px;
+  font-size:20px;font-weight:900;margin-bottom:14px;
+}
+.step-card.tower-step .step-num{background:rgba(255,140,66,0.15);color:var(--accent-orange);}
+.step-card.tower-step::before{background:var(--accent-orange);}
+.step-card.air-step .step-num{background:rgba(59,158,255,0.15);color:var(--wave-blue);}
+.step-card.air-step::before{background:var(--wave-blue);}
+.step-card.phone-step .step-num{background:rgba(6,214,160,0.15);color:var(--accent-green);}
+.step-card.phone-step::before{background:var(--accent-green);}
+
+.step-card h3{font-size:22px;font-weight:800;margin-bottom:6px;}
+.step-card .spec-ref{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-d);margin-bottom:14px;}
+
+/* Analogy box */
+.analogy{
+  background:rgba(255,209,102,0.06);
+  border:1px solid rgba(255,209,102,0.18);
+  border-radius:12px;
+  padding:16px 20px;
+  margin:16px 0;
+  font-size:14px;
+  line-height:1.7;
+  color:var(--text-s);
+}
+.analogy .emoji{font-size:20px;margin-right:8px;vertical-align:middle;}
+.analogy strong{color:var(--accent-gold);}
+
+/* Technical mini */
+.tech-mini{
+  background:rgba(59,158,255,0.04);
+  border:1px solid rgba(59,158,255,0.12);
+  border-radius:10px;
+  padding:14px 18px;
+  margin:12px 0;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  color:var(--wave-blue);
+  line-height:1.8;
+}
+.tech-mini .dim{color:var(--text-d);}
+.tech-mini .hl{color:var(--accent-gold);font-weight:700;}
+
+/* Visual strip inside cards */
+.visual-strip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:16px 0;
+  flex-wrap:wrap;
+}
+.vs-box{
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:700;
+  text-align:center;
+  line-height:1.3;
+}
+.vs-box small{font-weight:400;font-size:10px;display:block;opacity:0.7;}
+.vs-arr{font-size:16px;color:var(--text-d);}
+.vs-orange{background:rgba(255,140,66,0.12);border:1px solid rgba(255,140,66,0.3);color:var(--accent-orange);}
+.vs-red{background:rgba(239,71,111,0.12);border:1px solid rgba(239,71,111,0.3);color:var(--accent-red);}
+.vs-blue{background:rgba(59,158,255,0.12);border:1px solid rgba(59,158,255,0.3);color:var(--wave-blue);}
+.vs-purple{background:rgba(155,114,255,0.12);border:1px solid rgba(155,114,255,0.3);color:var(--accent-purple);}
+.vs-green{background:rgba(6,214,160,0.12);border:1px solid rgba(6,214,160,0.3);color:var(--accent-green);}
+.vs-gold{background:rgba(255,209,102,0.12);border:1px solid rgba(255,209,102,0.3);color:var(--accent-gold);}
+.vs-cyan{background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.3);color:var(--wave-cyan);}
+
+/* Animated bit stream */
+.bit-stream{
+  display:flex;gap:3px;margin:12px 0;flex-wrap:wrap;justify-content:center;
+}
+.bit{
+  width:24px;height:24px;border-radius:4px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  animation:bitAppear 0.3s ease-out both;
+}
+.bit:nth-child(odd){animation-delay:calc(var(--i,0)*0.04s);}
+.bit:nth-child(even){animation-delay:calc(var(--i,0)*0.04s + 0.02s);}
+@keyframes bitAppear{from{opacity:0;transform:scale(0.5);}to{opacity:1;transform:scale(1);}}
+.bit-o{background:rgba(255,140,66,0.18);color:var(--accent-orange);border:1px solid rgba(255,140,66,0.3);}
+.bit-b{background:rgba(59,158,255,0.18);color:var(--wave-blue);border:1px solid rgba(59,158,255,0.3);}
+.bit-g{background:rgba(6,214,160,0.18);color:var(--accent-green);border:1px solid rgba(6,214,160,0.3);}
+.bit-p{background:rgba(155,114,255,0.18);color:var(--accent-purple);border:1px solid rgba(155,114,255,0.3);}
+.bit-r{background:rgba(239,71,111,0.18);color:var(--accent-red);border:1px solid rgba(239,71,111,0.3);}
+.bit-y{background:rgba(255,209,102,0.18);color:var(--accent-gold);border:1px solid rgba(255,209,102,0.3);}
+
+/* Connector line between sections */
+.connector{
+  width:3px;height:50px;
+  background:linear-gradient(180deg,rgba(59,158,255,0.3),rgba(59,158,255,0.05));
+  margin:0 auto;
+  border-radius:2px;
+  position:relative;
+}
+.connector::after{
+  content:'';position:absolute;bottom:-4px;left:-3px;
+  width:9px;height:9px;border-radius:50%;
+  background:var(--wave-blue);
+  animation:connPulse 1.5s ease-in-out infinite;
+}
+@keyframes connPulse{0%,100%{opacity:0.4;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+
+/* Big analogy section */
+.big-analogy{
+  background:linear-gradient(135deg,rgba(255,209,102,0.05),rgba(0,212,170,0.05));
+  border:1px solid rgba(255,209,102,0.15);
+  border-radius:20px;
+  padding:36px;
+  margin:40px 0;
+  text-align:center;
+}
+.big-analogy h3{font-size:24px;font-weight:900;color:var(--accent-gold);margin-bottom:14px;}
+.big-analogy p{font-size:15px;color:var(--text-s);max-width:750px;margin:0 auto;line-height:1.8;}
+
+/* SSB Grid visual */
+.ssb-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  max-width:500px;
+  margin:16px auto;
+  background:rgba(0,0,0,0.3);
+  border-radius:10px;
+  padding:12px;
+}
+.ssb-cell{
+  padding:14px 6px;
+  border-radius:6px;
+  text-align:center;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.4;
+}
+.ssb-cell.pss{background:rgba(239,71,111,0.25);color:var(--accent-red);border:1px solid rgba(239,71,111,0.4);}
+.ssb-cell.pbch{background:rgba(59,158,255,0.2);color:var(--wave-blue);border:1px solid rgba(59,158,255,0.35);animation:pbchGlow 2s ease-in-out infinite;}
+.ssb-cell.sss{background:rgba(255,209,102,0.2);color:var(--accent-gold);border:1px solid rgba(255,209,102,0.35);}
+.ssb-cell.empty{background:rgba(255,255,255,0.02);color:var(--text-d);border:1px solid rgba(255,255,255,0.05);}
+@keyframes pbchGlow{0%,100%{box-shadow:inset 0 0 8px rgba(59,158,255,0.1);}50%{box-shadow:inset 0 0 16px rgba(59,158,255,0.3);}}
+
+/* Final summary */
+.final-summary{
+  background:var(--card-bg);
+  border:2px solid rgba(0,212,170,0.25);
+  border-radius:20px;
+  padding:36px;
+  margin-top:40px;
+}
+.final-summary h3{font-size:22px;font-weight:900;color:var(--accent-green);margin-bottom:16px;text-align:center;}
+.summary-flow{
+  display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:20px 0;
+}
+.sf-node{
+  padding:8px 14px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;line-height:1.3;
+}
+.sf-node small{font-weight:400;font-size:9px;display:block;opacity:0.7;}
+.sf-arr{color:var(--text-d);font-size:14px;}
+
+.footer{text-align:center;padding:40px 0 20px;border-top:1px solid rgba(59,158,255,0.1);margin-top:50px;}
+.footer p{font-size:12px;color:var(--text-d);}
+.footer a{color:var(--wave-cyan);text-decoration:none;}
+
+.desc-text{font-size:14px;color:var(--text-s);line-height:1.8;margin:8px 0;}
+.desc-text strong{color:var(--text-w);}
+
+@media(max-width:768px){
+  .hero-scene{height:340px;}
+  .tower-wrap{left:10px;width:120px;height:300px;}
+  .phone-wrap{right:10px;}
+  .phone-wrap svg{width:90px;}
+  .wave-emitter{left:100px;top:40px;}
+  .packet-lane{left:130px;width:calc(100% - 250px);}
+  .step-card{padding:22px;}
+  .overview-grid,.ssb-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- Stars background -->
+<div class="stars" id="stars"></div>
+
+<div class="container">
+
+<!-- ===== HERO SCENE: Tower → Air → Phone ===== -->
+<div class="hero-scene">
+  
+  <!-- CELL TOWER SVG -->
+  <div class="tower-wrap">
+    <svg viewBox="0 0 180 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Tower base / ground -->
+      <ellipse cx="90" cy="390" rx="70" ry="8" fill="#0A1620" opacity="0.6"/>
+      <!-- Tower legs -->
+      <path d="M70 385 L82 120 H98 L110 385 Z" fill="#1A2D42" stroke="#2A4A65" stroke-width="1.5"/>
+      <!-- Cross beams -->
+      <line x1="74" y1="200" x2="106" y2="230" stroke="#2A4A65" stroke-width="1.2"/>
+      <line x1="106" y1="200" x2="74" y2="230" stroke="#2A4A65" stroke-width="1.2"/>
+      <line x1="76" y1="260" x2="104" y2="290" stroke="#2A4A65" stroke-width="1.2"/>
+      <line x1="104" y1="260" x2="76" y2="290" stroke="#2A4A65" stroke-width="1.2"/>
+      <line x1="78" y1="320" x2="102" y2="350" stroke="#2A4A65" stroke-width="1.2"/>
+      <line x1="102" y1="320" x2="78" y2="350" stroke="#2A4A65" stroke-width="1.2"/>
+      <!-- Antenna mast -->
+      <rect x="87" y="30" width="6" height="92" rx="2" fill="#3A5A78"/>
+      <!-- Antenna panels -->
+      <rect x="68" y="90" width="16" height="35" rx="3" fill="#2A4A65" stroke="#4A7A9A" stroke-width="1"/>
+      <rect x="96" y="90" width="16" height="35" rx="3" fill="#2A4A65" stroke="#4A7A9A" stroke-width="1"/>
+      <rect x="78" y="80" width="24" height="12" rx="3" fill="#2A4A65" stroke="#4A7A9A" stroke-width="1"/>
+      <!-- Red blinking light -->
+      <circle cx="90" cy="30" r="5" fill="#FF4D5A">
+        <animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="90" cy="30" r="10" fill="#FF4D5A" opacity="0.15">
+        <animate attributeName="r" values="10;18;10" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Label -->
+      <text x="90" y="180" text-anchor="middle" fill="#FF8C42" font-family="Nunito" font-size="13" font-weight="800">gNB</text>
+      <text x="90" y="196" text-anchor="middle" fill="#5A7A98" font-family="Nunito" font-size="9" font-weight="600">5G Cell Tower</text>
+    </svg>
+    <!-- Radio waves -->
+    <div class="wave-emitter">
+      <div class="wave-ring"></div>
+      <div class="wave-ring"></div>
+      <div class="wave-ring"></div>
+      <div class="wave-ring"></div>
+    </div>
+  </div>
+
+  <!-- Flying data packets -->
+  <div class="packet-lane">
+    <div class="flying-packet p1">📦 MIB PAYLOAD</div>
+    <div class="flying-packet p2">🔒 SCRAMBLED + ENCODED</div>
+    <div class="flying-packet p3">📡 QPSK SYMBOLS ON AIR</div>
+  </div>
+
+  <!-- PHONE SVG -->
+  <div class="phone-wrap">
+    <svg width="120" height="220" viewBox="0 0 120 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Phone body -->
+      <rect x="10" y="10" width="100" height="200" rx="16" fill="#1A2A40" stroke="#2A4A65" stroke-width="2"/>
+      <!-- Screen -->
+      <rect x="18" y="30" width="84" height="160" rx="6" fill="#0D1A2A"/>
+      <!-- Screen content - signal bars -->
+      <rect x="30" y="60" width="6" height="20" rx="1" fill="#06D6A0" opacity="0.8">
+        <animate attributeName="height" values="20;30;20" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="60;50;60" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="40" y="55" width="6" height="25" rx="1" fill="#06D6A0" opacity="0.8">
+        <animate attributeName="height" values="25;35;25" dur="2s" repeatCount="indefinite" begin="0.2s"/>
+        <animate attributeName="y" values="55;45;55" dur="2s" repeatCount="indefinite" begin="0.2s"/>
+      </rect>
+      <rect x="50" y="50" width="6" height="30" rx="1" fill="#06D6A0" opacity="0.8">
+        <animate attributeName="height" values="30;40;30" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+        <animate attributeName="y" values="50;40;50" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+      </rect>
+      <rect x="60" y="45" width="6" height="35" rx="1" fill="#06D6A0" opacity="0.8">
+        <animate attributeName="height" values="35;45;35" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+        <animate attributeName="y" values="45;35;45" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+      </rect>
+      <rect x="70" y="40" width="6" height="40" rx="1" fill="#06D6A0" opacity="0.8">
+        <animate attributeName="height" values="40;50;40" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+        <animate attributeName="y" values="40;30;40" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+      </rect>
+      <!-- 5G text -->
+      <text x="60" y="110" text-anchor="middle" fill="#06D6A0" font-family="Nunito" font-size="18" font-weight="900">5G</text>
+      <text x="60" y="130" text-anchor="middle" fill="#4A7A9A" font-family="Nunito" font-size="8" font-weight="600">CONNECTED</text>
+      <!-- MIB decoded text -->
+      <text x="60" y="155" text-anchor="middle" fill="#FFD166" font-family="JetBrains Mono" font-size="7" font-weight="600">MIB DECODED ✓</text>
+      <text x="60" y="168" text-anchor="middle" fill="#3B9EFF" font-family="JetBrains Mono" font-size="6">SFN=42 SSB#3</text>
+      <text x="60" y="179" text-anchor="middle" fill="#3B9EFF" font-family="JetBrains Mono" font-size="6">PCI=276</text>
+      <!-- Notch -->
+      <rect x="40" y="12" width="40" height="12" rx="6" fill="#0D1A2A"/>
+      <!-- Camera dot -->
+      <circle cx="60" cy="18" r="3" fill="#1A2A40" stroke="#2A4A65" stroke-width="1"/>
+      <!-- Label -->
+      <text x="60" y="228" text-anchor="middle" fill="#06D6A0" font-family="Nunito" font-size="13" font-weight="800">UE</text>
+    </svg>
+  </div>
+
+  <div class="hero-text">
+    <h1>The <span class="hl-tower">Tower</span> Broadcasts → Through <span class="hl-air">Air</span> → Your <span class="hl-phone">Phone</span> Decodes</h1>
+    <p>The complete PBCH journey explained like you're telling a friend</p>
+  </div>
+</div>
+
+<!-- ===== BIG ANALOGY ===== -->
+<div class="big-analogy">
+  <h3>🏢 Think of PBCH Like a Building's Welcome Desk</h3>
+  <p>Imagine walking into a huge building (the 5G network). The very first thing you need is the <strong>welcome sign at the entrance</strong> — it tells you the building name, which floor to go to, and the current time. That's exactly what <strong>PBCH does for your phone</strong>. It's the first message a 5G tower broadcasts so every phone nearby can read it and know: "Who am I? What cell is this? What time is it? Where do I find more info?"</p>
+</div>
+
+<!-- ================================================================ -->
+<!-- TOWER SIDE: WHAT THE gNB DOES                                    -->
+<!-- ================================================================ -->
+<div class="step-section">
+  <div class="sec-label">
+    <span class="side-tag side-tower">📡 Tower Side</span>
+    <span style="color:var(--accent-orange);">What the gNB Does Before Broadcasting</span>
+  </div>
+</div>
+
+<!-- STEP 1: MIB Creation -->
+<div class="step-card tower-step">
+  <div class="step-num">1</div>
+  <h3>Write the Welcome Note — MIB Creation</h3>
+  <div class="spec-ref">3GPP TS 38.331 / TS 38.212 §7.1.1</div>
+  
+  <div class="analogy">
+    <span class="emoji">✉️</span> <strong>Analogy:</strong> Imagine the tower writes a tiny postcard (just 24 bits — smaller than a tweet!) with the most essential info: "My cell ID is 276, the current frame is #42, here's how to find my full instruction book (SIB1)."
+  </div>
+  
+  <p class="desc-text">The <strong>Master Information Block (MIB)</strong> is a 24-bit message containing just the bare essentials a phone needs to start connecting. Then 8 more bits are added for timing — making it <strong>32 bits total</strong>.</p>
+  
+  <div class="visual-strip">
+    <div class="vs-box vs-orange">SFN<small>6 bits</small></div>
+    <div class="vs-arr">+</div>
+    <div class="vs-box vs-orange">SCS<small>1 bit</small></div>
+    <div class="vs-arr">+</div>
+    <div class="vs-box vs-orange">k_SSB<small>4 bits</small></div>
+    <div class="vs-arr">+</div>
+    <div class="vs-box vs-orange">DMRS pos<small>1 bit</small></div>
+    <div class="vs-arr">+</div>
+    <div class="vs-box vs-orange">SIB1 config<small>8 bits</small></div>
+    <div class="vs-arr">+</div>
+    <div class="vs-box vs-orange">Others<small>4 bits</small></div>
+    <div class="vs-arr">=</div>
+    <div class="vs-box vs-gold">24-bit MIB<small>+ 8 timing</small></div>
+  </div>
+  
+  <div class="tech-mini">
+    <span class="dim">// Total payload:</span> A = <span class="hl">32 bits</span><br>
+    <span class="dim">// MIB (24) + SFN LSBs (4) + half-frame (1) + SSB/k_SSB bits (3)</span>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 2: Scrambling #1 -->
+<div class="step-card tower-step">
+  <div class="step-num">2</div>
+  <h3>Stamp a Secret Code — Payload Scrambling</h3>
+  <div class="spec-ref">3GPP TS 38.212 §7.1.1 — Scrambling #1</div>
+  
+  <div class="analogy">
+    <span class="emoji">🔐</span> <strong>Analogy:</strong> The tower has <strong>multiple loudspeakers</strong> (SSB beams) pointing in different directions. Each loudspeaker reads the SAME postcard but <strong>stamps a different invisible ink mark</strong> on it. When your phone reads it, the ink mark tells it "you heard this from loudspeaker #3" — even though the postcard itself doesn't say which loudspeaker it came from!
+  </div>
+  
+  <p class="desc-text">The 32-bit payload is <strong>XORed with a sequence</strong> that depends on the cell ID, SSB beam index, and timing. The phone doesn't know these yet — it will figure them out later by trying all possibilities. This is the <strong>"information-carrying" scrambling</strong>.</p>
+  
+  <div class="tech-mini">
+    <span class="dim">// Scrambling seed depends on:</span><br>
+    N_ID^cell + SSB index (v) + SFN bits + half-frame<br>
+    <span class="dim">// Output:</span> 32 scrambled payload bits
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 3: CRC -->
+<div class="step-card tower-step">
+  <div class="step-num">3</div>
+  <h3>Add an Error Checker — CRC Attachment</h3>
+  <div class="spec-ref">3GPP TS 38.212 §7.1.2</div>
+  
+  <div class="analogy">
+    <span class="emoji">✅</span> <strong>Analogy:</strong> The tower adds a <strong>checksum seal</strong> on the postcard — like a "scratch and verify" sticker. When the phone receives it, it can scratch the seal to check: "Did this message arrive correctly, or is it corrupted?" If the seal doesn't match → throw it away and try again.
+  </div>
+  
+  <p class="desc-text">A <strong>24-bit CRC</strong> (CRC24C polynomial) is appended to the 32-bit scrambled payload. The phone will use this CRC to verify correct decoding AND to confirm its hypothesis about the SSB index from Step 2.</p>
+  
+  <div class="visual-strip">
+    <div class="vs-box vs-orange">32-bit payload<small>(scrambled)</small></div>
+    <div class="vs-arr">+</div>
+    <div class="vs-box vs-red">24-bit CRC<small>CRC24C</small></div>
+    <div class="vs-arr">=</div>
+    <div class="vs-box vs-gold">56 bits total</div>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 4: Polar Encoding -->
+<div class="step-card tower-step">
+  <div class="step-num">4</div>
+  <h3>Add Armor — Polar Encoding</h3>
+  <div class="spec-ref">3GPP TS 38.212 §7.1.3 / §5.3.1</div>
+  
+  <div class="analogy">
+    <span class="emoji">🛡️</span> <strong>Analogy:</strong> The postcard is very fragile — just 56 bits traveling through air full of noise and interference. So the tower <strong>wraps it in bubble wrap</strong> — adding lots of redundant copies and protection bits. The 56-bit message gets expanded to <strong>512 bits</strong>! That's like writing the same message 9 times in different ways so even if some copies get damaged, the phone can still reconstruct the original.
+  </div>
+  
+  <p class="desc-text"><strong>Polar coding</strong> is the error correction method chosen by 3GPP for control channels. It transforms 56 information bits into 512 coded bits using a mathematical transformation (Kronecker product of the kernel matrix F).</p>
+  
+  <div class="visual-strip">
+    <div class="vs-box vs-gold">56 bits<small>payload+CRC</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-blue" style="min-width:160px;">POLAR ENCODER<small>G_N = F^(⊗9)</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-purple">512 coded bits<small>heavily protected!</small></div>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 5: Rate Matching -->
+<div class="step-card tower-step">
+  <div class="step-num">5</div>
+  <h3>Fill the Suitcase — Rate Matching</h3>
+  <div class="spec-ref">3GPP TS 38.212 §7.1.4</div>
+  
+  <div class="analogy">
+    <span class="emoji">🧳</span> <strong>Analogy:</strong> The PBCH has exactly <strong>432 seats</strong> on the airplane (resource elements), but each seat fits 2 bits (QPSK), so we need exactly <strong>864 bits</strong>. We currently have 512 bits — not enough! So the tower <strong>repeats some bits</strong> to fill all 864 slots (like photocopying some pages to fill a binder). This uses a circular buffer — bits go in a circle and we keep reading until we have 864.
+  </div>
+  
+  <div class="visual-strip">
+    <div class="vs-box vs-purple">512 bits</div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-blue">Sub-block<small>Interleave</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-blue">Circular<small>Buffer</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-blue">Repeat bits<small>to fill</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-gold">864 bits<small>exact fit!</small></div>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 6: Interleaving -->
+<div class="step-card tower-step">
+  <div class="step-num">6</div>
+  <h3>Shuffle the Deck — Interleaving</h3>
+  <div class="spec-ref">3GPP TS 38.212 §7.1.5</div>
+  
+  <div class="analogy">
+    <span class="emoji">🃏</span> <strong>Analogy:</strong> Imagine you wrote your message on a deck of 864 cards. If someone spills coffee on cards 100–200, you lose a big chunk. But if you <strong>shuffle the deck first</strong>, those same coffee-damaged cards now contain scattered bits from all over the message — the damage is spread out and much easier to recover from!
+  </div>
+  
+  <p class="desc-text"><strong>Block interleaving</strong> rearranges the bits by writing row-by-row into a matrix and reading column-by-column. This spreads adjacent bits apart in time, giving <strong>diversity against burst errors</strong>.</p>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 7: Scrambling #2 -->
+<div class="step-card tower-step">
+  <div class="step-num">7</div>
+  <h3>Paint Your Team's Colors — Physical Scrambling</h3>
+  <div class="spec-ref">3GPP TS 38.211 §7.3.3.1 — Scrambling #2</div>
+  
+  <div class="analogy">
+    <span class="emoji">🎨</span> <strong>Analogy:</strong> There are hundreds of cell towers nearby, all broadcasting PBCH at the same time. It's like a stadium where every team shouts at once! So each tower <strong>paints its message with a unique color</strong> (based on its Cell ID). Your phone knows the color of its tower (from PSS/SSS), so it can filter out all the other teams' noise. Without this, neighboring towers' PBCHs would clash and create interference.
+  </div>
+  
+  <p class="desc-text">All 864 bits are XORed with a <strong>Gold sequence</strong> initialized by N_ID^cell. The offset v·M_bit ensures different SSB beams within the same cell also have different scrambling patterns.</p>
+  
+  <div class="tech-mini">
+    b̃(i) = [ b(i) + c(i + v·<span class="hl">864</span>) ] mod 2<br>
+    <span class="dim">// c_init =</span> <span class="hl">N_ID^cell</span><br>
+    <span class="dim">// UE already knows N_ID^cell from PSS/SSS → direct descrambling, no guessing</span>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 8: QPSK Modulation -->
+<div class="step-card tower-step">
+  <div class="step-num">8</div>
+  <h3>Convert to Radio Language — QPSK Modulation</h3>
+  <div class="spec-ref">3GPP TS 38.211 §7.3.3.2 / §5.1.3</div>
+  
+  <div class="analogy">
+    <span class="emoji">📻</span> <strong>Analogy:</strong> Computers speak in 0s and 1s, but radio waves speak in <strong>waves with direction and strength</strong>. QPSK takes every <strong>pair of bits</strong> and converts them into a specific wave direction (like pointing a flashlight in 4 possible corners). 864 bits ÷ 2 = <strong>432 symbols</strong>, each pointing to one of four directions on the IQ constellation.
+  </div>
+  
+  <div class="visual-strip">
+    <div class="vs-box vs-gold">864 bits</div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-cyan" style="min-width:140px;">QPSK<small>2 bits → 1 symbol</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-green">432 symbols<small>complex I+jQ</small></div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- AIR INTERFACE: THE BROADCAST                                      -->
+<!-- ================================================================ -->
+<div class="step-section">
+  <div class="sec-label">
+    <span class="side-tag side-air">📡 Air Interface</span>
+    <span style="color:var(--wave-blue);">How It Travels Through the Air</span>
+  </div>
+</div>
+
+<div class="step-card air-step">
+  <div class="step-num">9</div>
+  <h3>Pack into the SSB Suitcase — Resource Mapping &amp; OFDM</h3>
+  <div class="spec-ref">3GPP TS 38.211 §7.4.3 / §7.4.3.1</div>
+  
+  <div class="analogy">
+    <span class="emoji">✈️</span> <strong>Analogy:</strong> Think of the SS/PBCH Block as a <strong>small airplane with 960 seats</strong> (240 subcarriers × 4 time symbols). Some seats are reserved for the pilot announcements (PSS, SSS), some for the navigation system (DMRS), and the remaining <strong>432 seats are for our PBCH passengers</strong> (the symbols from Step 8). Once everyone's seated, the plane takes off as radio waves!
+  </div>
+  
+  <p class="desc-text" style="margin-bottom:14px;">The 432 QPSK symbols are placed into specific <strong>Resource Elements (REs)</strong> within the SSB grid, carefully avoiding PSS, SSS, and DMRS positions. Then OFDM modulation (IFFT + cyclic prefix) converts everything into a time-domain radio signal that gets broadcast from the antenna.</p>
+  
+  <!-- SSB Grid Visual -->
+  <div style="text-align:center;margin:10px 0 6px;">
+    <span style="font-size:12px;color:var(--text-d);letter-spacing:1px;font-weight:700;">SS/PBCH BLOCK — 4 OFDM Symbols × 240 Subcarriers</span>
+  </div>
+  <div class="ssb-grid">
+    <div class="ssb-cell pss">PSS<br><small>127 SCs</small></div>
+    <div class="ssb-cell pbch">PBCH<br><small>+ DMRS</small></div>
+    <div class="ssb-cell sss">SSS<br><small>127 SCs</small></div>
+    <div class="ssb-cell pbch">PBCH<br><small>+ DMRS</small></div>
+    <div class="ssb-cell empty">Guard</div>
+    <div class="ssb-cell pbch">PBCH<br><small>Data</small></div>
+    <div class="ssb-cell empty">Guard</div>
+    <div class="ssb-cell pbch">PBCH<br><small>Data</small></div>
+  </div>
+  <div style="text-align:center;font-size:10px;color:var(--text-d);margin-bottom:8px;">Symbol 0 &nbsp;&nbsp;&nbsp; Symbol 1 &nbsp;&nbsp;&nbsp; Symbol 2 &nbsp;&nbsp;&nbsp; Symbol 3</div>
+  
+  <div class="tech-mini">
+    <span class="dim">// SSB structure:</span><br>
+    Symbol 0 → <span class="hl">PSS</span> (sync) &nbsp; | &nbsp; Symbol 1 → <span class="hl">PBCH</span> + DMRS<br>
+    Symbol 2 → <span class="hl">SSS</span> (sync) &nbsp; | &nbsp; Symbol 3 → <span class="hl">PBCH</span> + DMRS<br>
+    <span class="dim">// Then: IFFT → add CP → Digital-to-Analog → RF amplifier → Antenna → AIR! 📡</span>
+  </div>
+</div>
+
+<div class="step-card air-step">
+  <div class="step-num">⟿</div>
+  <h3>Beams Sweep Across — SSB Beam Sweeping</h3>
+  <div class="spec-ref">3GPP TS 38.213</div>
+  
+  <div class="analogy">
+    <span class="emoji">🔦</span> <strong>Analogy:</strong> The tower doesn't broadcast in all directions at once. It's like a <strong>lighthouse beam</strong> that rotates — it sends the SSB in one direction (Beam 0), then rotates and sends it in another direction (Beam 1), and so on. In FR1 below 3 GHz, there are <strong>4 beam positions</strong>. In mmWave, there can be up to <strong>64 beam positions</strong>! Each beam carries the same PBCH content but with a different scrambling stamp (from Step 2) so your phone can tell which beam direction it received.
+  </div>
+  
+  <p class="desc-text">The SSB is transmitted periodically (default every 20 ms) within a half-frame (5 ms) burst window. Multiple SSB beams are sent consecutively, each covering a different angular direction. The phone picks the strongest beam.</p>
+</div>
+
+<!-- ================================================================ -->
+<!-- PHONE SIDE: WHAT THE UE DOES                                      -->
+<!-- ================================================================ -->
+<div class="step-section">
+  <div class="sec-label">
+    <span class="side-tag side-phone">📱 Phone Side</span>
+    <span style="color:var(--accent-green);">What Your Phone Does to Decode PBCH</span>
+  </div>
+</div>
+
+<div class="step-card phone-step">
+  <div class="step-num">A</div>
+  <h3>Find the Tower's Heartbeat — PSS/SSS Detection</h3>
+  <div class="spec-ref">Before PBCH — TS 38.211 §7.4.2</div>
+  
+  <div class="analogy">
+    <span class="emoji">💓</span> <strong>Analogy:</strong> Before reading the welcome postcard, your phone first <strong>listens for the tower's heartbeat</strong>. The PSS is like a loud drum beat — "BOM!" — that tells the phone "I'm here, sync to me!" Then the SSS is a more specific rhythm that tells the phone the <strong>exact Cell ID (N_ID^cell)</strong>. Now the phone knows WHO is talking and is synchronized in time.
+  </div>
+  
+  <div class="visual-strip">
+    <div class="vs-box vs-red">Detect PSS<small>Timing sync</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-gold">Detect SSS<small>Cell ID found</small></div>
+    <div class="vs-arr">→</div>
+    <div class="vs-box vs-green">N_ID^cell known!<small>Ready for PBCH</small></div>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<div class="step-card phone-step">
+  <div class="step-num">B</div>
+  <h3>Reverse Everything — PBCH Decoding Chain</h3>
+  <div class="spec-ref">The complete reverse process</div>
+  
+  <div class="analogy">
+    <span class="emoji">🔄</span> <strong>Analogy:</strong> Now your phone does <strong>everything the tower did, but in reverse</strong> — like rewinding a movie. It peels off each layer of packaging, one by one, until it reaches the original postcard inside.
+  </div>
+  
+  <p class="desc-text" style="margin-bottom:14px;">Here's the complete reverse chain your phone performs:</p>
+  
+  <div class="visual-strip" style="flex-direction:column;gap:10px;align-items:stretch;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-green" style="min-width:200px;">① Extract PBCH REs<small>from SSB grid (432 symbols)</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">Phone knows where PBCH sits in the SSB — picks out the 432 QPSK symbols</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-green" style="min-width:200px;">② Channel Estimation<small>using PBCH-DMRS</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">DMRS (known reference signals) help the phone understand how the air channel distorted the signal</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-green" style="min-width:200px;">③ QPSK Demodulation<small>432 symbols → 864 bits</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">Convert each symbol back to 2 soft bits (with confidence levels) — reverse of Step 8</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-blue" style="min-width:200px;">④ Descramble #2<small>using N_ID^cell</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">Phone knows N_ID^cell from PSS/SSS → generates same Gold sequence → XOR to undo — reverse of Step 7</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-blue" style="min-width:200px;">⑤ De-interleave<small>unshuffle the bits</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">Reverse the shuffle pattern to put bits back in original order — reverse of Step 6</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-blue" style="min-width:200px;">⑥ De-rate-match<small>864 → 512 bits</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">Combine repeated bits (soft combining) to get back to mother code length — reverse of Step 5</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-purple" style="min-width:200px;">⑦ Polar Decode<small>SCL decoder → 56 bits</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">The heavy lifting! Successive Cancellation List (SCL) decoder strips the armor — reverse of Step 4</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-red" style="min-width:200px;">⑧ CRC Check<small>pass or fail?</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">Verify the 24-bit CRC — if it matches, the message is correct! — reverse of Step 3</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-orange" style="min-width:200px;">⑨ Descramble #1<small>try all v hypotheses!</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;">THE CLEVER PART: Try v=0,1,2,3… — whichever gives CRC pass reveals the SSB index! — reverse of Step 2</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="vs-box vs-gold" style="min-width:200px;border-width:2px;">⑩ MIB Extracted! 🎉<small>24 bits = all cell info</small></div>
+      <div class="vs-arr">→</div>
+      <span class="desc-text" style="margin:0;font-size:13px;color:var(--accent-gold);font-weight:700;">Phone now knows: SFN, SSB index, half-frame, SCS, SIB1 config — it can proceed to full connection!</span>
+    </div>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<div class="step-card phone-step">
+  <div class="step-num">C</div>
+  <h3>Now the Phone Knows Everything! — What MIB Unlocks</h3>
+  <div class="spec-ref">After successful PBCH decode</div>
+  
+  <div class="analogy">
+    <span class="emoji">🗝️</span> <strong>Analogy:</strong> The welcome postcard (MIB) is like a <strong>treasure map</strong>. It doesn't contain all the treasure — but it tells the phone exactly where to find <strong>SIB1</strong> (the full instruction manual), which then tells the phone how to access the full network. MIB is the key that unlocks everything.
+  </div>
+  
+  <p class="desc-text">After decoding PBCH, the phone knows:</p>
+  <div class="visual-strip" style="flex-wrap:wrap;justify-content:center;">
+    <div class="vs-box vs-green">System Frame #<small>SFN (10 bits)</small></div>
+    <div class="vs-box vs-green">SSB Beam Index<small>Which direction</small></div>
+    <div class="vs-box vs-green">Half-frame<small>0 or 1</small></div>
+    <div class="vs-box vs-green">Subcarrier Spacing<small>15 or 30 kHz</small></div>
+    <div class="vs-box vs-green">SIB1 Location<small>PDCCH config</small></div>
+    <div class="vs-box vs-green">DMRS Position<small>pos2 or pos3</small></div>
+  </div>
+  <p class="desc-text" style="text-align:center;margin-top:12px;color:var(--accent-green);font-weight:700;">→ Next stop: Decode SIB1 → RACH → Full 5G Connection! 🚀</p>
+</div>
+
+<!-- ===== FINAL SUMMARY ===== -->
+<div class="final-summary">
+  <h3>🎬 The Whole Movie in 30 Seconds</h3>
+  <p class="desc-text" style="text-align:center;margin-bottom:20px;">Here's the entire PBCH journey from the tower's brain to your phone's screen:</p>
+  
+  <div class="summary-flow">
+    <div class="sf-node vs-orange">MIB<small>24+8=32b</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-orange" style="border-width:2px;">Scramble₁<small>embed timing</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-red">+CRC<small>56b</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-purple">Polar<small>512b</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-blue">Rate Match<small>864b</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-blue">Interleave<small>shuffle</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-blue" style="border-width:2px;">Scramble₂<small>cell color</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-cyan">QPSK<small>432 sym</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-gold">SSB Map<small>432 REs</small></div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-green" style="font-size:14px;">📡 AIR</div>
+    <div class="sf-arr">→</div>
+    <div class="sf-node vs-green" style="font-size:14px;">📱 UE</div>
+  </div>
+  
+  <p class="desc-text" style="text-align:center;margin-top:18px;">
+    <strong style="color:var(--accent-orange);">Tower side:</strong> Write message → Stamp secret code → Seal → Armor → Fill → Shuffle → Paint colors → Convert to waves → Broadcast<br>
+    <strong style="color:var(--accent-green);">Phone side:</strong> Catch waves → Remove paint → Unshuffle → Unfill → Remove armor → Check seal → Crack secret code → Read message ✓
+  </p>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <p>5G NR PBCH — The Complete Journey &nbsp;|&nbsp; 3GPP TS 38.212 &amp; TS 38.211 &nbsp;|&nbsp; <a href="https://www.cafetele.com" target="_blank">CafeTele Telecom Training</a></p>
+</div>
+
+</div>
+
+<script>
+// Generate stars
+const starsEl=document.getElementById('stars');
+for(let i=0;i<80;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;--dur:${Math.random()*3+2}s;--del:${Math.random()*3}s;`;
+  starsEl.appendChild(s);
+}
+
+// Intersection Observer for scroll-triggered animations
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('.step-card,.big-analogy,.final-summary').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(30px)';
+  el.style.transition='opacity 0.6s ease-out, transform 0.6s ease-out';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>

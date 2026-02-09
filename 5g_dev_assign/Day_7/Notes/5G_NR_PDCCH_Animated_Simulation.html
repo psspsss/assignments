@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PDCCH — Animated Step-by-Step Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050810;--bg2:#0a0f1e;--bg3:#0e1528;--bg4:#131c35;
+  --bdr:#1a2545;--bdr2:#243362;
+  --txt:#dfe6f0;--dim:#7889ad;--muted:#4a5878;
+  --orange:#f59e0b;--blue:#3b82f6;--cyan:#06b6d4;
+  --purple:#a855f7;--green:#10b981;--red:#ef4444;
+  --pink:#ec4899;--teal:#14b8a6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;}
+::selection{background:var(--blue);color:#fff;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+
+/* ── HEADER ── */
+.hdr{text-align:center;padding:40px 20px 10px;position:relative;}
+.hdr::before{content:'';position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(59,130,246,0.07),transparent 70%);pointer-events:none;}
+.badge{display:inline-block;font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--cyan);background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);padding:5px 16px;border-radius:20px;margin-bottom:14px;}
+.hdr h1{font-size:clamp(1.4rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.5px;}
+.hdr h1 em{font-style:normal;background:linear-gradient(135deg,var(--orange),var(--blue),var(--purple),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:300% 300%;animation:gShift 5s ease infinite;}
+@keyframes gShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.hdr .sub{color:var(--dim);font-size:13px;margin-top:6px;}
+
+/* ── CONTROLS ── */
+.controls{display:flex;justify-content:center;align-items:center;gap:10px;padding:18px 20px;flex-wrap:wrap;}
+.btn{font-family:'Azeret Mono',monospace;font-size:11px;font-weight:600;letter-spacing:1px;padding:9px 22px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg3);color:var(--dim);cursor:pointer;transition:all .25s;text-transform:uppercase;}
+.btn:hover{background:var(--bg4);color:var(--txt);border-color:var(--bdr2);}
+.btn.primary{background:rgba(59,130,246,0.15);color:var(--blue);border-color:rgba(59,130,246,0.3);}
+.btn.primary:hover{background:rgba(59,130,246,0.25);box-shadow:0 0 20px rgba(59,130,246,0.15);}
+.btn.active{background:rgba(16,185,129,0.15);color:var(--green);border-color:rgba(16,185,129,0.3);}
+.speed-ctrl{display:flex;align-items:center;gap:6px;font-family:'Azeret Mono',monospace;font-size:11px;color:var(--muted);}
+.speed-ctrl input{width:80px;accent-color:var(--blue);}
+.step-indicator{font-family:'Azeret Mono',monospace;font-size:12px;color:var(--dim);padding:0 12px;}
+
+/* ── MAIN CANVAS ── */
+.canvas-wrap{max-width:1300px;margin:0 auto;padding:10px 20px 50px;position:relative;}
+
+/* ── STEP PANELS ── */
+.step-panel{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;margin-bottom:16px;overflow:hidden;opacity:0.3;transform:scale(0.98);transition:all .5s cubic-bezier(.4,0,.2,1);position:relative;}
+.step-panel.active{opacity:1;transform:scale(1);border-color:var(--bdr2);box-shadow:0 4px 40px rgba(0,0,0,0.3);}
+.step-panel.done{opacity:0.85;transform:scale(1);}
+.step-panel.done .sp-head{opacity:0.7;}
+
+.sp-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--bdr);transition:opacity .3s;}
+.sp-num{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Azeret Mono',monospace;font-size:13px;font-weight:700;flex-shrink:0;transition:all .4s;}
+.sp-title{font-size:15px;font-weight:700;letter-spacing:-0.2px;}
+.sp-sub{font-size:11.5px;color:var(--dim);font-family:'Azeret Mono',monospace;margin-top:2px;}
+.sp-status{margin-left:auto;font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:6px;transition:all .3s;}
+
+.sp-body{padding:20px;min-height:100px;position:relative;overflow:hidden;}
+
+/* ── Status colors ── */
+.status-waiting{color:var(--muted);background:rgba(255,255,255,0.03);}
+.status-active{color:var(--cyan);background:rgba(6,182,212,0.1);animation:statusPulse 1.5s ease infinite;}
+.status-done{color:var(--green);background:rgba(16,185,129,0.1);}
+@keyframes statusPulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* Step number colors */
+.n-orange{background:rgba(245,158,11,0.15);color:var(--orange);}
+.n-blue{background:rgba(59,130,246,0.15);color:var(--blue);}
+.n-cyan{background:rgba(6,182,212,0.15);color:var(--cyan);}
+.n-purple{background:rgba(168,85,247,0.15);color:var(--purple);}
+.n-green{background:rgba(16,185,129,0.15);color:var(--green);}
+.n-pink{background:rgba(236,72,153,0.15);color:var(--pink);}
+.n-teal{background:rgba(20,184,166,0.15);color:var(--teal);}
+.n-red{background:rgba(239,68,68,0.15);color:var(--red);}
+
+/* ── BIT STREAM ── */
+.bit-stream{display:flex;flex-wrap:wrap;gap:3px;font-family:'Azeret Mono',monospace;font-size:11px;line-height:1;}
+.bit{display:inline-flex;align-items:center;justify-content:center;width:20px;height:22px;border-radius:4px;font-weight:600;opacity:0;transform:scale(0);transition:all .15s ease;}
+.bit.show{opacity:1;transform:scale(1);}
+.bit.data{background:rgba(59,130,246,0.15);color:var(--blue);}
+.bit.crc{background:rgba(245,158,11,0.15);color:var(--orange);}
+.bit.rnti{background:rgba(239,68,68,0.15);color:var(--red);}
+.bit.frozen{background:rgba(255,255,255,0.04);color:var(--muted);}
+.bit.coded{background:rgba(168,85,247,0.12);color:var(--purple);}
+.bit.matched{background:rgba(6,182,212,0.12);color:var(--cyan);}
+.bit.qpsk{background:rgba(16,185,129,0.15);color:var(--green);}
+.bit.highlight{animation:bitGlow .6s ease;box-shadow:0 0 8px currentColor;}
+@keyframes bitGlow{0%{box-shadow:0 0 15px currentColor;}100%{box-shadow:0 0 3px currentColor;}}
+
+/* ── Labels inside steps ── */
+.row-label{font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.row-label::before{content:'';width:14px;height:2px;border-radius:1px;}
+.row-label.lb-orange{color:var(--orange);}  .row-label.lb-orange::before{background:var(--orange);}
+.row-label.lb-blue{color:var(--blue);}      .row-label.lb-blue::before{background:var(--blue);}
+.row-label.lb-cyan{color:var(--cyan);}      .row-label.lb-cyan::before{background:var(--cyan);}
+.row-label.lb-purple{color:var(--purple);}  .row-label.lb-purple::before{background:var(--purple);}
+.row-label.lb-green{color:var(--green);}    .row-label.lb-green::before{background:var(--green);}
+.row-label.lb-red{color:var(--red);}        .row-label.lb-red::before{background:var(--red);}
+.row-label.lb-pink{color:var(--pink);}      .row-label.lb-pink::before{background:var(--pink);}
+.row-label.lb-teal{color:var(--teal);}      .row-label.lb-teal::before{background:var(--teal);}
+
+.explain{font-size:13px;color:var(--dim);line-height:1.65;margin:10px 0;max-width:800px;}
+.explain strong{color:var(--txt);font-weight:600;}
+.explain code{font-family:'Azeret Mono',monospace;font-size:11.5px;background:rgba(59,130,246,0.1);color:var(--blue);padding:1px 6px;border-radius:3px;}
+
+.arrow-down{text-align:center;padding:6px 0;color:var(--muted);font-size:14px;animation:bounce 1.5s ease infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(4px);}}
+
+/* ── RESOURCE GRID ── */
+.res-grid-wrap{overflow-x:auto;padding:10px 0;}
+.res-grid{display:grid;gap:2px;font-family:'Azeret Mono',monospace;font-size:9px;}
+.rg-cell{width:100%;aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-weight:600;transition:all .3s;position:relative;min-width:18px;}
+.rg-cell.empty{background:rgba(255,255,255,0.02);color:transparent;}
+.rg-cell.dmrs{background:rgba(6,182,212,0.25);color:var(--cyan);border:1px solid rgba(6,182,212,0.3);}
+.rg-cell.pdcch-data{background:rgba(59,130,246,0.2);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.rg-cell.pdsch{background:rgba(34,197,94,0.08);color:rgba(34,197,94,0.3);}
+.rg-cell.cce-highlight{animation:cellPop .4s ease;box-shadow:0 0 8px rgba(59,130,246,0.4);}
+@keyframes cellPop{0%{transform:scale(1.3);opacity:0.5;}100%{transform:scale(1);opacity:1;}}
+
+/* axis labels */
+.grid-axis-x{display:flex;gap:2px;padding-left:36px;margin-bottom:2px;}
+.grid-axis-x span{flex:1;text-align:center;font-family:'Azeret Mono',monospace;font-size:8px;color:var(--muted);min-width:18px;}
+.grid-row{display:flex;align-items:center;gap:2px;}
+.grid-row-label{width:34px;text-align:right;font-family:'Azeret Mono',monospace;font-size:8px;color:var(--muted);flex-shrink:0;padding-right:4px;}
+
+/* ── QPSK Constellation ── */
+.constellation{position:relative;width:200px;height:200px;margin:10px auto;border:1px solid var(--bdr);border-radius:12px;background:var(--bg);}
+.const-axis-h,.const-axis-v{position:absolute;background:rgba(255,255,255,0.06);}
+.const-axis-h{width:100%;height:1px;top:50%;}
+.const-axis-v{height:100%;width:1px;left:50%;}
+.const-labels{font-family:'Azeret Mono',monospace;font-size:9px;color:var(--muted);}
+.const-labels span{position:absolute;}
+.const-point{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--green);transform:translate(-50%,-50%);opacity:0;transition:all .3s;box-shadow:0 0 10px rgba(16,185,129,0.5);}
+.const-point.show{opacity:1;}
+.const-point-label{position:absolute;font-family:'Azeret Mono',monospace;font-size:8px;color:var(--green);transform:translate(-50%,12px);white-space:nowrap;}
+
+/* ── UE Blind Decode ── */
+.bd-grid{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;}
+.bd-slot{width:60px;height:50px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;border:1px solid var(--bdr);background:var(--bg);transition:all .4s;gap:2px;}
+.bd-slot.checking{border-color:var(--orange);background:rgba(245,158,11,0.06);color:var(--orange);animation:bdPulse .5s ease;}
+.bd-slot.fail{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);color:var(--red);}
+.bd-slot.success{border-color:var(--green);background:rgba(16,185,129,0.12);color:var(--green);box-shadow:0 0 20px rgba(16,185,129,0.2);}
+.bd-slot .bd-al{font-size:8px;color:var(--muted);}
+.bd-slot .bd-icon{font-size:14px;}
+@keyframes bdPulse{0%{transform:scale(1.05);}100%{transform:scale(1);}}
+
+/* ── Footer ── */
+.footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--muted);border-top:1px solid var(--bdr);}
+.footer strong{color:var(--cyan);}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .sp-body{padding:14px;}
+  .controls{gap:6px;}
+  .btn{padding:7px 14px;font-size:10px;}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="badge">Live Animated Simulation</div>
+  <h1>How <em>5G NR PDCCH</em> Actually Works</h1>
+  <p class="sub">Watch every step — from DCI bits to UE decoding — animated in real time</p>
+</header>
+
+<div class="controls">
+  <button class="btn primary" id="btnPlay" onclick="startSimulation()">▶ Play Simulation</button>
+  <button class="btn" id="btnStep" onclick="nextStep()">⏭ Next Step</button>
+  <button class="btn" id="btnReset" onclick="resetSimulation()">↺ Reset</button>
+  <div class="speed-ctrl">
+    <span>Speed:</span>
+    <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+    <span id="speedLabel">3x</span>
+  </div>
+  <span class="step-indicator" id="stepIndicator">Step 0 / 9</span>
+</div>
+
+<div class="canvas-wrap">
+
+  <!-- ═══ STEP 1: DCI Payload ═══ -->
+  <div class="step-panel" id="step1">
+    <div class="sp-head">
+      <div class="sp-num n-orange">1</div>
+      <div><div class="sp-title">DCI Payload Generation</div><div class="sp-sub">gNB MAC Scheduler → DCI Format 1_1 (DL Grant)</div></div>
+      <span class="sp-status status-waiting" id="s1status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain">The gNB scheduler decides to send a <strong>DL Grant</strong> to UE#7 (C-RNTI = <code>0x4E21</code>). It creates a <strong>DCI Format 1_1</strong> with: RB allocation, MCS=15, HARQ process #3, TCI state, antenna ports. Total payload: <strong>42 bits</strong>.</div>
+      <div class="row-label lb-orange">DCI Payload — 42 bits</div>
+      <div class="bit-stream" id="dciPayload"></div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr1">▼</div>
+
+  <!-- ═══ STEP 2: CRC + RNTI ═══ -->
+  <div class="step-panel" id="step2">
+    <div class="sp-head">
+      <div class="sp-num n-red">2</div>
+      <div><div class="sp-title">CRC Attachment & RNTI Masking</div><div class="sp-sub">24-bit CRC-24C → XOR with C-RNTI</div></div>
+      <span class="sp-status status-waiting" id="s2status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain">A <strong>24-bit CRC</strong> (CRC-24C polynomial) is computed from the 42-bit DCI payload. Then the <strong>last 16 bits of the CRC are XORed with the target UE's C-RNTI</strong> (<code>0x4E21</code>). This is how the UE knows the DCI is addressed to it. Total: <strong>42 + 24 = 66 bits (K)</strong>.</div>
+      <div class="row-label lb-blue">DCI (42 bits)</div>
+      <div class="bit-stream" id="dciPart2"></div>
+      <div style="margin-top:8px;"></div>
+      <div class="row-label lb-orange">CRC-24C (24 bits)</div>
+      <div class="bit-stream" id="crcBits"></div>
+      <div style="margin-top:4px;"></div>
+      <div class="row-label lb-red">Last 16 CRC bits ⊕ RNTI 0x4E21</div>
+      <div class="bit-stream" id="rntiBits"></div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr2">▼</div>
+
+  <!-- ═══ STEP 3: Polar Encoding ═══ -->
+  <div class="step-panel" id="step3">
+    <div class="sp-head">
+      <div class="sp-num n-purple">3</div>
+      <div><div class="sp-title">Polar Encoding</div><div class="sp-sub">K=66 info bits → N=512 coded bits (Polar Code)</div></div>
+      <span class="sp-status status-waiting" id="s3status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain"><strong>Polar encoding:</strong> The 66 info bits (DCI+CRC) are placed into <strong>reliable channel positions</strong> determined by the reliability sequence. The remaining <strong>446 positions are frozen bits (0s)</strong>. The Kronecker product G_N = F^⊗n encodes all 512 bits. Output: <strong>N = 512 coded bits</strong>.</div>
+      <div class="row-label lb-blue">Info Bits (66) — placed in reliable positions</div>
+      <div class="bit-stream" id="infoBits3"></div>
+      <div style="margin-top:8px;"></div>
+      <div class="row-label lb-purple">Polar Encoded Output (showing first 80 of 512 bits)</div>
+      <div class="bit-stream" id="polarBits"></div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr3">▼</div>
+
+  <!-- ═══ STEP 4: Rate Matching ═══ -->
+  <div class="step-panel" id="step4">
+    <div class="sp-head">
+      <div class="sp-num n-cyan">4</div>
+      <div><div class="sp-title">Rate Matching</div><div class="sp-sub">N=512 polar bits → E=432 output bits (AL 4 × 108)</div></div>
+      <span class="sp-status status-waiting" id="s4status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain">The scheduler chose <strong>Aggregation Level 4</strong> for this UE (moderate SINR). Target coded bits: <code>E = AL × 108 = 4 × 108 = 432 bits</code>. Since E=432 &lt; N=512, <strong>shortening</strong> is applied — the last 80 coded bits are discarded from the circular buffer. Output: <strong>432 rate-matched bits</strong>.</div>
+      <div class="row-label lb-cyan">Rate-Matched Output (showing first 80 of 432 bits)</div>
+      <div class="bit-stream" id="rmBits"></div>
+      <div class="explain" style="margin-top:12px;">
+        <strong>Code Rate:</strong> <code>K/E = 66/432 ≈ 0.153</code> — very robust encoding.
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr4">▼</div>
+
+  <!-- ═══ STEP 5: Scrambling + QPSK ═══ -->
+  <div class="step-panel" id="step5">
+    <div class="sp-head">
+      <div class="sp-num n-green">5</div>
+      <div><div class="sp-title">Scrambling & QPSK Modulation</div><div class="sp-sub">432 bits → scrambled → 216 QPSK symbols</div></div>
+      <span class="sp-status status-waiting" id="s5status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain"><strong>Scrambling:</strong> 432 bits XORed with pseudo-random sequence (<code>c_init = RNTI × 2¹⁶ + n_ID</code>). Then <strong>QPSK modulation</strong> maps every 2 bits to one complex symbol: <code>00→(+1+j)/√2, 01→(+1−j)/√2, 10→(−1+j)/√2, 11→(−1−j)/√2</code>. Result: <strong>216 QPSK symbols</strong>.</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+        <div style="flex:1;min-width:250px;">
+          <div class="row-label lb-green">QPSK Symbols (first 40 of 216)</div>
+          <div class="bit-stream" id="qpskSymbols"></div>
+        </div>
+        <div style="flex-shrink:0;">
+          <div class="row-label lb-green">Constellation Diagram</div>
+          <div class="constellation" id="constellation">
+            <div class="const-axis-h"></div>
+            <div class="const-axis-v"></div>
+            <div class="const-labels">
+              <span style="top:8px;left:50%;transform:translateX(-50%);">+Q (Imag)</span>
+              <span style="bottom:8px;left:50%;transform:translateX(-50%);">−Q</span>
+              <span style="right:6px;top:50%;transform:translateY(-50%);">+I (Real)</span>
+              <span style="left:6px;top:50%;transform:translateY(-50%);">−I</span>
+            </div>
+            <div class="const-point" id="cp00" style="left:75%;top:25%;"><span class="const-point-label">00</span></div>
+            <div class="const-point" id="cp01" style="left:75%;top:75%;"><span class="const-point-label">01</span></div>
+            <div class="const-point" id="cp10" style="left:25%;top:25%;"><span class="const-point-label">10</span></div>
+            <div class="const-point" id="cp11" style="left:25%;top:75%;"><span class="const-point-label">11</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr5">▼</div>
+
+  <!-- ═══ STEP 6: CCE to REG Mapping ═══ -->
+  <div class="step-panel" id="step6">
+    <div class="sp-head">
+      <div class="sp-num n-blue">6</div>
+      <div><div class="sp-title">CCE-to-REG Mapping</div><div class="sp-sub">216 symbols → 4 CCEs → 24 REGs (Non-Interleaved)</div></div>
+      <span class="sp-status status-waiting" id="s6status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain"><strong>AL 4 = 4 CCEs</strong>, each CCE = 6 REGs. So <strong>24 REGs</strong> total. Using <strong>non-interleaved mapping</strong> (UE-specific, enables beamforming) — REGs are contiguous in frequency. Each REG has 12 REs: <strong>9 data + 3 DMRS</strong>. The 216 data symbols fill 4×54 = 216 data REs perfectly.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0;">
+        <div id="cce0" class="cce-vis"></div>
+        <div id="cce1" class="cce-vis"></div>
+        <div id="cce2" class="cce-vis"></div>
+        <div id="cce3" class="cce-vis"></div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr6">▼</div>
+
+  <!-- ═══ STEP 7: CORESET Placement ═══ -->
+  <div class="step-panel" id="step7">
+    <div class="sp-head">
+      <div class="sp-num n-teal">7</div>
+      <div><div class="sp-title">CORESET Resource Grid Placement</div><div class="sp-sub">24 REGs → CORESET (48 RBs × 2 symbols) + DMRS + Beamforming</div></div>
+      <span class="sp-status status-waiting" id="s7status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain">The 4 CCEs (24 REGs) are placed into the <strong>CORESET</strong> configured as: <strong>48 RBs × 2 OFDM symbols</strong> (symbols 0–1). Non-interleaved: CCEs occupy contiguous RBs starting from CCE index calculated by the hashing formula. DMRS is inserted at subcarrier positions k={1,5,9} per RB. <strong>TCI state</strong> determines the beam.</div>
+      <div class="row-label lb-teal">CORESET Resource Grid — 1 Slot (14 symbols × 24 RBs shown)</div>
+      <div class="res-grid-wrap">
+        <div class="grid-axis-x" id="gridAxisX"></div>
+        <div id="resGrid"></div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-family:'Azeret Mono',monospace;font-size:10px;">
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:2px;background:rgba(59,130,246,0.3);border:1px solid rgba(59,130,246,0.4);"></div><span style="color:var(--blue);">PDCCH Data</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:2px;background:rgba(6,182,212,0.35);border:1px solid rgba(6,182,212,0.4);"></div><span style="color:var(--cyan);">DMRS</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:2px;background:rgba(34,197,94,0.1);"></div><span style="color:var(--muted);">PDSCH / Unused</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:2px;background:rgba(255,255,255,0.03);"></div><span style="color:var(--muted);">Empty</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr7">▼</div>
+
+  <!-- ═══ STEP 8: Over the Air ═══ -->
+  <div class="step-panel" id="step8">
+    <div class="sp-head">
+      <div class="sp-num n-pink">8</div>
+      <div><div class="sp-title">Over-the-Air Transmission</div><div class="sp-sub">OFDM (IFFT + Cyclic Prefix) → Beamformed RF Signal → UE Antenna</div></div>
+      <span class="sp-status status-waiting" id="s8status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain">All symbols in the resource grid are converted via <strong>IFFT</strong> to time-domain, <strong>cyclic prefix</strong> is prepended, and the signal is <strong>beamformed</strong> using weights from the TCI state (QCL-TypeD with CSI-RS #3). The RF signal propagates through the wireless channel to UE#7.</div>
+      <div id="waveContainer" style="height:80px;position:relative;overflow:hidden;border-radius:10px;background:var(--bg);border:1px solid var(--bdr);margin:10px 0;">
+        <canvas id="waveCanvas" style="width:100%;height:100%;"></canvas>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 10px;">
+        <div style="font-family:'Azeret Mono',monospace;font-size:11px;color:var(--pink);">gNB 📡</div>
+        <div id="rfArrow" style="flex:1;height:2px;margin:0 16px;background:linear-gradient(90deg,var(--pink),transparent);position:relative;overflow:hidden;border-radius:1px;">
+          <div id="rfParticle" style="position:absolute;width:8px;height:8px;background:var(--pink);border-radius:50%;top:-3px;left:0;box-shadow:0 0 12px var(--pink);opacity:0;"></div>
+        </div>
+        <div style="font-family:'Azeret Mono',monospace;font-size:11px;color:var(--green);">📱 UE#7</div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down" id="arr8">▼</div>
+
+  <!-- ═══ STEP 9: UE Blind Decoding ═══ -->
+  <div class="step-panel" id="step9">
+    <div class="sp-head">
+      <div class="sp-num n-green">9</div>
+      <div><div class="sp-title">UE Blind Decoding & DCI Extraction</div><div class="sp-sub">Try candidates at each AL → Polar Decode → CRC ⊕ RNTI → DCI Found!</div></div>
+      <span class="sp-status status-waiting" id="s9status">Waiting</span>
+    </div>
+    <div class="sp-body">
+      <div class="explain">The UE doesn't know which CCEs carry its DCI. It must <strong>blind decode</strong> multiple candidates across all configured ALs. For each candidate: extract symbols → descramble → rate de-match → <strong>polar decode (CA-SCL, L=8)</strong> → compute CRC → <strong>XOR with C-RNTI</strong>. If CRC=0, DCI found!</div>
+      <div class="row-label lb-green">Blind Decode Attempts (UE-Specific Search Space)</div>
+      <div class="bd-grid" id="bdGrid"></div>
+      <div id="dciResult" style="display:none;margin-top:16px;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;">
+        <div class="row-label lb-green">✅ DCI Successfully Decoded!</div>
+        <div class="explain" style="margin:6px 0 0;">
+          <strong>Format:</strong> DCI 1_1 (DL Grant) &nbsp;|&nbsp; <strong>RNTI:</strong> C-RNTI 0x4E21 (UE#7)<br>
+          <strong>Freq Alloc:</strong> RB 12–35 &nbsp;|&nbsp; <strong>MCS:</strong> 15 (64QAM, R=0.59) &nbsp;|&nbsp; <strong>HARQ:</strong> Process #3<br>
+          <strong>Layers:</strong> 2 &nbsp;|&nbsp; <strong>TCI:</strong> State 3 (QCL with CSI-RS #3) &nbsp;|&nbsp; <strong>K1:</strong> 4 slots
+        </div>
+        <div class="explain" style="margin-top:8px;">
+          → UE#7 now knows exactly where & how to decode its <strong>PDSCH</strong> in this slot and when to send <strong>HARQ-ACK</strong> on PUCCH.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <p>5G NR PDCCH Step-by-Step Simulation — <strong>3GPP TS 38.211 / 38.212 / 38.213</strong></p>
+  <p style="margin-top:4px;">Created for <strong>CafeTele Telecom Training</strong> — www.cafetele.com</p>
+</footer>
+
+<script>
+// ══════ SIMULATION ENGINE ══════
+let currentStep = 0;
+let isPlaying = false;
+let playTimer = null;
+let speed = 3;
+
+const speedSlider = document.getElementById('speedSlider');
+const speedLabel = document.getElementById('speedLabel');
+speedSlider.addEventListener('input', () => {
+  speed = parseInt(speedSlider.value);
+  speedLabel.textContent = speed + 'x';
+});
+
+function getDelay(base) { return base / speed; }
+
+function updateStepIndicator() {
+  document.getElementById('stepIndicator').textContent = `Step ${currentStep} / 9`;
+}
+
+function setStatus(n, state) {
+  const el = document.getElementById('s' + n + 'status');
+  el.className = 'sp-status status-' + state;
+  el.textContent = state === 'waiting' ? 'Waiting' : state === 'active' ? 'Running...' : '✓ Done';
+}
+
+function setActive(n) {
+  const panel = document.getElementById('step' + n);
+  document.querySelectorAll('.step-panel.active').forEach(p => { p.classList.remove('active'); p.classList.add('done'); });
+  panel.classList.add('active');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Generate random bits ──
+function randBit() { return Math.random() > 0.5 ? '1' : '0'; }
+function randBits(n) { let s = []; for (let i = 0; i < n; i++) s.push(randBit()); return s; }
+
+// ── Animate bits appearing ──
+function animateBits(containerId, bits, cssClass, delayBase = 20) {
+  return new Promise(resolve => {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    bits.forEach((b, i) => {
+      const el = document.createElement('span');
+      el.className = 'bit ' + cssClass;
+      el.textContent = b;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.classList.add('show');
+        if (i < 5) el.classList.add('highlight');
+      }, i * getDelay(delayBase));
+    });
+    setTimeout(resolve, bits.length * getDelay(delayBase) + 200);
+  });
+}
+
+// ══════ STEP FUNCTIONS ══════
+
+async function runStep1() {
+  currentStep = 1;
+  updateStepIndicator();
+  setActive(1);
+  setStatus(1, 'active');
+  const dci = randBits(42);
+  await animateBits('dciPayload', dci, 'data', 30);
+  setStatus(1, 'done');
+  window._dci = dci;
+}
+
+async function runStep2() {
+  currentStep = 2;
+  updateStepIndicator();
+  setActive(2);
+  setStatus(2, 'active');
+  await animateBits('dciPart2', window._dci || randBits(42), 'data', 15);
+  const crc = randBits(24);
+  await animateBits('crcBits', crc, 'crc', 30);
+  const rntiMasked = randBits(16);
+  await animateBits('rntiBits', rntiMasked, 'rnti', 40);
+  setStatus(2, 'done');
+}
+
+async function runStep3() {
+  currentStep = 3;
+  updateStepIndicator();
+  setActive(3);
+  setStatus(3, 'active');
+  // Show info bits (mix of data and frozen)
+  const info = [];
+  for (let i = 0; i < 60; i++) info.push({ v: randBit(), c: Math.random() > 0.3 ? 'data' : 'frozen' });
+  const infoC = document.getElementById('infoBits3');
+  infoC.innerHTML = '';
+  for (let i = 0; i < info.length; i++) {
+    const el = document.createElement('span');
+    el.className = 'bit ' + info[i].c;
+    el.textContent = info[i].v;
+    infoC.appendChild(el);
+    await new Promise(r => setTimeout(r, getDelay(12)));
+    el.classList.add('show');
+  }
+  // Polar output
+  await new Promise(r => setTimeout(r, getDelay(300)));
+  await animateBits('polarBits', randBits(80), 'coded', 18);
+  setStatus(3, 'done');
+}
+
+async function runStep4() {
+  currentStep = 4;
+  updateStepIndicator();
+  setActive(4);
+  setStatus(4, 'active');
+  await animateBits('rmBits', randBits(80), 'matched', 18);
+  setStatus(4, 'done');
+}
+
+async function runStep5() {
+  currentStep = 5;
+  updateStepIndicator();
+  setActive(5);
+  setStatus(5, 'active');
+  // QPSK symbols
+  const pairs = ['00', '01', '10', '11'];
+  const syms = [];
+  for (let i = 0; i < 40; i++) syms.push(pairs[Math.floor(Math.random() * 4)]);
+  const container = document.getElementById('qpskSymbols');
+  container.innerHTML = '';
+  for (let i = 0; i < syms.length; i++) {
+    const el = document.createElement('span');
+    el.className = 'bit qpsk';
+    el.style.width = '28px';
+    el.textContent = syms[i];
+    container.appendChild(el);
+    await new Promise(r => setTimeout(r, getDelay(35)));
+    el.classList.add('show');
+    // Light up constellation point
+    const pts = ['cp00', 'cp01', 'cp10', 'cp11'];
+    pts.forEach(p => document.getElementById(p).classList.remove('show'));
+    document.getElementById('cp' + syms[i]).classList.add('show');
+  }
+  // Show all constellation points
+  await new Promise(r => setTimeout(r, getDelay(200)));
+  document.querySelectorAll('.const-point').forEach(p => p.classList.add('show'));
+  setStatus(5, 'done');
+}
+
+async function runStep6() {
+  currentStep = 6;
+  updateStepIndicator();
+  setActive(6);
+  setStatus(6, 'active');
+  // Build CCE visualizations
+  for (let c = 0; c < 4; c++) {
+    const cceEl = document.getElementById('cce' + c);
+    cceEl.innerHTML = `<div class="row-label lb-blue" style="margin-bottom:6px;">CCE ${c} — 6 REGs</div>`;
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(12,1fr);gap:2px;';
+    for (let r = 0; r < 6; r++) {
+      for (let sc = 0; sc < 12; sc++) {
+        const cell = document.createElement('div');
+        const isDmrs = (sc === 1 || sc === 5 || sc === 9);
+        cell.className = 'rg-cell ' + (isDmrs ? 'dmrs' : 'pdcch-data');
+        cell.textContent = isDmrs ? 'D' : '·';
+        cell.style.opacity = '0';
+        grid.appendChild(cell);
+      }
+    }
+    cceEl.appendChild(grid);
+    // Animate cells appearing
+    const cells = grid.querySelectorAll('.rg-cell');
+    for (let i = 0; i < cells.length; i++) {
+      await new Promise(r => setTimeout(r, getDelay(6)));
+      cells[i].style.opacity = '1';
+      cells[i].classList.add('cce-highlight');
+    }
+    await new Promise(r => setTimeout(r, getDelay(100)));
+  }
+  setStatus(6, 'done');
+}
+
+async function runStep7() {
+  currentStep = 7;
+  updateStepIndicator();
+  setActive(7);
+  setStatus(7, 'active');
+
+  const nRB = 24;
+  const nSym = 14;
+  const coresetSymbols = 2;
+  const cceStartRB = 6; // CCEs start at RB 6
+  const cceEndRB = cceStartRB + 4 * 6; // 4 CCEs × 6 RBs each = 24, but limited to nRB
+
+  // Build axis
+  const axisX = document.getElementById('gridAxisX');
+  axisX.innerHTML = '<span style="width:34px;flex-shrink:0;"></span>';
+  for (let s = 0; s < nSym; s++) {
+    const sp = document.createElement('span');
+    sp.textContent = s;
+    axisX.appendChild(sp);
+  }
+
+  const gridC = document.getElementById('resGrid');
+  gridC.innerHTML = '';
+
+  // Build grid row by row
+  for (let rb = nRB - 1; rb >= 0; rb--) {
+    const row = document.createElement('div');
+    row.className = 'grid-row';
+    const lbl = document.createElement('div');
+    lbl.className = 'grid-row-label';
+    lbl.textContent = 'RB ' + rb;
+    row.appendChild(lbl);
+
+    for (let sym = 0; sym < nSym; sym++) {
+      const cell = document.createElement('div');
+      cell.className = 'rg-cell';
+      cell.style.opacity = '0';
+      cell.style.minWidth = '18px';
+      cell.style.height = '18px';
+      cell.style.fontSize = '7px';
+
+      const inCoreset = sym < coresetSymbols;
+      const inCCE = inCoreset && rb >= cceStartRB && rb < Math.min(cceEndRB, nRB);
+
+      if (inCCE) {
+        cell.dataset.type = 'pdcch';
+        cell.dataset.rb = rb;
+        cell.dataset.sym = sym;
+      } else if (inCoreset && rb < nRB) {
+        cell.dataset.type = 'coreset-empty';
+      } else if (sym >= 2) {
+        cell.dataset.type = 'pdsch';
+      } else {
+        cell.dataset.type = 'empty';
+      }
+      row.appendChild(cell);
+    }
+    gridC.appendChild(row);
+  }
+
+  // Animate: first show PDSCH area dimly
+  const allCells = gridC.querySelectorAll('.rg-cell');
+  for (const cell of allCells) {
+    const t = cell.dataset.type;
+    if (t === 'pdsch') {
+      cell.className = 'rg-cell pdsch';
+      cell.textContent = '';
+    } else if (t === 'empty' || t === 'coreset-empty') {
+      cell.className = 'rg-cell empty';
+    }
+    cell.style.opacity = '0.3';
+  }
+  await new Promise(r => setTimeout(r, getDelay(400)));
+
+  // Animate PDCCH cells filling in
+  const pdcchCells = gridC.querySelectorAll('[data-type="pdcch"]');
+  for (let i = 0; i < pdcchCells.length; i++) {
+    const cell = pdcchCells[i];
+    const sym = parseInt(cell.dataset.sym);
+    const rb = parseInt(cell.dataset.rb);
+    // Simulate 12 subcarriers per RB - we show RB-level, mark DMRS RBs
+    cell.className = 'rg-cell pdcch-data cce-highlight';
+    cell.textContent = '▪';
+    cell.style.opacity = '1';
+    await new Promise(r => setTimeout(r, getDelay(25)));
+  }
+
+  // Make all cells visible
+  allCells.forEach(c => c.style.opacity = c.dataset.type === 'pdcch' ? '1' : '0.6');
+  setStatus(7, 'done');
+}
+
+async function runStep8() {
+  currentStep = 8;
+  updateStepIndicator();
+  setActive(8);
+  setStatus(8, 'active');
+
+  // Animate wave
+  const canvas = document.getElementById('waveCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(2, 2);
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+
+  let frame = 0;
+  const totalFrames = Math.floor(120 / speed);
+
+  function drawWave() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.beginPath();
+    ctx.strokeStyle = '#ec4899';
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#ec4899';
+    for (let x = 0; x < w; x++) {
+      const progress = frame / totalFrames;
+      const amplitude = Math.sin(progress * Math.PI) * 25;
+      const y = h / 2 + Math.sin((x / 30) + frame * 0.15) * amplitude
+                      + Math.sin((x / 15) + frame * 0.08) * amplitude * 0.4;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // RF particle
+    const particle = document.getElementById('rfParticle');
+    const progress = frame / totalFrames;
+    particle.style.opacity = progress > 0.05 && progress < 0.95 ? '1' : '0';
+    particle.style.left = (progress * 100) + '%';
+
+    frame++;
+    if (frame < totalFrames) {
+      requestAnimationFrame(drawWave);
+    } else {
+      particle.style.opacity = '0';
+    }
+  }
+  drawWave();
+
+  await new Promise(r => setTimeout(r, getDelay(3000)));
+  setStatus(8, 'done');
+}
+
+async function runStep9() {
+  currentStep = 9;
+  updateStepIndicator();
+  setActive(9);
+  setStatus(9, 'active');
+
+  const grid = document.getElementById('bdGrid');
+  grid.innerHTML = '';
+
+  // Simulate blind decode attempts
+  const attempts = [
+    { al: 'AL 1', idx: '#0', result: 'fail' },
+    { al: 'AL 1', idx: '#1', result: 'fail' },
+    { al: 'AL 1', idx: '#2', result: 'fail' },
+    { al: 'AL 2', idx: '#0', result: 'fail' },
+    { al: 'AL 2', idx: '#1', result: 'fail' },
+    { al: 'AL 2', idx: '#2', result: 'fail' },
+    { al: 'AL 4', idx: '#0', result: 'fail' },
+    { al: 'AL 4', idx: '#1', result: 'success' },
+  ];
+
+  attempts.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'bd-slot';
+    el.innerHTML = `<span class="bd-al">${a.al} ${a.idx}</span><span class="bd-icon">⏳</span><span class="bd-al">—</span>`;
+    el.dataset.result = a.result;
+    grid.appendChild(el);
+  });
+
+  const slots = grid.querySelectorAll('.bd-slot');
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i];
+    slot.classList.add('checking');
+    slot.querySelector('.bd-icon').textContent = '🔍';
+    slot.querySelector('.bd-al:last-child').textContent = 'CRC...';
+    await new Promise(r => setTimeout(r, getDelay(500)));
+
+    const res = slot.dataset.result;
+    slot.classList.remove('checking');
+    if (res === 'fail') {
+      slot.classList.add('fail');
+      slot.querySelector('.bd-icon').textContent = '✗';
+      slot.querySelector('.bd-al:last-child').textContent = 'CRC≠0';
+    } else {
+      slot.classList.add('success');
+      slot.querySelector('.bd-icon').textContent = '✓';
+      slot.querySelector('.bd-al:last-child').textContent = 'CRC=0!';
+      await new Promise(r => setTimeout(r, getDelay(400)));
+      // Show result
+      document.getElementById('dciResult').style.display = 'block';
+      document.getElementById('dciResult').classList.add('cce-highlight');
+      break;
+    }
+    await new Promise(r => setTimeout(r, getDelay(150)));
+  }
+
+  setStatus(9, 'done');
+  isPlaying = false;
+  document.getElementById('btnPlay').textContent = '▶ Play Again';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+// ══════ CONTROL FUNCTIONS ══════
+
+const stepFunctions = [null, runStep1, runStep2, runStep3, runStep4, runStep5, runStep6, runStep7, runStep8, runStep9];
+
+async function startSimulation() {
+  if (isPlaying) return;
+  if (currentStep >= 9) resetSimulation();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Playing...';
+  document.getElementById('btnPlay').classList.add('active');
+
+  for (let i = currentStep + 1; i <= 9; i++) {
+    if (!isPlaying) break;
+    await stepFunctions[i]();
+    if (i < 9) await new Promise(r => setTimeout(r, getDelay(600)));
+  }
+}
+
+async function nextStep() {
+  if (currentStep >= 9) return;
+  isPlaying = false;
+  await stepFunctions[currentStep + 1]();
+}
+
+function resetSimulation() {
+  isPlaying = false;
+  currentStep = 0;
+  updateStepIndicator();
+  document.getElementById('btnPlay').textContent = '▶ Play Simulation';
+  document.getElementById('btnPlay').classList.remove('active');
+
+  // Reset all panels
+  document.querySelectorAll('.step-panel').forEach(p => {
+    p.classList.remove('active', 'done');
+  });
+  for (let i = 1; i <= 9; i++) setStatus(i, 'waiting');
+
+  // Clear content
+  ['dciPayload', 'dciPart2', 'crcBits', 'rntiBits', 'infoBits3', 'polarBits', 'rmBits', 'qpskSymbols'].forEach(id => {
+    document.getElementById(id).innerHTML = '';
+  });
+  ['cce0', 'cce1', 'cce2', 'cce3'].forEach(id => document.getElementById(id).innerHTML = '');
+  document.getElementById('resGrid').innerHTML = '';
+  document.getElementById('gridAxisX').innerHTML = '';
+  document.getElementById('bdGrid').innerHTML = '';
+  document.getElementById('dciResult').style.display = 'none';
+  document.querySelectorAll('.const-point').forEach(p => p.classList.remove('show'));
+
+  const canvas = document.getElementById('waveCanvas');
+  const ctx = canvas.getContext('2d');
+  if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const particle = document.getElementById('rfParticle');
+  if (particle) particle.style.opacity = '0';
+}
+
+// Initialize
+updateStepIndicator();
+</script>
+
+</body>
+</html>

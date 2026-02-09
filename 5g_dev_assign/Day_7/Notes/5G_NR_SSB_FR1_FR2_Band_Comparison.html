@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR SSB Broadcasting — FR1 vs FR2 Frequency Band Comparison</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #050810;
+  --bg2: #0a0f1e;
+  --card: rgba(10,16,34,0.88);
+  --border: rgba(90,140,220,0.12);
+  --shine: rgba(120,180,255,0.05);
+  --t1: #e2ecff;
+  --t2: rgba(170,195,240,0.7);
+  --t3: rgba(120,150,200,0.4);
+  --fr1a: #22d3ee; /* 0-3GHz cyan */
+  --fr1aG: rgba(34,211,238,;
+  --fr1b: #a78bfa; /* 3-6GHz purple */
+  --fr1bG: rgba(167,139,250,;
+  --fr2: #fb923c;  /* >6GHz orange */
+  --fr2G: rgba(251,146,60,;
+  --pss: #38bdf8;
+  --sss: #c084fc;
+  --pbch: #34d399;
+  --dmrs: #fbbf24;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:'Manrope',sans-serif;overflow-x:hidden}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse at 15% 15%,rgba(34,211,238,0.03) 0%,transparent 50%),
+    radial-gradient(ellipse at 85% 30%,rgba(167,139,250,0.03) 0%,transparent 50%),
+    radial-gradient(ellipse at 50% 80%,rgba(251,146,60,0.02) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
+.page{max-width:1380px;margin:0 auto;padding:28px 22px 70px;position:relative;z-index:1}
+
+/* ═══ HEADER ═══ */
+.hero{text-align:center;padding:40px 0 32px}
+.hero h1{
+  font-weight:800;font-size:clamp(1.6rem,3.8vw,2.6rem);
+  background:linear-gradient(135deg,var(--fr1a),var(--fr1b),var(--fr2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-0.5px;
+}
+.hero .sub{font-weight:300;font-size:0.92rem;color:var(--t2);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px}
+.hero .spec{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--t3);margin-top:8px}
+.hero::after{
+  content:'';display:block;margin:24px auto 0;width:280px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(34,211,238,0.4),rgba(167,139,250,0.4),rgba(251,146,60,0.4),transparent);
+}
+
+/* ═══ BAND TABS ═══ */
+.tabs{
+  display:flex;justify-content:center;gap:8px;flex-wrap:wrap;
+  margin-bottom:32px;position:sticky;top:0;z-index:100;
+  padding:12px 0;background:rgba(5,8,16,0.92);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(90,140,220,0.05);
+}
+.tab{
+  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:500;
+  padding:8px 18px;border-radius:22px;cursor:pointer;transition:all 0.3s;
+  border:1px solid var(--border);background:var(--card);color:var(--t2);
+  white-space:nowrap;
+}
+.tab:hover{border-color:rgba(90,140,220,0.3)}
+.tab.active-a{background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.4);color:var(--fr1a)}
+.tab.active-b{background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.4);color:var(--fr1b)}
+.tab.active-c{background:rgba(251,146,60,0.12);border-color:rgba(251,146,60,0.4);color:var(--fr2)}
+
+/* ═══ GLASS SECTION ═══ */
+.sec{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:28px;margin-bottom:28px;position:relative;overflow:hidden;
+  backdrop-filter:blur(10px);
+}
+.sec::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--shine),transparent 60%);pointer-events:none}
+.sec::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(100,170,255,0.25),transparent);pointer-events:none}
+
+.sec-t{font-weight:700;font-size:1.1rem;color:#93c5fd;margin-bottom:4px;display:flex;align-items:center;gap:9px;position:relative;z-index:1}
+.sec-t .ic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:0.82rem;border:1px solid rgba(90,140,220,0.2);background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.1))}
+.sec-d{font-weight:300;font-size:0.82rem;color:var(--t3);margin-bottom:20px;position:relative;z-index:1}
+
+.cvs-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:rgba(5,8,16,0.5);border:1px solid rgba(90,140,220,0.06)}
+canvas{display:block;width:100%;height:auto}
+
+/* ═══ CONTROLS ═══ */
+.ctrls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:2}
+.btn{
+  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:500;
+  padding:7px 16px;border-radius:9px;cursor:pointer;transition:all 0.25s;
+  border:1px solid var(--border);background:rgba(16,24,50,0.7);color:var(--t2);white-space:nowrap;
+}
+.btn:hover{background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.3);color:var(--fr1a)}
+.btn.on{background:rgba(34,211,238,0.15);border-color:var(--fr1a);color:#e0f7fa;box-shadow:0 0 14px rgba(34,211,238,0.12)}
+
+.sbar{
+  margin-top:12px;padding:10px 16px;background:rgba(8,12,28,0.7);
+  border:1px solid rgba(90,140,220,0.06);border-radius:9px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--t2);
+  line-height:1.55;min-height:40px;position:relative;z-index:2;
+}
+.sbar .lb{font-weight:600}
+.lb-a{color:var(--fr1a)}.lb-b{color:var(--fr1b)}.lb-c{color:var(--fr2)}
+
+/* ═══ INFO CARDS ═══ */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:16px;position:relative;z-index:2}
+.card{background:rgba(12,18,38,0.6);border:1px solid rgba(90,140,220,0.07);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(100,170,255,0.2),transparent)}
+.card h4{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:600;color:rgba(147,197,253,0.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px}
+.card p{font-weight:300;font-size:0.8rem;line-height:1.6;color:rgba(195,210,240,0.75)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:#a5b4fc}
+.ha{color:var(--fr1a);font-weight:500}.hb{color:var(--fr1b);font-weight:500}.hc{color:var(--fr2);font-weight:500}
+
+/* ═══ LEGEND ═══ */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;position:relative;z-index:2}
+.lg-i{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--t2)}
+.lg-d{width:10px;height:10px;border-radius:3px}
+
+/* ═══ 3-COL COMPARISON ═══ */
+.comp3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.comp3 .col{background:rgba(10,16,34,0.5);border-radius:14px;padding:18px;border:1px solid var(--border)}
+.col-head{font-weight:700;font-size:1rem;margin-bottom:4px}
+.col-sub{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;margin-bottom:12px}
+.col-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(90,140,220,0.05);font-size:0.78rem}
+.col-row .k{color:var(--t3);font-weight:400}.col-row .v{font-weight:500}
+
+.footer{text-align:center;margin-top:44px;padding-top:16px;border-top:1px solid rgba(90,140,220,0.05)}
+.footer p{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:rgba(90,120,170,0.3)}
+
+@media(max-width:900px){.comp3{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.sec{padding:18px 14px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hero">
+  <h1>5G NR SSB Broadcasting Across Frequency Bands</h1>
+  <div class="sub">FR1 (0–3 GHz) &nbsp;·&nbsp; FR1 (3–6 GHz) &nbsp;·&nbsp; FR2 (>6 GHz mmWave)</div>
+  <div class="spec">3GPP TS 38.213 §4.1 — SSB Configuration per Frequency Range &nbsp;|&nbsp; TS 38.211 §7.4.3</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active-a" onclick="goSec('#sec1')">① Overview</button>
+  <button class="tab" onclick="goSec('#sec2')">② Beam Sweep Comparison</button>
+  <button class="tab" onclick="goSec('#sec3')">③ SSB Case Patterns</button>
+  <button class="tab" onclick="goSec('#sec4')">④ Slot Mapping</button>
+  <button class="tab" onclick="goSec('#sec5')">⑤ Coverage & Link Budget</button>
+  <button class="tab" onclick="goSec('#sec6')">⑥ Burst Timing</button>
+</div>
+
+<!-- ═══════════════════════════════ SEC 1: OVERVIEW ═══════════════════════════════ -->
+<div class="sec" id="sec1">
+  <div class="sec-t"><span class="ic">📊</span> Band Comparison Overview</div>
+  <div class="sec-d">Side-by-side comparison of SSB parameters across the three frequency ranges</div>
+  <div class="cvs-wrap"><canvas id="c1" width="1300" height="520"></canvas></div>
+  <div class="sbar" id="s1"><span class="lb lb-a">Overview</span> — Hover over each band column for details</div>
+</div>
+
+<!-- ═══════════════════════════════ SEC 2: BEAM SWEEP ═══════════════════════════════ -->
+<div class="sec" id="sec2">
+  <div class="sec-t"><span class="ic">📡</span> Beam Sweeping — L_max Comparison</div>
+  <div class="sec-d">See how beam count and width change: 4 wide beams (0-3 GHz) → 8 beams (3-6 GHz) → 64 narrow beams (mmWave)</div>
+  <div class="cvs-wrap"><canvas id="c2" width="1300" height="560"></canvas></div>
+  <div class="ctrls">
+    <button class="btn on" id="b2p" onclick="tog(2)">⏸ Pause</button>
+    <button class="btn" onclick="rst(2)">↺ Reset</button>
+  </div>
+  <div class="sbar" id="s2"><span class="lb lb-a">Beam Sweep</span> — Watch all three bands sweep simultaneously</div>
+  <div class="cards">
+    <div class="card"><h4>FR1 0–3 GHz · L_max = 4</h4><p><span class="ha">4 wide beams</span> provide broad sector coverage. Lower frequencies propagate well through walls and foliage. Typical beam width: <span class="mono">~30°</span>. Case A/C patterns, 15/30 kHz SCS.</p></div>
+    <div class="card"><h4>FR1 3–6 GHz · L_max = 8</h4><p><span class="hb">8 medium beams</span> balance coverage and gain. C-band (n77/n78) is the global 5G workhorse. Beam width: <span class="mono">~15°</span>. Case A/B/C patterns, 15/30 kHz SCS.</p></div>
+    <div class="card"><h4>FR2 >6 GHz · L_max = 64</h4><p><span class="hc">Up to 64 narrow beams</span> compensate for severe path loss at mmWave. Beam width: <span class="mono">~3–5°</span>. Requires exhaustive beam sweeping. Case D/E, 120/240 kHz SCS.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SEC 3: CASE PATTERNS ═══════════════════════════════ -->
+<div class="sec" id="sec3">
+  <div class="sec-t"><span class="ic">⊞</span> SSB Case Patterns (A / B / C / D / E)</div>
+  <div class="sec-d">Different SCS and symbol start positions for each frequency range — animated slot-by-slot view</div>
+  <div class="cvs-wrap"><canvas id="c3" width="1300" height="600"></canvas></div>
+  <div class="ctrls">
+    <button class="btn on" id="b3p" onclick="tog(3)">⏸ Pause</button>
+    <button class="btn" onclick="rst(3)">↺ Reset</button>
+  </div>
+  <div class="sbar" id="s3"><span class="lb lb-a">Case Patterns</span> — Symbol-level SSB placement within slots</div>
+  <div class="legend">
+    <div class="lg-i"><div class="lg-d" style="background:var(--pss)"></div>PSS</div>
+    <div class="lg-i"><div class="lg-d" style="background:var(--pbch)"></div>PBCH</div>
+    <div class="lg-i"><div class="lg-d" style="background:var(--sss)"></div>SSS</div>
+    <div class="lg-i"><div class="lg-d" style="background:var(--dmrs)"></div>DMRS</div>
+    <div class="lg-i"><div class="lg-d" style="background:rgba(100,116,139,0.3)"></div>Other</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SEC 4: SLOT MAPPING ═══════════════════════════════ -->
+<div class="sec" id="sec4">
+  <div class="sec-t"><span class="ic">▦</span> Half-Frame SSB Slot Mapping</div>
+  <div class="sec-d">How SSBs are placed within a 5ms half-frame for each band — showing actual slot and symbol indices</div>
+  <div class="cvs-wrap"><canvas id="c4" width="1300" height="540"></canvas></div>
+  <div class="ctrls">
+    <button class="btn on" id="b4p" onclick="tog(4)">⏸ Pause</button>
+    <button class="btn" onclick="rst(4)">↺ Reset</button>
+  </div>
+  <div class="sbar" id="s4"><span class="lb lb-a">Slot Mapping</span> — SSB positions within half-frame</div>
+</div>
+
+<!-- ═══════════════════════════════ SEC 5: COVERAGE ═══════════════════════════════ -->
+<div class="sec" id="sec5">
+  <div class="sec-t"><span class="ic">🌐</span> Coverage, Path Loss & Beam Gain Comparison</div>
+  <div class="sec-d">How frequency affects coverage radius, building penetration, and why higher bands need more beams</div>
+  <div class="cvs-wrap"><canvas id="c5" width="1300" height="520"></canvas></div>
+  <div class="ctrls">
+    <button class="btn on" id="b5p" onclick="tog(5)">⏸ Pause</button>
+    <button class="btn" onclick="rst(5)">↺ Reset</button>
+  </div>
+  <div class="sbar" id="s5"><span class="lb lb-a">Coverage</span> — Why mmWave needs 64 beams to match sub-6 coverage</div>
+  <div class="cards">
+    <div class="card"><h4>Path Loss Equation</h4><p><span class="mono">PL(dB) = 32.4 + 20·log₁₀(f) + 30·log₁₀(d)</span><br>Free-space: every doubling of frequency adds <span class="ha">+6 dB</span> path loss. mmWave at 28 GHz sees ~20 dB more loss than 2 GHz.</p></div>
+    <div class="card"><h4>Beam Gain Compensation</h4><p>Narrow beams at FR2 provide <span class="hc">+20–25 dBi</span> antenna gain vs <span class="ha">+8–12 dBi</span> at FR1. This partially compensates for higher path loss but requires precise beam alignment.</p></div>
+    <div class="card"><h4>Practical Impact</h4><p>FR1 0-3GHz: <span class="ha">~5–15 km</span> cell radius. FR1 3-6GHz: <span class="hb">~1–5 km</span>. FR2 mmWave: <span class="hc">~100–500 m</span>. Building penetration drops dramatically above 6 GHz.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SEC 6: BURST TIMING ═══════════════════════════════ -->
+<div class="sec" id="sec6">
+  <div class="sec-t"><span class="ic">⏱</span> SSB Burst Set Timing Across Bands</div>
+  <div class="sec-d">How SSB bursts fit within 5ms half-frame — FR2 needs the entire window for 64 beams</div>
+  <div class="cvs-wrap"><canvas id="c6" width="1300" height="500"></canvas></div>
+  <div class="ctrls">
+    <button class="btn on" id="b6p" onclick="tog(6)">⏸ Pause</button>
+    <button class="btn" onclick="rst(6)">↺ Reset</button>
+  </div>
+  <div class="sbar" id="s6"><span class="lb lb-a">Timing</span> — Burst density increases dramatically with frequency</div>
+</div>
+
+<!-- ═══════════════════════════════ PARAM TABLE ═══════════════════════════════ -->
+<div class="sec">
+  <div class="sec-t"><span class="ic">⬡</span> Complete Parameter Reference</div>
+  <div class="comp3">
+    <div class="col" style="border-color:rgba(34,211,238,0.2)">
+      <div class="col-head ha">FR1: 0 – 3 GHz</div>
+      <div class="col-sub" style="color:rgba(34,211,238,0.5)">Low-band / Sub-3 GHz</div>
+      <div class="col-row"><span class="k">L_max</span><span class="v ha">4</span></div>
+      <div class="col-row"><span class="k">SSB SCS</span><span class="v">15 kHz</span></div>
+      <div class="col-row"><span class="k">SSB BW</span><span class="v">3.6 MHz</span></div>
+      <div class="col-row"><span class="k">Cases</span><span class="v">A, C</span></div>
+      <div class="col-row"><span class="k">Case A starts</span><span class="v">{2,8}+14n</span></div>
+      <div class="col-row"><span class="k">Beam width</span><span class="v">~25–35°</span></div>
+      <div class="col-row"><span class="k">Coverage</span><span class="v">5–15 km</span></div>
+      <div class="col-row"><span class="k">Penetration</span><span class="v">Excellent</span></div>
+      <div class="col-row"><span class="k">Typical bands</span><span class="v">n1,n3,n5,n7,n8</span></div>
+      <div class="col-row"><span class="k">GSCN step</span><span class="v">1.2 MHz</span></div>
+    </div>
+    <div class="col" style="border-color:rgba(167,139,250,0.2)">
+      <div class="col-head hb">FR1: 3 – 6 GHz</div>
+      <div class="col-sub" style="color:rgba(167,139,250,0.5)">Mid-band / C-band</div>
+      <div class="col-row"><span class="k">L_max</span><span class="v hb">8</span></div>
+      <div class="col-row"><span class="k">SSB SCS</span><span class="v">15 or 30 kHz</span></div>
+      <div class="col-row"><span class="k">SSB BW</span><span class="v">3.6 / 7.2 MHz</span></div>
+      <div class="col-row"><span class="k">Cases</span><span class="v">A, B, C</span></div>
+      <div class="col-row"><span class="k">Case B starts</span><span class="v">{4,8,16,20}+28n</span></div>
+      <div class="col-row"><span class="k">Beam width</span><span class="v">~12–20°</span></div>
+      <div class="col-row"><span class="k">Coverage</span><span class="v">1–5 km</span></div>
+      <div class="col-row"><span class="k">Penetration</span><span class="v">Good</span></div>
+      <div class="col-row"><span class="k">Typical bands</span><span class="v">n77,n78,n79</span></div>
+      <div class="col-row"><span class="k">GSCN step</span><span class="v">1.44 MHz</span></div>
+    </div>
+    <div class="col" style="border-color:rgba(251,146,60,0.2)">
+      <div class="col-head hc">FR2: > 6 GHz</div>
+      <div class="col-sub" style="color:rgba(251,146,60,0.5)">mmWave / High-band</div>
+      <div class="col-row"><span class="k">L_max</span><span class="v hc">64</span></div>
+      <div class="col-row"><span class="k">SSB SCS</span><span class="v">120 or 240 kHz</span></div>
+      <div class="col-row"><span class="k">SSB BW</span><span class="v">28.8 / 57.6 MHz</span></div>
+      <div class="col-row"><span class="k">Cases</span><span class="v">D, E</span></div>
+      <div class="col-row"><span class="k">Case D starts</span><span class="v">{4,8,16,20}+28n</span></div>
+      <div class="col-row"><span class="k">Beam width</span><span class="v">~3–5°</span></div>
+      <div class="col-row"><span class="k">Coverage</span><span class="v">100–500 m</span></div>
+      <div class="col-row"><span class="k">Penetration</span><span class="v">Very Poor</span></div>
+      <div class="col-row"><span class="k">Typical bands</span><span class="v">n257,n258,n260,n261</span></div>
+      <div class="col-row"><span class="k">GSCN step</span><span class="v">17.28 MHz</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>5G NR SSB Frequency Band Comparison — 3GPP TS 38.211/213 Rel-17 &nbsp;|&nbsp; CafeTele Telecom Training &nbsp;|&nbsp; www.cafetele.com</p>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CORE UTILITIES
+// ═══════════════════════════════════════════
+const FR1A='#22d3ee',FR1AG='rgba(34,211,238,',FR1B='#a78bfa',FR1BG='rgba(167,139,250,',FR2C='#fb923c',FR2G='rgba(251,146,60,';
+const PSS='#38bdf8',SSS='#c084fc',PBCH='#34d399',DMRS='#fbbf24';
+const BG='#050810',TXT='#93c5fd',DIM='rgba(120,150,200,0.35)',WHT='rgba(224,240,255,0.92)';
+
+function initC(id){const c=document.getElementById(id),x=c.getContext('2d'),d=window.devicePixelRatio||1;const w=c.width,h=c.height;c.width=w*d;c.height=h*d;c.style.width=w+'px';c.style.height=h+'px';x.scale(d,d);return{x,w,h}}
+function rr(x,a,b,c,d,r,f,s){x.beginPath();x.moveTo(a+r,b);x.lineTo(a+c-r,b);x.quadraticCurveTo(a+c,b,a+c,b+r);x.lineTo(a+c,b+d-r);x.quadraticCurveTo(a+c,b+d,a+c-r,b+d);x.lineTo(a+r,b+d);x.quadraticCurveTo(a,b+d,a,b+d-r);x.lineTo(a,b+r);x.quadraticCurveTo(a,b,a+r,b);x.closePath();if(f){x.fillStyle=f;x.fill()}if(s){x.strokeStyle=s;x.lineWidth=1;x.stroke()}}
+function ease(t){return t<.5?2*t*t:-1+(4-2*t)*t}
+function eO(t){return 1-Math.pow(1-t,3)}
+function goSec(s){document.querySelector(s)?.scrollIntoView({behavior:'smooth',block:'start'})}
+
+// Animation state
+const P={},T={},S={};
+for(let i=1;i<=6;i++){P[i]=true;T[i]=0;S[i]=1}
+function tog(n){P[n]=!P[n];const b=document.getElementById('b'+n+'p');b.textContent=P[n]?'⏸ Pause':'▶ Play';b.classList.toggle('on',P[n])}
+function rst(n){T[n]=0}
+
+// ═══════════════════════════════════════════
+// CANVAS 1: OVERVIEW COMPARISON
+// ═══════════════════════════════════════════
+const C1=initC('c1');
+function draw1(t){
+  const{x,w,h}=C1;x.clearRect(0,0,w,h);
+  x.fillStyle=BG;x.fillRect(0,0,w,h);
+  
+  const bands=[
+    {name:'FR1: 0–3 GHz',sub:'Low Band',color:FR1A,cg:FR1AG,lmax:4,scs:'15 kHz',bw:'3.6 MHz',cases:'A, C',beamW:'25–35°',range:'5–15 km',pen:'████████',penL:'Excellent',bands:'n1,n3,n5,n7,n8,n20,n28'},
+    {name:'FR1: 3–6 GHz',sub:'C-Band / Mid',color:FR1B,cg:FR1BG,lmax:8,scs:'15/30 kHz',bw:'3.6/7.2 MHz',cases:'A, B, C',beamW:'12–20°',range:'1–5 km',pen:'██████',penL:'Good',bands:'n77,n78,n79'},
+    {name:'FR2: >6 GHz',sub:'mmWave',color:FR2C,cg:FR2G,lmax:64,scs:'120/240 kHz',bw:'28.8/57.6 MHz',cases:'D, E',beamW:'3–5°',range:'100–500 m',pen:'██',penL:'Very Poor',bands:'n257,n258,n260,n261'}
+  ];
+  
+  const colW=(w-100)/3,startX=50;
+  const anim=ease(Math.min(t/2000,1));
+  
+  bands.forEach((b,i)=>{
+    const cx=startX+i*colW;
+    const delay=i*0.15;
+    const a=eO(Math.max(0,Math.min(1,(anim-delay)/0.5)));
+    if(a<=0)return;
+    x.save();x.globalAlpha=a;
+    
+    // Column bg
+    rr(x,cx+6,20,colW-12,h-40,14,b.cg+'0.05)',b.cg+'0.15)');
+    // Shine
+    const g=x.createLinearGradient(cx,20,cx,100);
+    g.addColorStop(0,b.cg+'0.1)');g.addColorStop(1,b.cg+'0)');
+    rr(x,cx+6,20,colW-12,80,14,g,null);
+    
+    // Header
+    x.font='700 16px Manrope';x.textAlign='center';x.fillStyle=b.color;
+    x.fillText(b.name,cx+colW/2,52);
+    x.font='300 11px "IBM Plex Mono"';x.fillStyle=b.cg+'0.5)';
+    x.fillText(b.sub,cx+colW/2,70);
+    
+    // L_max big number
+    x.font='800 52px Manrope';x.fillStyle=b.color;
+    x.fillText('L='+b.lmax,cx+colW/2,135);
+    x.font='300 11px Manrope';x.fillStyle=b.cg+'0.6)';
+    x.fillText('Max SSB Beams',cx+colW/2,155);
+    
+    // Beam visualization (mini)
+    const bCx=cx+colW/2,bCy=210,bR=60;
+    const span=Math.PI*0.8;
+    const startA=-Math.PI/2-span/2;
+    for(let j=0;j<b.lmax&&j<16;j++){
+      const step=b.lmax>16?16:b.lmax;
+      const a1=startA+j*(span/step);
+      const a2=startA+(j+1)*(span/step);
+      x.beginPath();x.moveTo(bCx,bCy);
+      x.arc(bCx,bCy,bR,a1,a2);x.closePath();
+      const pulse=Math.sin(t/500+j*0.5)*0.1+0.15;
+      x.fillStyle=b.cg+pulse+')';x.fill();
+      x.strokeStyle=b.cg+'0.3)';x.lineWidth=0.5;x.stroke();
+    }
+    if(b.lmax>16){
+      x.font='400 9px "IBM Plex Mono"';x.fillStyle=b.cg+'0.5)';
+      x.fillText('(showing 16 of '+b.lmax+')',bCx,bCy+bR+14);
+    }
+    
+    // Parameters list
+    const params=[
+      ['SCS',b.scs],['SSB BW',b.bw],['Cases',b.cases],
+      ['Beam Width',b.beamW],['Cell Range',b.range],
+      ['Penetration',b.penL],['NR Bands',b.bands]
+    ];
+    let py=275;
+    params.forEach(([k,v])=>{
+      x.font='400 10px "IBM Plex Mono"';x.textAlign='left';
+      x.fillStyle=DIM;x.fillText(k,cx+20,py);
+      x.textAlign='right';x.fillStyle=WHT;x.font='500 10px "IBM Plex Mono"';
+      x.fillText(v,cx+colW-20,py);
+      // Separator
+      x.fillStyle='rgba(90,140,220,0.05)';x.fillRect(cx+20,py+5,colW-40,1);
+      py+=30;
+    });
+    
+    x.globalAlpha=1;x.restore();
+  });
+}
+
+// ═══════════════════════════════════════════
+// CANVAS 2: BEAM SWEEP COMPARISON
+// ═══════════════════════════════════════════
+const C2=initC('c2');
+function draw2(t){
+  const{x,w,h}=C2;x.clearRect(0,0,w,h);
+  x.fillStyle=BG;x.fillRect(0,0,w,h);
+  
+  const configs=[
+    {name:'FR1: 0–3 GHz',L:4,color:FR1A,cg:FR1AG,beamW:35,radius:200},
+    {name:'FR1: 3–6 GHz',L:8,color:FR1B,cg:FR1BG,beamW:18,radius:180},
+    {name:'FR2: mmWave',L:64,color:FR2C,cg:FR2G,beamW:4,radius:160}
+  ];
+  
+  const colW=w/3;
+  
+  configs.forEach((cfg,ci)=>{
+    const cx=ci*colW+colW/2;
+    const cy=280;
+    const sweepDur=cfg.L*600;
+    const phase=(t%sweepDur)/sweepDur;
+    const activeBeam=Math.floor(phase*cfg.L);
+    const beamPhase=(phase*cfg.L)%1;
+    
+    // Section divider
+    if(ci>0){
+      x.beginPath();x.moveTo(ci*colW,30);x.lineTo(ci*colW,h-30);
+      x.strokeStyle='rgba(90,140,220,0.06)';x.lineWidth=1;x.stroke();
+    }
+    
+    // Title
+    x.font='700 14px Manrope';x.textAlign='center';x.fillStyle=cfg.color;
+    x.fillText(cfg.name,cx,30);
+    x.font='500 11px "IBM Plex Mono"';x.fillStyle=cfg.cg+'0.6)';
+    x.fillText('L_max = '+cfg.L+' beams',cx,48);
+    
+    // gNB
+    rr(x,cx-16,cy-50,32,100,5,'rgba(20,35,70,0.6)',cfg.cg+'0.3)');
+    rr(x,cx-8,cy-58,16,18,3,cfg.cg+'0.3)',cfg.cg+'0.5)');
+    
+    // Beams
+    const totalSpan=Math.PI*0.85;
+    const startAngle=-Math.PI/2-totalSpan/2;
+    const drawL=Math.min(cfg.L,32);
+    const step=cfg.L/drawL;
+    
+    for(let b=0;b<drawL;b++){
+      const realB=Math.floor(b*step);
+      const a1=startAngle+b*(totalSpan/drawL);
+      const a2=startAngle+(b+1)*(totalSpan/drawL);
+      const isActive=realB===activeBeam||(cfg.L>32&&Math.abs(realB-activeBeam)<(cfg.L/drawL));
+      
+      x.beginPath();x.moveTo(cx,cy);
+      x.arc(cx,cy,cfg.radius,a1,a2);x.closePath();
+      
+      const grad=x.createRadialGradient(cx,cy,20,cx,cy,cfg.radius);
+      grad.addColorStop(0,cfg.cg+(isActive?'0.5)':'0.08)'));
+      grad.addColorStop(0.6,cfg.cg+(isActive?'0.2)':'0.03)'));
+      grad.addColorStop(1,cfg.cg+'0)');
+      x.fillStyle=grad;x.fill();
+      
+      if(isActive){
+        for(let r=0;r<2;r++){
+          const rp=(beamPhase+r*0.35)%1;
+          const radius=30+rp*cfg.radius*0.9;
+          x.beginPath();x.arc(cx,cy,radius,a1+0.01,a2-0.01);
+          x.strokeStyle=cfg.cg+(1-rp)*0.4+')';x.lineWidth=1.5;x.stroke();
+        }
+      }
+    }
+    
+    // Active beam label
+    x.font='600 12px "IBM Plex Mono"';x.fillStyle=cfg.color;x.textAlign='center';
+    x.fillText('SSB #'+activeBeam,cx,cy+cfg.radius+30);
+    
+    // Progress bar
+    const barY=cy+cfg.radius+42;
+    rr(x,cx-80,barY,160,8,4,'rgba(20,30,50,0.5)',cfg.cg+'0.15)');
+    rr(x,cx-80,barY,160*phase,8,4,cfg.cg+'0.4)',null);
+    
+    // Stats
+    x.font='300 9px "IBM Plex Mono"';x.fillStyle=cfg.cg+'0.5)';
+    x.fillText(`Beam ${activeBeam+1}/${cfg.L} | Width: ~${cfg.beamW}°`,cx,barY+22);
+    x.fillText(`Sweep: ${(phase*100).toFixed(0)}% complete`,cx,barY+36);
+  });
+  
+  document.getElementById('s2').innerHTML=
+    `<span class="lb lb-a">FR1 0-3:</span> Beam ${Math.floor((t%(4*600))/(4*600)*4)}/4 &nbsp;|&nbsp; `+
+    `<span class="lb lb-b">FR1 3-6:</span> Beam ${Math.floor((t%(8*600))/(8*600)*8)}/8 &nbsp;|&nbsp; `+
+    `<span class="lb lb-c">FR2 mmW:</span> Beam ${Math.floor((t%(64*600))/(64*600)*64)}/64 — More beams = longer sweep = higher overhead but necessary for mmWave link budget`;
+}
+
+// ═══════════════════════════════════════════
+// CANVAS 3: CASE PATTERNS
+// ═══════════════════════════════════════════
+const C3=initC('c3');
+const CASES=[
+  {name:'Case A',scs:'15 kHz',band:'FR1 ≤3 GHz',color:FR1A,cg:FR1AG,starts:[2,8],period:14,slots:10,symPerSlot:14,lmax:4},
+  {name:'Case B',scs:'30 kHz',band:'FR1 3–6 GHz',color:FR1B,cg:FR1BG,starts:[4,8,16,20],period:28,slots:20,symPerSlot:14,lmax:8},
+  {name:'Case C',scs:'30 kHz',band:'FR1 ≤3 GHz',color:FR1A,cg:FR1AG,starts:[2,8],period:14,slots:20,symPerSlot:14,lmax:4},
+  {name:'Case D',scs:'120 kHz',band:'FR2 mmWave',color:FR2C,cg:FR2G,starts:[4,8,16,20],period:28,slots:80,symPerSlot:14,lmax:64},
+  {name:'Case E',scs:'240 kHz',band:'FR2 mmWave',color:FR2C,cg:FR2G,starts:[8,12,16,20,32,36,40,44],period:56,slots:160,symPerSlot:14,lmax:64},
+];
+
+function draw3(t){
+  const{x,w,h}=C3;x.clearRect(0,0,w,h);
+  x.fillStyle=BG;x.fillRect(0,0,w,h);
+  
+  const rowH=105;
+  const ox=90,oy=25;
+  const availW=w-ox-40;
+  const scanPhase=(t%8000)/8000;
+  
+  // Show 3 key cases: A, B, D
+  const show=[CASES[0],CASES[1],CASES[3]];
+  
+  show.forEach((cs,ri)=>{
+    const ry=oy+ri*(rowH+55);
+    
+    // Row header
+    x.font='700 13px Manrope';x.textAlign='left';x.fillStyle=cs.color;
+    x.fillText(cs.name,10,ry+18);
+    x.font='400 10px "IBM Plex Mono"';x.fillStyle=cs.cg+'0.5)';
+    x.fillText(`SCS: ${cs.scs} | ${cs.band} | L_max=${cs.lmax}`,10,ry+34);
+    x.font='300 9px "IBM Plex Mono"';
+    x.fillText(`Starts: {${cs.starts.join(',')}} + ${cs.period}n`,10,ry+48);
+    
+    // Draw symbols in 2 slots (or up to period symbols)
+    const showSyms=Math.min(cs.period*2,56);
+    const symW=Math.min(availW/showSyms,22);
+    const totalDrawW=showSyms*symW;
+    
+    // Background
+    rr(x,ox,ry,totalDrawW,rowH,6,'rgba(10,16,34,0.5)',cs.cg+'0.08)');
+    
+    // Slot dividers
+    for(let s=0;s<=Math.ceil(showSyms/cs.symPerSlot);s++){
+      const sx=ox+s*cs.symPerSlot*symW;
+      if(sx<=ox+totalDrawW){
+        x.beginPath();x.moveTo(sx,ry);x.lineTo(sx,ry+rowH);
+        x.strokeStyle='rgba(90,140,220,0.12)';x.lineWidth=1;x.stroke();
+        x.font='300 8px "IBM Plex Mono"';x.fillStyle=DIM;x.textAlign='center';
+        x.fillText('Slot '+s,sx+cs.symPerSlot*symW/2,ry+rowH-4);
+      }
+    }
+    
+    // Determine SSB symbol positions
+    const ssbSyms=new Set();
+    const ssbMap={};// sym -> component
+    let ssbCount=0;
+    for(let n=0;ssbCount<cs.lmax&&n<4;n++){
+      for(let si=0;si<cs.starts.length&&ssbCount<cs.lmax;si++){
+        const base=cs.starts[si]+n*cs.period;
+        if(base+3<showSyms){
+          for(let d=0;d<4;d++){
+            ssbSyms.add(base+d);
+            if(d===0)ssbMap[base+d]={type:'PSS',idx:ssbCount};
+            else if(d===2)ssbMap[base+d]={type:'SSS',idx:ssbCount};
+            else ssbMap[base+d]={type:'PBCH',idx:ssbCount};
+          }
+          ssbCount++;
+        }
+      }
+    }
+    
+    // Scan line
+    const scanX=ox+scanPhase*totalDrawW;
+    
+    // Draw each symbol
+    for(let s=0;s<showSyms;s++){
+      const sx=ox+s*symW;
+      const isSSB=ssbSyms.has(s);
+      const info=ssbMap[s];
+      const isPast=sx+symW<scanX;
+      const isNow=sx<scanX&&sx+symW>=scanX;
+      
+      let fill='rgba(30,40,60,0.3)';
+      let border='rgba(90,140,220,0.04)';
+      
+      if(isSSB&&(isPast||isNow)){
+        const alpha=isNow?0.5:0.35;
+        if(info.type==='PSS'){fill=`rgba(56,189,248,${alpha})`;border='rgba(56,189,248,0.5)';}
+        else if(info.type==='SSS'){fill=`rgba(192,132,252,${alpha})`;border='rgba(192,132,252,0.5)';}
+        else{fill=`rgba(52,211,153,${alpha})`;border='rgba(52,211,153,0.5)';}
+      }
+      
+      rr(x,sx+0.5,ry+2,symW-1,rowH-18,2,fill,border);
+      
+      // Symbol labels
+      if(isSSB&&(isPast||isNow)){
+        x.save();
+        x.font='600 '+(symW>14?'9':'7')+'px "IBM Plex Mono"';x.textAlign='center';
+        if(info.type==='PSS'){x.fillStyle=PSS;x.fillText('P',sx+symW/2,ry+25)}
+        else if(info.type==='SSS'){x.fillStyle=SSS;x.fillText('S',sx+symW/2,ry+25)}
+        else{x.fillStyle=PBCH;x.fillText('B',sx+symW/2,ry+25)}
+        
+        // SSB index
+        if(info.type==='PSS'&&symW>10){
+          x.font='500 7px "IBM Plex Mono"';x.fillStyle=cs.cg+'0.6)';
+          x.fillText('#'+info.idx,sx+symW/2,ry+45);
+        }
+        x.restore();
+      }
+      
+      // Glow on active
+      if(isNow&&isSSB){
+        x.save();x.shadowColor=cs.color;x.shadowBlur=12;
+        rr(x,sx+1,ry+3,symW-2,rowH-20,2,cs.cg+'0.15)',null);
+        x.shadowBlur=0;x.restore();
+      }
+      
+      // Symbol number at bottom
+      if(s%2===0&&symW>8){
+        x.font='300 6px "IBM Plex Mono"';x.fillStyle='rgba(120,150,200,0.2)';x.textAlign='center';
+        x.fillText(s,sx+symW/2,ry+rowH-7);
+      }
+    }
+    
+    // Scan line
+    x.beginPath();x.moveTo(scanX,ry-2);x.lineTo(scanX,ry+rowH+2);
+    x.strokeStyle='rgba(255,255,255,0.35)';x.lineWidth=1.5;
+    x.setLineDash([3,3]);x.stroke();x.setLineDash([]);
+    
+    // SSB brackets
+    x.font='500 8px "IBM Plex Mono"';x.fillStyle=cs.cg+'0.5)';x.textAlign='center';
+    x.fillText(`${ssbCount} SSBs shown in ${Math.ceil(showSyms/cs.symPerSlot)} slots`,ox+totalDrawW/2,ry+rowH+14);
+  });
+  
+  document.getElementById('s3').innerHTML=
+    `<span class="lb lb-a">Case A:</span> 15kHz, starts {2,8}+14n → 2 SSBs per 14-sym period &nbsp;|&nbsp; `+
+    `<span class="lb lb-b">Case B:</span> 30kHz, starts {4,8,16,20}+28n → 4 SSBs per 28-sym period &nbsp;|&nbsp; `+
+    `<span class="lb lb-c">Case D:</span> 120kHz, starts {4,8,16,20}+28n → 4 SSBs per 28-sym period, but 80 slots in 5ms!`;
+}
+
+// ═══════════════════════════════════════════
+// CANVAS 4: HALF-FRAME SLOT MAPPING
+// ═══════════════════════════════════════════
+const C4=initC('c4');
+function draw4(t){
+  const{x,w,h}=C4;x.clearRect(0,0,w,h);
+  x.fillStyle=BG;x.fillRect(0,0,w,h);
+  
+  const bands=[
+    {name:'FR1: 0–3 GHz (Case A, 15 kHz)',color:FR1A,cg:FR1AG,slots:10,ssbSlots:[{s:0,sym:2},{s:0,sym:8},{s:1,sym:2},{s:1,sym:8}],lmax:4,msPerSlot:0.5},
+    {name:'FR1: 3–6 GHz (Case B, 30 kHz)',color:FR1B,cg:FR1BG,slots:20,ssbSlots:[{s:0,sym:4},{s:0,sym:8},{s:1,sym:2},{s:1,sym:6},{s:2,sym:4},{s:2,sym:8},{s:3,sym:2},{s:3,sym:6}],lmax:8,msPerSlot:0.25},
+    {name:'FR2: mmWave (Case D, 120 kHz)',color:FR2C,cg:FR2G,slots:80,ssbSlots:Array.from({length:16},(_,i)=>({s:Math.floor(i/2),sym:i%2===0?4:8})),lmax:64,msPerSlot:0.0625}
+  ];
+  
+  const ox=60,rowH=140;
+  const scanPhase=(t%6000)/6000;
+  
+  bands.forEach((b,bi)=>{
+    const ry=20+bi*(rowH+28);
+    
+    // Label
+    x.font='600 12px Manrope';x.textAlign='left';x.fillStyle=b.color;
+    x.fillText(b.name,10,ry+14);
+    x.font='300 9px "IBM Plex Mono"';x.fillStyle=b.cg+'0.5)';
+    x.fillText(`${b.slots} slots in 5ms half-frame | L_max=${b.lmax} SSBs | ${b.msPerSlot}ms/slot`,10,ry+28);
+    
+    const availW=w-ox-30;
+    const showSlots=Math.min(b.slots,40);
+    const slotW=availW/showSlots;
+    const totalW=showSlots*slotW;
+    
+    // Half-frame bar
+    rr(x,ox,ry+35,totalW,rowH-45,6,'rgba(10,16,34,0.5)',b.cg+'0.1)');
+    
+    // Slots
+    for(let s=0;s<showSlots;s++){
+      const sx=ox+s*slotW;
+      const hasSSB=b.ssbSlots.some(ss=>ss.s===s);
+      const isPast=sx+slotW<ox+scanPhase*totalW;
+      const isNow=sx<ox+scanPhase*totalW&&sx+slotW>=ox+scanPhase*totalW;
+      
+      rr(x,sx+0.5,ry+37,slotW-1,rowH-50,2,
+        hasSSB?(isPast||isNow?b.cg+'0.3)':b.cg+'0.08)'):'rgba(25,35,55,0.4)',
+        hasSSB?b.cg+(isPast||isNow?'0.5)':'0.15)'):'rgba(90,140,220,0.04)');
+      
+      if(hasSSB&&(isPast||isNow)){
+        // SSB index
+        const idx=b.ssbSlots.findIndex(ss=>ss.s===s);
+        if(idx>=0&&slotW>12){
+          x.font='600 '+(slotW>20?'9':'7')+'px "IBM Plex Mono"';x.textAlign='center';x.fillStyle=b.color;
+          x.fillText('#'+idx,sx+slotW/2,ry+60);
+        }
+        // Glow
+        if(isNow){
+          x.save();x.shadowColor=b.color;x.shadowBlur=10;
+          rr(x,sx+1,ry+38,slotW-2,rowH-52,2,b.cg+'0.15)',null);
+          x.shadowBlur=0;x.restore();
+        }
+      }
+      
+      // Slot number (sparse)
+      if(s%(showSlots>30?5:2)===0&&slotW>4){
+        x.font='300 6px "IBM Plex Mono"';x.fillStyle='rgba(120,150,200,0.2)';x.textAlign='center';
+        x.fillText(s,sx+slotW/2,ry+rowH-7);
+      }
+    }
+    
+    // Time markers
+    for(let ms=0;ms<=5;ms++){
+      const mx=ox+ms/5*totalW;
+      x.beginPath();x.moveTo(mx,ry+rowH-4);x.lineTo(mx,ry+rowH);
+      x.strokeStyle='rgba(90,140,220,0.2)';x.lineWidth=1;x.stroke();
+      x.font='300 7px "IBM Plex Mono"';x.fillStyle=DIM;x.textAlign='center';
+      x.fillText(ms+'ms',mx,ry+rowH+8);
+    }
+    
+    if(b.slots>showSlots){
+      x.font='300 9px "IBM Plex Mono"';x.fillStyle=b.cg+'0.4)';x.textAlign='right';
+      x.fillText(`(showing ${showSlots} of ${b.slots} slots)`,ox+totalW,ry+30);
+    }
+    
+    // Scan line
+    const scanX=ox+scanPhase*totalW;
+    x.beginPath();x.moveTo(scanX,ry+34);x.lineTo(scanX,ry+rowH-3);
+    x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1.5;
+    x.setLineDash([3,3]);x.stroke();x.setLineDash([]);
+  });
+  
+  document.getElementById('s4').innerHTML=
+    `<span class="lb lb-a">0-3GHz:</span> 10 slots/5ms, 4 SSBs fit easily &nbsp;|&nbsp; `+
+    `<span class="lb lb-b">3-6GHz:</span> 20 slots/5ms, 8 SSBs &nbsp;|&nbsp; `+
+    `<span class="lb lb-c">mmWave:</span> 80 slots/5ms, packs up to 64 SSBs — almost every slot carries an SSB beam!`;
+}
+
+// ═══════════════════════════════════════════
+// CANVAS 5: COVERAGE COMPARISON
+// ═══════════════════════════════════════════
+const C5=initC('c5');
+function draw5(t){
+  const{x,w,h}=C5;x.clearRect(0,0,w,h);
+  x.fillStyle=BG;x.fillRect(0,0,w,h);
+  
+  const cx=w/2,cy=h/2+20;
+  const pulse=Math.sin(t/800)*0.1+0.9;
+  
+  // Title
+  x.font='600 13px Manrope';x.textAlign='center';x.fillStyle=TXT;
+  x.fillText('Cell Coverage Radius & Beam Pattern Comparison',cx,24);
+  
+  // Coverage circles (to scale ratio)
+  const rings=[
+    {r:220,color:FR1A,cg:FR1AG,label:'FR1: 0–3 GHz',range:'5–15 km',beams:4,gain:'+8–12 dBi'},
+    {r:150,color:FR1B,cg:FR1BG,label:'FR1: 3–6 GHz',range:'1–5 km',beams:8,gain:'+12–18 dBi'},
+    {r:55,color:FR2C,cg:FR2G,label:'FR2: mmWave',range:'100–500m',beams:64,gain:'+20–25 dBi'},
+  ];
+  
+  rings.forEach((ring,i)=>{
+    const r=ring.r*pulse;
+    
+    // Coverage area
+    const grad=x.createRadialGradient(cx,cy,0,cx,cy,r);
+    grad.addColorStop(0,ring.cg+'0.08)');
+    grad.addColorStop(0.7,ring.cg+'0.04)');
+    grad.addColorStop(1,ring.cg+'0)');
+    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fillStyle=grad;x.fill();
+    
+    // Ring border
+    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);
+    x.strokeStyle=ring.cg+'0.3)';x.lineWidth=1.5;x.setLineDash([4,4]);x.stroke();x.setLineDash([]);
+    
+    // Beam lines for this ring
+    const beamDraw=Math.min(ring.beams,24);
+    const spanAngle=Math.PI*2;
+    for(let b=0;b<beamDraw;b++){
+      const angle=b*(spanAngle/beamDraw)-Math.PI/2;
+      const phase2=(t/1000+b*0.1)%1;
+      const lineR=r*0.95;
+      x.beginPath();x.moveTo(cx,cy);
+      x.lineTo(cx+Math.cos(angle)*lineR,cy+Math.sin(angle)*lineR);
+      x.strokeStyle=ring.cg+'0.1)';x.lineWidth=0.5;x.stroke();
+    }
+    
+    // Label
+    const labelAngle=-Math.PI*0.25+i*0.35;
+    const lx=cx+Math.cos(labelAngle)*(r+8);
+    const ly=cy+Math.sin(labelAngle)*(r+8);
+    
+    // Label box
+    const boxW=180,boxH=58;
+    const bx=i===0?w-220:i===1?w-220:w-220;
+    const by=30+i*130;
+    
+    rr(x,bx,by,boxW,boxH,8,ring.cg+'0.1)',ring.cg+'0.25)');
+    x.font='600 11px Manrope';x.textAlign='left';x.fillStyle=ring.color;
+    x.fillText(ring.label,bx+10,by+18);
+    x.font='400 9px "IBM Plex Mono"';x.fillStyle=ring.cg+'0.7)';
+    x.fillText(`Range: ${ring.range}`,bx+10,by+34);
+    x.fillText(`Beams: ${ring.beams} | Gain: ${ring.gain}`,bx+10,by+48);
+    
+    // Connector line
+    const connEndX=bx;
+    const connEndY=by+boxH/2;
+    const connStartX=cx+Math.cos(Math.atan2(connEndY-cy,connEndX-cx))*r;
+    const connStartY=cy+Math.sin(Math.atan2(connEndY-cy,connEndX-cx))*r;
+    x.beginPath();x.moveTo(connStartX,connStartY);x.lineTo(connEndX,connEndY);
+    x.strokeStyle=ring.cg+'0.2)';x.lineWidth=1;x.setLineDash([2,4]);x.stroke();x.setLineDash([]);
+  });
+  
+  // Center gNB
+  x.beginPath();x.arc(cx,cy,12,0,Math.PI*2);x.fillStyle='rgba(30,50,90,0.8)';x.fill();
+  x.strokeStyle='rgba(147,197,253,0.4)';x.lineWidth=1.5;x.stroke();
+  x.font='600 8px "IBM Plex Mono"';x.textAlign='center';x.fillStyle=WHT;x.fillText('gNB',cx,cy+3);
+  
+  // Path loss comparison bar chart (bottom-left)
+  const barX=30,barY=h-160;
+  rr(x,barX,barY,260,150,10,'rgba(10,16,34,0.6)','rgba(90,140,220,0.08)');
+  x.font='500 9px "IBM Plex Mono"';x.fillStyle=TXT;x.textAlign='left';
+  x.fillText('Free-Space Path Loss @ 1km',barX+12,barY+18);
+  
+  const plData=[
+    {f:'2 GHz',pl:98,color:FR1A,cg:FR1AG},
+    {f:'3.5 GHz',pl:103,color:FR1B,cg:FR1BG},
+    {f:'28 GHz',pl:121,color:FR2C,cg:FR2G}
+  ];
+  
+  plData.forEach((d,i)=>{
+    const by2=barY+32+i*36;
+    const barW2=(d.pl-90)*6;
+    const animW=barW2*ease(Math.min(t/2000,1));
+    
+    x.font='400 9px "IBM Plex Mono"';x.fillStyle=d.cg+'0.6)';x.textAlign='left';
+    x.fillText(d.f,barX+12,by2+8);
+    
+    rr(x,barX+70,by2,animW,16,4,d.cg+'0.3)',d.cg+'0.5)');
+    const g2=x.createLinearGradient(barX+70,by2,barX+70,by2+6);
+    g2.addColorStop(0,d.cg+'0.2)');g2.addColorStop(1,d.cg+'0)');
+    rr(x,barX+70,by2,animW,8,4,g2,null);
+    
+    x.font='600 9px "IBM Plex Mono"';x.fillStyle=d.color;
+    x.fillText(d.pl+' dB',barX+75+animW,by2+12);
+  });
+  
+  // Building penetration (bottom area)
+  const penX=30,penY=barY-70;
+  rr(x,penX,penY,260,60,10,'rgba(10,16,34,0.6)','rgba(90,140,220,0.08)');
+  x.font='500 9px "IBM Plex Mono"';x.fillStyle=TXT;x.textAlign='left';
+  x.fillText('Building Penetration Loss',penX+12,penY+18);
+  
+  const penData=[
+    {label:'0-3 GHz',val:'10–15 dB',bars:3,color:FR1A,cg:FR1AG},
+    {label:'3-6 GHz',val:'15–25 dB',bars:2,color:FR1B,cg:FR1BG},
+    {label:'mmWave',val:'30–50 dB',bars:1,color:FR2C,cg:FR2G},
+  ];
+  penData.forEach((p,i)=>{
+    const px2=penX+12+i*86;
+    x.font='400 8px "IBM Plex Mono"';x.fillStyle=p.cg+'0.6)';x.textAlign='center';
+    x.fillText(p.label,px2+35,penY+34);
+    // Signal bars
+    for(let b=0;b<4;b++){
+      const bh=8+b*5;
+      const on=b<p.bars;
+      rr(x,px2+10+b*14,penY+48-bh,10,bh,2,on?p.cg+'0.5)':'rgba(50,60,80,0.3)',null);
+    }
+    x.font='300 7px "IBM Plex Mono"';x.fillStyle=p.cg+'0.4)';
+    x.fillText(p.val,px2+35,penY+56);
+  });
+}
+
+// ═══════════════════════════════════════════
+// CANVAS 6: BURST TIMING COMPARISON
+// ═══════════════════════════════════════════
+const C6=initC('c6');
+function draw6(t){
+  const{x,w,h}=C6;x.clearRect(0,0,w,h);
+  x.fillStyle=BG;x.fillRect(0,0,w,h);
+  
+  const ox=60;
+  const frameW=w-120;
+  const bands=[
+    {name:'FR1: 0–3 GHz',color:FR1A,cg:FR1AG,L:4,occSlots:4,totalSlots:10,scs:'15k',burstW:0.25},
+    {name:'FR1: 3–6 GHz',color:FR1B,cg:FR1BG,L:8,occSlots:6,totalSlots:10,scs:'30k',burstW:0.4},
+    {name:'FR2: mmWave',color:FR2C,cg:FR2G,L:64,occSlots:10,totalSlots:10,scs:'120k',burstW:0.95}
+  ];
+  
+  const scanPhase=(t%5000)/5000;
+  
+  // Title
+  x.font='600 13px Manrope';x.textAlign='center';x.fillStyle=TXT;
+  x.fillText('SSB Burst Set — 5ms Half-Frame Utilization',w/2,22);
+  
+  bands.forEach((b,bi)=>{
+    const ry=45+bi*150;
+    const barH=90;
+    
+    // Label
+    x.font='700 13px Manrope';x.textAlign='left';x.fillStyle=b.color;
+    x.fillText(b.name,10,ry+18);
+    x.font='300 9px "IBM Plex Mono"';x.fillStyle=b.cg+'0.5)';
+    x.fillText(`L=${b.L} SSBs | SCS: ${b.scs}Hz`,10,ry+32);
+    
+    // 5ms bar
+    rr(x,ox,ry+5,frameW,barH,8,'rgba(10,16,34,0.5)',b.cg+'0.1)');
+    
+    // Time markers
+    for(let ms=0;ms<=5;ms++){
+      const mx=ox+ms/5*frameW;
+      x.beginPath();x.moveTo(mx,ry+barH+6);x.lineTo(mx,ry+barH+12);
+      x.strokeStyle='rgba(90,140,220,0.15)';x.lineWidth=1;x.stroke();
+      x.font='300 8px "IBM Plex Mono"';x.fillStyle=DIM;x.textAlign='center';
+      x.fillText(ms+'ms',mx,ry+barH+22);
+    }
+    
+    // SSB blocks within burst
+    const burstEndX=ox+b.burstW*frameW;
+    const ssbBlockW=(burstEndX-ox)/b.L;
+    const drawL=Math.min(b.L,40);
+    const drawBlockW=(burstEndX-ox)/drawL;
+    
+    // Burst window highlight
+    rr(x,ox,ry+5,burstEndX-ox,barH,8,b.cg+'0.04)',b.cg+'0.15)');
+    
+    for(let s=0;s<drawL;s++){
+      const sx=ox+s*drawBlockW;
+      const isPast=sx+drawBlockW<ox+scanPhase*frameW;
+      const isNow=sx<ox+scanPhase*frameW&&sx+drawBlockW>=ox+scanPhase*frameW;
+      const alpha=isNow?0.5:isPast?0.3:0.06;
+      
+      const hue=s/drawL;
+      const sColor=`hsla(${180+hue*60},70%,65%,${alpha})`;
+      const sBorder=`hsla(${180+hue*60},70%,65%,${alpha+0.2})`;
+      
+      rr(x,sx+1,ry+10,drawBlockW-2,barH-12,3,sColor,sBorder);
+      
+      if(isNow){
+        x.save();x.shadowColor=b.color;x.shadowBlur=12;
+        rr(x,sx+1,ry+10,drawBlockW-2,barH-12,3,b.cg+'0.2)',null);
+        x.shadowBlur=0;x.restore();
+      }
+      
+      // SSB number (sparse for FR2)
+      if(drawBlockW>14||(s%4===0&&drawBlockW>5)){
+        x.font='500 '+(drawBlockW>16?'8':'6')+'px "IBM Plex Mono"';x.textAlign='center';
+        x.fillStyle=isPast||isNow?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.15)';
+        x.fillText(b.L>40?Math.floor(s*b.L/drawL):s,sx+drawBlockW/2,ry+42);
+      }
+    }
+    
+    // Unused portion
+    if(burstEndX<ox+frameW){
+      x.save();
+      x.setLineDash([3,3]);
+      x.beginPath();
+      x.moveTo(burstEndX+10,ry+barH/2+5);
+      x.lineTo(ox+frameW-10,ry+barH/2+5);
+      x.strokeStyle='rgba(90,140,220,0.1)';x.lineWidth=1;x.stroke();
+      x.setLineDash([]);
+      x.font='300 9px "IBM Plex Mono"';x.fillStyle=DIM;x.textAlign='center';
+      x.fillText('Available for PDCCH/PDSCH',burstEndX+(ox+frameW-burstEndX)/2,ry+barH/2);
+      x.restore();
+    }
+    
+    // Utilization label
+    const util=(b.burstW*100).toFixed(0);
+    x.font='600 10px "IBM Plex Mono"';x.textAlign='right';x.fillStyle=b.color;
+    x.fillText(`${util}% of half-frame used`,ox+frameW,ry+barH+22);
+    x.font='300 9px "IBM Plex Mono"';x.fillStyle=b.cg+'0.4)';
+    x.fillText(`SSB overhead: ${(b.L*4*240/(b.totalSlots*14*12*20)*100).toFixed(1)}% of slot REs`,ox+frameW,ry+barH+36);
+    
+    // Scan line
+    const scanX=ox+scanPhase*frameW;
+    x.beginPath();x.moveTo(scanX,ry+3);x.lineTo(scanX,ry+barH+3);
+    x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1.5;
+    x.setLineDash([3,3]);x.stroke();x.setLineDash([]);
+  });
+  
+  document.getElementById('s6').innerHTML=
+    `<span class="lb lb-a">0-3GHz:</span> 4 SSBs use ~25% of half-frame — minimal overhead &nbsp;|&nbsp; `+
+    `<span class="lb lb-b">3-6GHz:</span> 8 SSBs use ~40% &nbsp;|&nbsp; `+
+    `<span class="lb lb-c">mmWave:</span> 64 SSBs use ~95% of the 5ms window — significant overhead, which is why periodicity matters!`;
+}
+
+// ═══════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════
+function loop(){
+  for(let i=1;i<=6;i++){if(P[i])T[i]+=16*S[i]}
+  draw1(T[1]);draw2(T[2]);draw3(T[3]);draw4(T[4]);draw5(T[5]);draw6(T[6]);
+  requestAnimationFrame(loop);
+}
+
+// Initial draws + start loop
+draw1(0);draw5(0);
+requestAnimationFrame(loop);
+
+// Nav observer
+const secs=document.querySelectorAll('.sec[id]');
+const tabs=document.querySelectorAll('.tab');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const id=e.target.id;
+      tabs.forEach(t=>{
+        const isMatch=t.getAttribute('onclick')?.includes(id);
+        t.className='tab'+(isMatch?(id==='sec1'||id==='sec3'?' active-a':id==='sec2'||id==='sec4'?' active-b':' active-c'):'');
+      });
+    }
+  });
+},{threshold:0.25});
+secs.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

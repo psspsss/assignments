@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIB Payload Constructor — Interactive 5G Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-dark: #0a0e27;
+  --bg-mid: #141b3d;
+  --bg-card: #1a2249;
+  --accent-cyan: #00ffff;
+  --accent-pink: #ff2e97;
+  --accent-yellow: #ffd700;
+  --accent-green: #00ff88;
+  --accent-orange: #ff6b35;
+  --text-primary: #e8f1ff;
+  --text-secondary: #8a9bba;
+  --border: #2d3a5f;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Animated background */
+.bg-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.15;
+  background: 
+    radial-gradient(circle at 20% 50%, var(--accent-cyan) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--accent-pink) 0%, transparent 50%),
+    radial-gradient(circle at 40% 90%, var(--accent-yellow) 0%, transparent 50%);
+  animation: bgPulse 15s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.1); }
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: slideDown 1s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink), var(--accent-yellow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+.header .subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+.header .badge {
+  display: inline-block;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+/* Real-world analogy section */
+.analogy-section {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-yellow);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.analogy-section::before {
+  content: '💡';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 60px;
+  opacity: 0.3;
+}
+
+.analogy-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-yellow);
+  font-size: 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analogy-section p {
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.analogy-section strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.analogy-highlight {
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 4px solid var(--accent-yellow);
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+/* Input controls */
+.controls-section {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  animation: fadeIn 1s ease-out 0.6s both;
+}
+
+.controls-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-cyan);
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.control-item {
+  background: var(--bg-mid);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.control-item:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 255, 255, 0.2);
+}
+
+.control-item label {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--accent-cyan);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.control-item input {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.control-item input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.control-item .hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.calculate-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+  border: none;
+  color: var(--bg-dark);
+  padding: 18px;
+  border-radius: 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.calculate-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 40px rgba(0, 255, 255, 0.4);
+}
+
+.calculate-btn:active {
+  transform: scale(0.98);
+}
+
+/* Processing stages */
+.stages-container {
+  display: grid;
+  gap: 30px;
+}
+
+.stage {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stage.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.stage-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stage-number {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  font-weight: 900;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 46, 151, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(255, 46, 151, 0); }
+}
+
+.stage-title h3 {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.stage-title .spec {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+}
+
+.field-calculation {
+  background: var(--bg-mid);
+  border-left: 4px solid var(--accent-green);
+  padding: 20px;
+  margin: 16px 0;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  position: relative;
+  overflow: hidden;
+}
+
+.field-calculation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-green);
+  animation: scanLine 2s ease-in-out infinite;
+}
+
+@keyframes scanLine {
+  0%, 100% { transform: scaleY(0); }
+  50% { transform: scaleY(1); }
+}
+
+.field-name {
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.field-value {
+  color: var(--accent-yellow);
+  font-weight: 700;
+}
+
+.field-binary {
+  color: var(--accent-pink);
+  font-weight: 700;
+}
+
+.comment {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Bit visualization */
+.bit-container {
+  background: var(--bg-dark);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+}
+
+.bit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.bit-cell {
+  aspect-ratio: 1;
+  background: var(--bg-mid);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.bit-cell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+.bit-cell.bit-1 {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.05));
+  border-color: var(--accent-green);
+}
+
+.bit-cell.bit-0 {
+  background: rgba(138, 155, 186, 0.1);
+  border-color: var(--border);
+}
+
+.bit-cell.animating {
+  animation: bitFlip 0.6s ease-out;
+}
+
+@keyframes bitFlip {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+.bit-index {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.bit-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Final result */
+.result-section {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-mid));
+  border: 3px solid var(--accent-cyan);
+  border-radius: 20px;
+  padding: 40px;
+  margin-top: 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, transparent, var(--accent-cyan), transparent 30deg);
+  animation: rotate 6s linear infinite;
+  opacity: 0.1;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.result-section h2 {
+  position: relative;
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: var(--accent-cyan);
+}
+
+.payload-display {
+  position: relative;
+  background: var(--bg-dark);
+  border: 2px solid var(--accent-cyan);
+  border-radius: 12px;
+  padding: 24px;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  word-break: break-all;
+  line-height: 1.8;
+  color: var(--accent-yellow);
+  text-align: left;
+  margin: 20px 0;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+}
+
+.stats-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.stat-item {
+  background: var(--bg-dark);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  border-color: var(--accent-pink);
+  transform: translateY(-4px);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+/* Flow diagram */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 30px 0;
+}
+
+.flow-box {
+  background: var(--bg-mid);
+  border: 2px solid var(--accent-green);
+  border-radius: 10px;
+  padding: 16px 24px;
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-green);
+  white-space: nowrap;
+  animation: flowPulse 2s ease-in-out infinite;
+}
+
+@keyframes flowPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+}
+
+.flow-arrow {
+  color: var(--accent-yellow);
+  font-size: 24px;
+  animation: arrowBounce 1s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 32px;
+  }
+  
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .bit-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  
+  .flow-diagram {
+    flex-direction: column;
+  }
+  
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* Loading animation */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 40px;
+}
+
+.loading.active {
+  display: block;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-animation"></div>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">Interactive Simulator</div>
+    <h1>MIB PAYLOAD CONSTRUCTOR</h1>
+    <p class="subtitle">5G NR Physical Broadcast Channel — Step-by-Step Visualization</p>
+  </div>
+
+  <!-- Real-World Analogy -->
+  <div class="analogy-section">
+    <h2>🎯 Real-World Analogy: The Airport Information Board</h2>
+    <p>Imagine you're at an <strong>international airport</strong>, and you need to catch a flight. Before you can board, you need critical information displayed on the <strong>airport information board</strong>:</p>
+    
+    <div class="analogy-highlight">
+      <p><strong>📋 The MIB (Master Information Block)</strong> is like the <strong>airport information board</strong> that displays essential details:</p>
+      <ul style="margin: 12px 0 12px 24px; line-height: 2;">
+        <li><strong>Flight Number (SFN)</strong> → Which "flight" (frame) we're on</li>
+        <li><strong>Gate Number (k_SSB)</strong> → Where to find the signal</li>
+        <li><strong>Terminal Section (SCS)</strong> → Which frequency band to use</li>
+        <li><strong>Boarding Status (Cell Barred)</strong> → Can you connect to this cell?</li>
+        <li><strong>Check-in Counter (PDCCH Config)</strong> → Where to get more detailed info</li>
+      </ul>
+    </div>
+
+    <p>Just like you need this information <strong>before</strong> you can board your flight, your phone needs the <strong>MIB information before</strong> it can connect to the 5G network!</p>
+
+    <p><strong>The 32-bit payload</strong> is like fitting all this essential information into a <strong>compact QR code</strong> that your phone can quickly scan and understand in milliseconds. Each bit position matters — just like each digit in your flight number!</p>
+  </div>
+
+  <!-- Input Controls -->
+  <div class="controls-section">
+    <h2>⚙️ Configure Cell Parameters</h2>
+    <div class="controls-grid">
+      <div class="control-item">
+        <label>N_ID_cell (Physical Cell ID)</label>
+        <input type="number" id="n_id_cell" value="276" min="0" max="1007">
+        <div class="hint">Range: 0-1007</div>
+      </div>
+      
+      <div class="control-item">
+        <label>SFN (System Frame Number)</label>
+        <input type="number" id="sfn" value="42" min="0" max="1023">
+        <div class="hint">Range: 0-1023 (10 bits)</div>
+      </div>
+      
+      <div class="control-item">
+        <label>Half-frame Indicator</label>
+        <input type="number" id="half_frame" value="0" min="0" max="1">
+        <div class="hint">0 or 1</div>
+      </div>
+      
+      <div class="control-item">
+        <label>SSB Index</label>
+        <input type="number" id="ssb_index" value="3" min="0" max="63">
+        <div class="hint">SS/PBCH block index</div>
+      </div>
+      
+      <div class="control-item">
+        <label>k_SSB (Frequency Offset)</label>
+        <input type="number" id="k_ssb" value="5" min="0" max="31">
+        <div class="hint">Range: 0-31 (5 bits)</div>
+      </div>
+      
+      <div class="control-item">
+        <label>SCS (Subcarrier Spacing)</label>
+        <input type="number" id="scs" value="30" min="15" max="240" step="15">
+        <div class="hint">15, 30, 60, 120, 240 kHz</div>
+      </div>
+      
+      <div class="control-item">
+        <label>L_max (Max SSB Beams)</label>
+        <input type="number" id="l_max" value="4" min="4" max="64">
+        <div class="hint">4, 8, or 64</div>
+      </div>
+      
+      <div class="control-item">
+        <label>Control Resource Set Zero</label>
+        <input type="number" id="coreset_zero" value="10" min="0" max="15">
+        <div class="hint">Range: 0-15 (4 bits)</div>
+      </div>
+    </div>
+    
+    <button class="calculate-btn" onclick="calculateMIB()">🚀 Generate MIB Payload</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p style="margin-top: 20px; color: var(--text-secondary);">Processing payload construction...</p>
+  </div>
+
+  <!-- Results Container -->
+  <div id="results" style="display: none;">
+    <!-- Stage 1: MIB Fields -->
+    <div class="stage" data-stage="1">
+      <div class="stage-header">
+        <div class="stage-number">1</div>
+        <div class="stage-title">
+          <h3>MIB Information Elements</h3>
+          <div class="spec">24 bits from 8 fields</div>
+        </div>
+      </div>
+      
+      <div id="mib-fields"></div>
+      
+      <div class="bit-container">
+        <h4 style="color: var(--accent-cyan); font-family: 'Orbitron', monospace; margin-bottom: 12px;">MIB Bits (a0 to a23)</h4>
+        <div class="bit-grid" id="mib-bits"></div>
+      </div>
+    </div>
+
+    <!-- Stage 2: Timing Bits -->
+    <div class="stage" data-stage="2">
+      <div class="stage-header">
+        <div class="stage-number">2</div>
+        <div class="stage-title">
+          <h3>Additional Timing Bits</h3>
+          <div class="spec">8 bits for frame timing synchronization</div>
+        </div>
+      </div>
+      
+      <div id="timing-fields"></div>
+      
+      <div class="bit-container">
+        <h4 style="color: var(--accent-cyan); font-family: 'Orbitron', monospace; margin-bottom: 12px;">Timing Bits (a24 to a31)</h4>
+        <div class="bit-grid" id="timing-bits"></div>
+      </div>
+    </div>
+
+    <!-- Stage 3: Final Payload -->
+    <div class="stage" data-stage="3">
+      <div class="stage-header">
+        <div class="stage-number">3</div>
+        <div class="stage-title">
+          <h3>Complete 32-bit Payload</h3>
+          <div class="spec">A = 32 bits (MIB + Timing)</div>
+        </div>
+      </div>
+      
+      <div class="flow-diagram">
+        <div class="flow-box">24 MIB bits</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">+ 8 Timing bits</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">= 32 bits Total</div>
+      </div>
+      
+      <div class="bit-container">
+        <h4 style="color: var(--accent-cyan); font-family: 'Orbitron', monospace; margin-bottom: 12px;">Complete Payload (a0 to a31)</h4>
+        <div class="bit-grid" id="complete-bits"></div>
+      </div>
+    </div>
+
+    <!-- Final Result -->
+    <div class="result-section">
+      <h2>✨ Final MIB Payload</h2>
+      <div class="payload-display" id="final-payload"></div>
+      
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Total Bits</div>
+          <div class="stat-value">32</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">MIB Fields</div>
+          <div class="stat-value">8</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Timing Bits</div>
+          <div class="stat-value">8</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">N_ID_cell</div>
+          <div class="stat-value" id="stat-cell-id">276</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">SFN</div>
+          <div class="stat-value" id="stat-sfn">42</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Utility functions
+function toBinary(num, width) {
+  return num.toString(2).padStart(width, '0');
+}
+
+function extractBits(num, msb, lsb) {
+  const mask = ((1 << (msb - lsb + 1)) - 1) << lsb;
+  return (num & mask) >> lsb;
+}
+
+function createBitCell(index, value, delay = 0) {
+  const cell = document.createElement('div');
+  cell.className = `bit-cell bit-${value}`;
+  cell.innerHTML = `
+    <div class="bit-index">a${index}</div>
+    <div class="bit-value">${value}</div>
+  `;
+  
+  setTimeout(() => {
+    cell.classList.add('animating');
+    setTimeout(() => cell.classList.remove('animating'), 600);
+  }, delay);
+  
+  return cell;
+}
+
+function createFieldCalculation(name, description, value, binary, comment = '') {
+  return `
+    <div class="field-calculation">
+      <div><span class="field-name">${name}</span>: ${description}</div>
+      <div>Value = <span class="field-value">${value}</span> → Binary: <span class="field-binary">${binary}</span></div>
+      ${comment ? `<div class="comment">// ${comment}</div>` : ''}
+    </div>
+  `;
+}
+
+function calculateMIB() {
+  // Get input values
+  const nIdCell = parseInt(document.getElementById('n_id_cell').value);
+  const sfn = parseInt(document.getElementById('sfn').value);
+  const halfFrame = parseInt(document.getElementById('half_frame').value);
+  const ssbIndex = parseInt(document.getElementById('ssb_index').value);
+  const kSsb = parseInt(document.getElementById('k_ssb').value);
+  const scs = parseInt(document.getElementById('scs').value);
+  const lMax = parseInt(document.getElementById('l_max').value);
+  const coresetZero = parseInt(document.getElementById('coreset_zero').value);
+  
+  // Show loading
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('results').style.display = 'none';
+  
+  setTimeout(() => {
+    // Hide loading
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('results').style.display = 'block';
+    
+    // Calculate MIB fields (24 bits)
+    const sfnField = extractBits(sfn, 9, 4); // 6 bits
+    const sfnFieldBinary = toBinary(sfnField, 6);
+    
+    const scsCommon = (scs === 30) ? 1 : 0; // 1 bit
+    const scsCommonBinary = toBinary(scsCommon, 1);
+    
+    const kSsb4bits = toBinary(kSsb, 4); // 4 bits
+    
+    const dmrsTypeAPos = 0; // 1 bit (pos2)
+    const dmrsTypeAPosBinary = toBinary(dmrsTypeAPos, 1);
+    
+    const searchSpaceZero = 4;
+    const pdcchConfig = (coresetZero << 4) | searchSpaceZero; // 8 bits
+    const pdcchConfigBinary = toBinary(pdcchConfig, 8);
+    
+    const cellBarred = 0; // 1 bit
+    const cellBarredBinary = toBinary(cellBarred, 1);
+    
+    const intraFreqResel = 0; // 1 bit
+    const intraFreqReselBinary = toBinary(intraFreqResel, 1);
+    
+    const spare1bit = 0; // 1 bit
+    const spare1bitBinary = toBinary(spare1bit, 1);
+    
+    const mib24bits = sfnFieldBinary + scsCommonBinary + kSsb4bits + 
+                      dmrsTypeAPosBinary + pdcchConfigBinary + 
+                      cellBarredBinary + intraFreqReselBinary + spare1bitBinary;
+    
+    // Display MIB fields
+    const mibFieldsHTML = `
+      ${createFieldCalculation('systemFrameNumber', 'SFN[9:4]', `${sfn} → SFN[9:4] = ${sfnField}`, sfnFieldBinary, '6 MSBs of 10-bit SFN')}
+      ${createFieldCalculation('subCarrierSpacingCommon', `${scs} kHz → scs-${scs === 30 ? '30' : '15'}`, scsCommon, scsCommonBinary, '1 bit for SCS')}
+      ${createFieldCalculation('ssb-SubcarrierOffset', `k_SSB = ${kSsb}`, kSsb, kSsb4bits, '4 bits for frequency offset')}
+      ${createFieldCalculation('dmrs-TypeA-Position', 'pos2', dmrsTypeAPos, dmrsTypeAPosBinary, '1 bit')}
+      ${createFieldCalculation('pdcch-ConfigSIB1', `ControlResSet=${coresetZero}, SearchSpace=${searchSpaceZero}`, pdcchConfig, pdcchConfigBinary, '8 bits combined')}
+      ${createFieldCalculation('cellBarred', 'notBarred', cellBarred, cellBarredBinary, '1 bit')}
+      ${createFieldCalculation('intraFreqReselection', 'allowed', intraFreqResel, intraFreqReselBinary, '1 bit')}
+      ${createFieldCalculation('spare', 'reserved', spare1bit, spare1bitBinary, '1 bit')}
+    `;
+    document.getElementById('mib-fields').innerHTML = mibFieldsHTML;
+    
+    // Display MIB bits
+    const mibBitsContainer = document.getElementById('mib-bits');
+    mibBitsContainer.innerHTML = '';
+    for (let i = 0; i < 24; i++) {
+      mibBitsContainer.appendChild(createBitCell(i, mib24bits[i], i * 30));
+    }
+    
+    // Calculate timing bits (8 bits)
+    const sfnBits32 = extractBits(sfn, 3, 2);
+    const sfnBits32Binary = toBinary(sfnBits32, 2);
+    
+    const sfnBits10 = extractBits(sfn, 1, 0);
+    const sfnBits10Binary = toBinary(sfnBits10, 2);
+    
+    const halfFrameBinary = toBinary(halfFrame, 1);
+    
+    const kSsbMsb = extractBits(kSsb, 4, 4);
+    const kSsbMsbBinary = toBinary(kSsbMsb, 1);
+    
+    const spare2bits = '00';
+    
+    const timing8bits = sfnBits32Binary + sfnBits10Binary + halfFrameBinary + kSsbMsbBinary + spare2bits;
+    
+    // Display timing fields
+    const timingFieldsHTML = `
+      ${createFieldCalculation('SFN[3:2]', `Bits 3-2 of SFN=${sfn}`, `${toBinary(sfn, 10)} → bits[3:2]`, sfnBits32Binary, '2 bits')}
+      ${createFieldCalculation('SFN[1:0]', `Bits 1-0 of SFN=${sfn}`, `${toBinary(sfn, 10)} → bits[1:0]`, sfnBits10Binary, '2 bits - LSBs')}
+      ${createFieldCalculation('Half-frame', 'Half-frame indicator', halfFrame, halfFrameBinary, '1 bit')}
+      ${createFieldCalculation('k_SSB MSB', `MSB of k_SSB=${kSsb} for L_max=${lMax}`, `${toBinary(kSsb, 5)} → bit[4]`, kSsbMsbBinary, '1 bit - bit position 4')}
+      ${createFieldCalculation('spare[2]', 'Reserved bits', 0, spare2bits, '2 bits')}
+    `;
+    document.getElementById('timing-fields').innerHTML = timingFieldsHTML;
+    
+    // Display timing bits
+    const timingBitsContainer = document.getElementById('timing-bits');
+    timingBitsContainer.innerHTML = '';
+    for (let i = 0; i < 8; i++) {
+      timingBitsContainer.appendChild(createBitCell(24 + i, timing8bits[i], i * 30));
+    }
+    
+    // Complete 32-bit payload
+    const payload32bits = mib24bits + timing8bits;
+    
+    // Display complete bits
+    const completeBitsContainer = document.getElementById('complete-bits');
+    completeBitsContainer.innerHTML = '';
+    for (let i = 0; i < 32; i++) {
+      completeBitsContainer.appendChild(createBitCell(i, payload32bits[i], i * 20));
+    }
+    
+    // Display final payload
+    document.getElementById('final-payload').textContent = payload32bits;
+    document.getElementById('stat-cell-id').textContent = nIdCell;
+    document.getElementById('stat-sfn').textContent = sfn;
+    
+    // Animate stages
+    const stages = document.querySelectorAll('.stage');
+    stages.forEach((stage, index) => {
+      setTimeout(() => {
+        stage.classList.add('visible');
+      }, 500 + (index * 300));
+    });
+    
+    // Scroll to results
+    setTimeout(() => {
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+    
+  }, 1500);
+}
+
+// Initial calculation on page load
+window.addEventListener('load', () => {
+  setTimeout(() => calculateMIB(), 500);
+});
+</script>
+
+</body>
+</html>

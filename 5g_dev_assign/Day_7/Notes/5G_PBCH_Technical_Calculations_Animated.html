@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PBCH — Technical Calculation Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060A12;--bg2:#0A1020;--bg3:#0E1830;--bg4:#121E3A;
+  --bdr:#162040;--bdr2:#1E3060;
+  --t1:#E8EEF4;--t2:#8CA0B8;--t3:#506880;--t4:#304060;
+  --orange:#FF7E33;--orange-d:rgba(255,126,51,0.12);--orange-b:rgba(255,126,51,0.25);
+  --blue:#3E9FFF;--blue-d:rgba(62,159,255,0.12);--blue-b:rgba(62,159,255,0.25);
+  --cyan:#00D4A8;--cyan-d:rgba(0,212,168,0.12);--cyan-b:rgba(0,212,168,0.25);
+  --gold:#FFD060;--gold-d:rgba(255,208,96,0.12);--gold-b:rgba(255,208,96,0.25);
+  --red:#FF4B6E;--red-d:rgba(255,75,110,0.12);--red-b:rgba(255,75,110,0.25);
+  --purple:#9B6EFF;--purple-d:rgba(155,110,255,0.12);--purple-b:rgba(155,110,255,0.25);
+  --green:#4ADE80;--green-d:rgba(74,222,128,0.12);--green-b:rgba(74,222,128,0.25);
+  --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.6;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(62,159,255,0.02) 59px,rgba(62,159,255,0.02) 60px),repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(62,159,255,0.02) 59px,rgba(62,159,255,0.02) 60px);pointer-events:none;z-index:0;}
+.wrap{max-width:1150px;margin:0 auto;padding:24px 20px 80px;position:relative;z-index:1;}
+
+/* Header */
+.hdr{text-align:center;padding:40px 0 30px;}
+.hdr-badge{display:inline-block;background:linear-gradient(135deg,var(--blue-d),var(--cyan-d));border:1px solid var(--blue-b);color:var(--blue);font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:5px 18px;border-radius:30px;margin-bottom:16px;}
+.hdr h1{font-size:clamp(26px,4.5vw,48px);font-weight:800;letter-spacing:-0.5px;line-height:1.15;}
+.hdr h1 .c-o{color:var(--orange);}
+.hdr h1 .c-b{color:var(--blue);}
+.hdr h1 .c-g{color:var(--cyan);}
+.hdr p{color:var(--t2);font-size:15px;max-width:680px;margin:12px auto 0;}
+
+/* Nav pills */
+.nav-pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:24px 0 36px;position:sticky;top:8px;z-index:50;background:rgba(6,10,18,0.9);backdrop-filter:blur(12px);padding:10px;border-radius:14px;border:1px solid var(--bdr);}
+.nav-pill{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.nav-pill:hover{border-color:var(--blue-b);color:var(--blue);}
+.nav-pill.active{background:var(--blue-d);border-color:var(--blue);color:var(--blue);}
+
+/* Stage container */
+.stage{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;margin-bottom:28px;overflow:hidden;transition:border-color 0.3s;}
+.stage:hover{border-color:var(--bdr2);}
+.stage-hdr{display:flex;align-items:center;gap:14px;padding:22px 28px;border-bottom:1px solid var(--bdr);cursor:pointer;user-select:none;}
+.stage-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0;}
+.stage-hdr h2{font-size:18px;font-weight:700;flex:1;}
+.stage-hdr .spec{font-family:var(--mono);font-size:10px;color:var(--t3);display:block;margin-top:2px;}
+.stage-hdr .bits-tag{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:6px;font-weight:600;flex-shrink:0;}
+.stage-body{padding:24px 28px;}
+
+/* Color variants */
+.s-orange .stage-num{background:var(--orange-d);color:var(--orange);}
+.s-orange .bits-tag{background:var(--orange-d);color:var(--orange);border:1px solid var(--orange-b);}
+.s-red .stage-num{background:var(--red-d);color:var(--red);}
+.s-red .bits-tag{background:var(--red-d);color:var(--red);border:1px solid var(--red-b);}
+.s-blue .stage-num{background:var(--blue-d);color:var(--blue);}
+.s-blue .bits-tag{background:var(--blue-d);color:var(--blue);border:1px solid var(--blue-b);}
+.s-purple .stage-num{background:var(--purple-d);color:var(--purple);}
+.s-purple .bits-tag{background:var(--purple-d);color:var(--purple);border:1px solid var(--purple-b);}
+.s-green .stage-num{background:var(--green-d);color:var(--green);}
+.s-green .bits-tag{background:var(--green-d);color:var(--green);border:1px solid var(--green-b);}
+.s-gold .stage-num{background:var(--gold-d);color:var(--gold);}
+.s-gold .bits-tag{background:var(--gold-d);color:var(--gold);border:1px solid var(--gold-b);}
+.s-cyan .stage-num{background:var(--cyan-d);color:var(--cyan);}
+.s-cyan .bits-tag{background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);}
+
+/* Calc box — the core calculation display */
+.calc-box{background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:20px 22px;margin:14px 0;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;}
+.calc-box .cl{color:var(--t3);} /* comment line */
+.calc-box .hl{font-weight:700;}
+.calc-box .v-o{color:var(--orange);}
+.calc-box .v-b{color:var(--blue);}
+.calc-box .v-c{color:var(--cyan);}
+.calc-box .v-g{color:var(--gold);}
+.calc-box .v-r{color:var(--red);}
+.calc-box .v-p{color:var(--purple);}
+.calc-box .v-gr{color:var(--green);}
+.calc-box .op{color:var(--t2);}
+.calc-box .eq{color:var(--gold);font-weight:700;}
+
+/* Bit grid — shows actual bit values */
+.bit-grid{display:flex;flex-wrap:wrap;gap:2px;margin:10px 0;}
+.bg-cell{width:28px;height:26px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;transition:all 0.3s;}
+.bg-cell.hdr-cell{background:transparent;color:var(--t3);font-size:8px;width:28px;height:16px;}
+
+/* Animated calc step */
+.calc-step{opacity:0;transform:translateY(10px);transition:all 0.4s ease-out;}
+.calc-step.visible{opacity:1;transform:translateY(0);}
+
+/* Progression buttons */
+.prog-bar{display:flex;align-items:center;gap:10px;margin:16px 0;}
+.prog-btn{padding:7px 18px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);cursor:pointer;transition:all 0.2s;font-family:var(--sans);}
+.prog-btn:hover{background:var(--bg4);border-color:var(--blue);}
+.prog-btn.active-btn{background:var(--blue-d);border-color:var(--blue);color:var(--blue);}
+.prog-label{font-size:11px;color:var(--t3);font-family:var(--mono);}
+
+/* XOR visual row */
+.xor-block{margin:12px 0;}
+.xor-row{display:flex;align-items:center;gap:2px;margin:3px 0;flex-wrap:wrap;}
+.xor-row .rl{font-family:var(--mono);font-size:10px;font-weight:600;width:85px;text-align:right;margin-right:8px;flex-shrink:0;}
+.xb{width:24px;height:22px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;}
+.xb-o{background:var(--orange-d);color:var(--orange);border:1px solid var(--orange-b);}
+.xb-b{background:var(--blue-d);color:var(--blue);border:1px solid var(--blue-b);}
+.xb-g{background:var(--gold-d);color:var(--gold);border:1px solid var(--gold-b);}
+.xb-r{background:var(--red-d);color:var(--red);border:1px solid var(--red-b);}
+.xb-c{background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);}
+.xb-p{background:var(--purple-d);color:var(--purple);border:1px solid var(--purple-b);}
+.xb-gr{background:var(--green-d);color:var(--green);border:1px solid var(--green-b);}
+.xor-op-line{text-align:center;font-family:var(--mono);font-size:12px;color:var(--gold);margin:4px 0;font-weight:700;padding-left:93px;}
+
+/* Matrix / table */
+.mtx{border-collapse:collapse;margin:12px 0;font-family:var(--mono);font-size:11px;}
+.mtx th{background:var(--bg3);color:var(--t2);padding:6px 12px;text-align:left;border:1px solid var(--bdr);font-weight:600;}
+.mtx td{padding:6px 12px;border:1px solid var(--bdr);color:var(--t2);}
+.mtx .v{font-weight:700;}
+
+/* LFSR visual */
+.lfsr{display:flex;align-items:center;gap:3px;margin:8px 0;flex-wrap:wrap;}
+.lfsr-reg{display:flex;gap:1px;}
+.lfsr-bit{width:22px;height:22px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;}
+.lfsr-label{font-family:var(--mono);font-size:10px;color:var(--t3);width:40px;flex-shrink:0;}
+
+/* Constellation plot */
+.const-plot{position:relative;width:220px;height:220px;background:var(--bg);border:1px solid var(--bdr);border-radius:10px;margin:14px auto;}
+.const-axis{position:absolute;background:var(--bdr);}
+.const-axis.h{width:200px;height:1px;top:110px;left:10px;}
+.const-axis.v{width:1px;height:200px;top:10px;left:110px;}
+.const-pt{position:absolute;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:700;transition:all 0.4s;border:2px solid;}
+.const-lbl{position:absolute;font-family:var(--mono);font-size:9px;color:var(--t3);}
+
+/* RE grid */
+.re-grid{display:grid;gap:2px;margin:14px auto;max-width:500px;}
+.re-cell{height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:7px;font-weight:600;transition:all 0.3s;}
+
+/* Summary flow */
+.sum-flow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;margin:20px 0;}
+.sf-n{padding:6px 12px;border-radius:6px;font-size:10px;font-weight:700;text-align:center;font-family:var(--mono);}
+.sf-a{color:var(--t3);font-size:12px;}
+
+/* Description */
+.desc{font-size:13px;color:var(--t2);line-height:1.8;margin:8px 0;}
+.desc strong{color:var(--t1);}
+.desc code{font-family:var(--mono);background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:12px;color:var(--gold);}
+
+/* Scroll animation */
+.stage{opacity:0;transform:translateY(24px);transition:opacity 0.5s,transform 0.5s;}
+.stage.vis{opacity:1;transform:translateY(0);}
+
+/* Footer */
+.ftr{text-align:center;padding:36px 0 16px;border-top:1px solid var(--bdr);margin-top:40px;}
+.ftr p{font-size:11px;color:var(--t4);}
+.ftr a{color:var(--cyan);text-decoration:none;}
+
+/* Animated highlight */
+@keyframes calcGlow{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.glow-result{background:linear-gradient(90deg,var(--gold-d),var(--cyan-d),var(--gold-d));background-size:200% 200%;animation:calcGlow 3s ease infinite;border-radius:6px;padding:2px 8px;display:inline-block;}
+
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(62,159,255,0.3);}50%{box-shadow:0 0 12px 4px rgba(62,159,255,0.15);}}
+.anim-pulse{animation:pulse 2s ease-in-out infinite;}
+
+@media(max-width:768px){
+  .stage-body{padding:16px;}
+  .calc-box{padding:14px;font-size:11px;}
+  .xor-row .rl{width:60px;font-size:9px;}
+  .xb{width:20px;height:20px;font-size:9px;}
+  .nav-pills{position:static;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="hdr-badge">Technical Calculation Engine</div>
+  <h1>5G NR PBCH — <span class="c-o">Every Bit</span> <span class="c-b">Calculated</span> <span class="c-g">Step by Step</span></h1>
+  <p>Real numbers, real math, real 3GPP calculations with animated progression at each stage</p>
+</div>
+
+<!-- NAV -->
+<div class="nav-pills" id="nav">
+  <a href="#s1" class="nav-pill active">1 MIB</a>
+  <a href="#s2" class="nav-pill">2 Scramble₁</a>
+  <a href="#s3" class="nav-pill">3 CRC</a>
+  <a href="#s4" class="nav-pill">4 Polar</a>
+  <a href="#s5" class="nav-pill">5 Rate Match</a>
+  <a href="#s6" class="nav-pill">6 Interleave</a>
+  <a href="#s7" class="nav-pill">7 Scramble₂</a>
+  <a href="#s8" class="nav-pill">8 QPSK</a>
+  <a href="#s9" class="nav-pill">9 RE Map</a>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 1: MIB PAYLOAD CONSTRUCTION                                 -->
+<!-- ================================================================ -->
+<div class="stage s-orange" id="s1">
+  <div class="stage-hdr">
+    <div class="stage-num">1</div>
+    <div><h2>MIB Payload Construction</h2><span class="spec">TS 38.331 / TS 38.212 §7.1.1</span></div>
+    <div class="bits-tag">24→32 bits</div>
+  </div>
+  <div class="stage-body">
+    <p class="desc"><strong>Example cell:</strong> N_ID^cell = <code>276</code>, SFN = <code>42</code> (binary 0000101010), Half-frame = <code>0</code>, SSB index = <code>3</code>, SCS = 30kHz, k_SSB = <code>5</code>, L̄_max = <code>4</code></p>
+
+    <div class="calc-box">
+      <span class="cl">// ─── MIB IE Fields (24 bits) ───</span><br><br>
+      <span class="v-o hl">systemFrameNumber</span> <span class="op">=</span> SFN[9:4] <span class="op">=</span> 42 → binary 0000101010 → <span class="eq">6 MSBs = 000010</span><br>
+      <span class="v-o hl">subCarrierSpacingCommon</span> <span class="op">=</span> 30kHz → scs-30 → <span class="eq">1</span><br>
+      <span class="v-o hl">ssb-SubcarrierOffset</span> <span class="op">=</span> k_SSB = 5 → 4 bits → <span class="eq">0101</span><br>
+      <span class="v-o hl">dmrs-TypeA-Position</span> <span class="op">=</span> pos2 → <span class="eq">0</span><br>
+      <span class="v-o hl">pdcch-ConfigSIB1</span> <span class="op">=</span> controlResourceSetZero=10, searchSpaceZero=4 → <span class="eq">10100100</span><br>
+      <span class="v-o hl">cellBarred</span> <span class="op">=</span> notBarred → <span class="eq">0</span><br>
+      <span class="v-o hl">intraFreqReselection</span> <span class="op">=</span> allowed → <span class="eq">0</span><br>
+      <span class="v-o hl">spare</span> <span class="op">=</span> <span class="eq">0</span><br><br>
+      <span class="cl">// ─── MIB = 24 bits ───</span><br>
+      a₀…a₂₃ <span class="op">=</span> <span class="eq">000010 1 0101 0 10100100 0 0 0</span><br><br>
+      <span class="cl">// ─── Additional timing bits (8 bits) ─── TS 38.212 §7.1.1</span><br>
+      <span class="v-g hl">SFN[3:2]</span> <span class="op">=</span> bits 6,7 of SFN = 42 → 0000<span class="eq">10</span>1010 → <span class="eq">10</span><br>
+      <span class="v-g hl">SFN[1:0]</span> <span class="op">=</span> bits 8,9 of SFN = 42 → 000010<span class="eq">10</span>10 → <span class="eq">10</span><br>
+      <span class="v-g hl">Half-frame</span> <span class="op">=</span> <span class="eq">0</span><br>
+      <span class="cl">// For L̄_max=4: 1 bit k_SSB MSB + 2 spare</span><br>
+      <span class="v-g hl">k_SSB MSB (5th bit)</span> <span class="op">=</span> k_SSB=5=00101 → MSB=<span class="eq">0</span><br>
+      <span class="v-g hl">spare[2]</span> <span class="op">=</span> <span class="eq">00</span><br><br>
+      <span class="cl">// ─── TOTAL PAYLOAD ───</span><br>
+      <span class="v-o">A</span> <span class="op">=</span> 24 + 8 <span class="op">=</span> <span class="glow-result eq">32 bits</span><br>
+      a₀…a₃₁ <span class="op">=</span> <span class="eq">00001010101010100100000 10100 000</span>
+    </div>
+
+    <!-- Bit grid visual -->
+    <p class="desc" style="margin-top:14px;"><strong>Payload bit map (a₀ to a₃₁):</strong></p>
+    <div class="bit-grid">
+      <div class="bg-cell hdr-cell">a₀</div><div class="bg-cell hdr-cell">a₁</div><div class="bg-cell hdr-cell">a₂</div><div class="bg-cell hdr-cell">a₃</div><div class="bg-cell hdr-cell">a₄</div><div class="bg-cell hdr-cell">a₅</div><div class="bg-cell hdr-cell">a₆</div><div class="bg-cell hdr-cell">a₇</div><div class="bg-cell hdr-cell">a₈</div><div class="bg-cell hdr-cell">a₉</div><div class="bg-cell hdr-cell">a₁₀</div><div class="bg-cell hdr-cell">a₁₁</div><div class="bg-cell hdr-cell">a₁₂</div><div class="bg-cell hdr-cell">a₁₃</div><div class="bg-cell hdr-cell">a₁₄</div><div class="bg-cell hdr-cell">a₁₅</div><div class="bg-cell hdr-cell">a₁₆</div><div class="bg-cell hdr-cell">a₁₇</div><div class="bg-cell hdr-cell">a₁₈</div><div class="bg-cell hdr-cell">a₁₉</div><div class="bg-cell hdr-cell">a₂₀</div><div class="bg-cell hdr-cell">a₂₁</div><div class="bg-cell hdr-cell">a₂₂</div><div class="bg-cell hdr-cell">a₂₃</div><div class="bg-cell hdr-cell">a₂₄</div><div class="bg-cell hdr-cell">a₂₅</div><div class="bg-cell hdr-cell">a₂₆</div><div class="bg-cell hdr-cell">a₂₇</div><div class="bg-cell hdr-cell">a₂₈</div><div class="bg-cell hdr-cell">a₂₉</div><div class="bg-cell hdr-cell">a₃₀</div><div class="bg-cell hdr-cell">a₃₁</div>
+      <div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">0</div><div class="xb xb-g">0</div><div class="xb xb-g">0</div><div class="xb xb-g">0</div>
+    </div>
+    <div style="display:flex;gap:16px;font-size:10px;color:var(--t3);font-family:var(--mono);margin-top:4px;">
+      <span style="color:var(--orange);">■ MIB fields (a₀-a₂₃)</span>
+      <span style="color:var(--gold);">■ Timing bits (a₂₄-a₃₁)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 2: SCRAMBLING #1                                            -->
+<!-- ================================================================ -->
+<div class="stage s-gold" id="s2">
+  <div class="stage-hdr">
+    <div class="stage-num">2</div>
+    <div><h2>Scrambling #1 — Payload Scrambling</h2><span class="spec">TS 38.212 §7.1.1 — Scrambling before CRC</span></div>
+    <div class="bits-tag">32→32 bits</div>
+  </div>
+  <div class="stage-body">
+    <p class="desc"><strong>Purpose:</strong> Embed SSB index, SFN bits, and half-frame into the payload via scrambling. The scrambling seed is a function of <code>N_ID^cell=276</code>, SSB index=<code>3</code>, SFN 2nd/3rd LSB, and half-frame.</p>
+
+    <div class="calc-box">
+      <span class="cl">// ─── Scrambling #1: Which bits get scrambled? ───</span><br>
+      <span class="cl">// For L̄_max = 4:</span><br>
+      <span class="cl">//   - v = 2 LSBs of SSB index = 3 → v = 11₂ = 3</span><br>
+      <span class="cl">//   - Only certain payload bits are scrambled</span><br>
+      <span class="cl">//   - Scrambling sequence s(j) depends on:</span><br><br>
+      <span class="v-g hl">v</span> <span class="op">=</span> SSB_index mod 4 <span class="op">=</span> 3 mod 4 <span class="op">=</span> <span class="eq">3</span><br>
+      <span class="v-g hl">N_ID^cell</span> <span class="op">=</span> <span class="eq">276</span><br><br>
+      <span class="cl">// ─── Second &amp; Third LSBs of SFN (provided via scrambling) ───</span><br>
+      SFN <span class="op">=</span> 42 <span class="op">=</span> 0000101010₂<br>
+      <span class="v-g hl">SFN 2nd LSB (c̃)</span> <span class="op">=</span> bit[8] <span class="op">=</span> <span class="eq">1</span><br>
+      <span class="v-g hl">SFN 3rd LSB (c̃)</span> <span class="op">=</span> bit[7] <span class="op">=</span> <span class="eq">0</span><br><br>
+      <span class="cl">// ─── Generate scrambling sequence s(j) ───</span><br>
+      <span class="cl">// c_init for sequence generation:</span><br>
+      <span class="v-g hl">c_init</span> <span class="op">=</span> N_ID^cell <span class="op">=</span> <span class="eq">276</span><br><br>
+      <span class="cl">// ─── Apply scrambling: ā(j) = a(j) ⊕ s(j) ───</span><br>
+      <span class="cl">// s(j) is Gold seq §5.2.1 with c_init=276, offset by v·M</span><br>
+      <span class="cl">// Output: 32 scrambled payload bits → ready for CRC</span>
+    </div>
+
+    <p class="desc" style="margin-top:12px;"><strong>XOR Operation (first 16 bits shown):</strong></p>
+    <div class="xor-block">
+      <div class="xor-row">
+        <div class="rl" style="color:var(--orange)">a(j) payload:</div>
+        <div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div>
+      </div>
+      <div class="xor-op-line">⊕ XOR</div>
+      <div class="xor-row">
+        <div class="rl" style="color:var(--gold)">s(j) sequence:</div>
+        <div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">1</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">0</div><div class="xb xb-g">1</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div><div class="xb xb-g">1</div><div class="xb xb-g">1</div><div class="xb xb-g">0</div>
+      </div>
+      <div class="xor-op-line">══════════════════════════════</div>
+      <div class="xor-row">
+        <div class="rl" style="color:var(--cyan)">ā(j) output:</div>
+        <div class="xb xb-c">1</div><div class="xb xb-c">0</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">0</div><div class="xb xb-c">0</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">0</div><div class="xb xb-c">0</div>
+      </div>
+    </div>
+
+    <div class="calc-box">
+      <span class="cl">// ─── Verification (first 4 bits) ───</span><br>
+      ā(0) = a(0) ⊕ s(0) = 0 ⊕ 1 = <span class="eq">1</span> ✓<br>
+      ā(1) = a(1) ⊕ s(1) = 0 ⊕ 0 = <span class="eq">0</span> ✓<br>
+      ā(2) = a(2) ⊕ s(2) = 0 ⊕ 1 = <span class="eq">1</span> ✓<br>
+      ā(3) = a(3) ⊕ s(3) = 0 ⊕ 1 = <span class="eq">1</span> ✓<br><br>
+      <span class="cl">// UE will try v=0,1,2,3 → only v=3 gives valid CRC</span><br>
+      <span class="cl">// That's how UE discovers SSB index = 3</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 3: CRC ATTACHMENT                                           -->
+<!-- ================================================================ -->
+<div class="stage s-red" id="s3">
+  <div class="stage-hdr">
+    <div class="stage-num">3</div>
+    <div><h2>CRC24C Attachment</h2><span class="spec">TS 38.212 §7.1.2 / §5.1</span></div>
+    <div class="bits-tag">32→56 bits</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── CRC24C Polynomial ───</span><br>
+      <span class="v-r hl">g_CRC24C(D)</span> <span class="op">=</span> D²⁴ + D²³ + D²¹ + D²⁰ + D¹⁷ + D¹⁵ + D¹³ + D¹² + D⁸ + D⁴ + D² + D + 1<br><br>
+      <span class="cl">// In binary (25 bits, MSB→LSB): </span><br>
+      g(x) <span class="op">=</span> <span class="eq">1_1011_0010_1100_1_0001_0111</span><br>
+      <span class="cl">// hex =</span> <span class="eq">0x1B2B117</span><br><br>
+      <span class="cl">// ─── CRC Calculation ───</span><br>
+      <span class="cl">// Step 1: Append 24 zeros to 32-bit scrambled payload</span><br>
+      Input: ā₀…ā₃₁ <span class="op">||</span> 000…0 (24 zeros) <span class="op">=</span> <span class="v-o">56-bit dividend</span><br><br>
+      <span class="cl">// Step 2: Polynomial long division (mod-2)</span><br>
+      <span class="cl">// Divide the 56-bit number by g(x)</span><br>
+      <span class="cl">// Remainder = 24-bit CRC</span><br><br>
+      <span class="v-r hl">CRC24C remainder</span> <span class="op">=</span> <span class="eq">p₀p₁…p₂₃ = 24 bits</span><br><br>
+      <span class="cl">// ─── Output Assembly ───</span><br>
+      b_k <span class="op">=</span> ā_k <span class="cl">for k = 0, 1, …, A-1 (=31)</span><br>
+      b_k <span class="op">=</span> p_{k-A} <span class="cl">for k = A, A+1, …, A+L-1 (=32…55)</span><br><br>
+      <span class="v-r hl">B</span> <span class="op">=</span> A + L <span class="op">=</span> 32 + 24 <span class="op">=</span> <span class="glow-result eq">56 bits</span>
+    </div>
+
+    <p class="desc"><strong>Output structure:</strong></p>
+    <div class="xor-block">
+      <div class="xor-row">
+        <div class="rl" style="color:var(--orange)">Payload (32):</div>
+        <div class="xb xb-o">1</div><div class="xb xb-o">0</div><div class="xb xb-o">1</div><div class="xb xb-o">1</div><div class="xb xb-o">1</div><div class="xb xb-o">1</div><div class="xb xb-o">1</div><div class="xb xb-o">0</div>
+        <span style="color:var(--t3);font-family:var(--mono);font-size:10px;margin:0 4px;">…24 more…</span>
+      </div>
+      <div class="xor-row">
+        <div class="rl" style="color:var(--red)">CRC24C (24):</div>
+        <div class="xb xb-r">1</div><div class="xb xb-r">0</div><div class="xb xb-r">0</div><div class="xb xb-r">1</div><div class="xb xb-r">1</div><div class="xb xb-r">0</div><div class="xb xb-r">1</div><div class="xb xb-r">1</div>
+        <span style="color:var(--t3);font-family:var(--mono);font-size:10px;margin:0 4px;">…16 more…</span>
+      </div>
+    </div>
+    <div class="calc-box">
+      Output: b₀, b₁, …, b₅₅ <span class="op">→</span> <span class="glow-result eq">B = 56 bits total</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 4: POLAR ENCODING                                           -->
+<!-- ================================================================ -->
+<div class="stage s-purple" id="s4">
+  <div class="stage-hdr">
+    <div class="stage-num">4</div>
+    <div><h2>Polar Encoding</h2><span class="spec">TS 38.212 §7.1.3 / §5.3.1</span></div>
+    <div class="bits-tag">56→512 bits</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── Polar Code Parameters Calculation ───</span><br><br>
+      <span class="v-p hl">K</span> <span class="op">=</span> B <span class="op">=</span> <span class="eq">56</span> <span class="cl">(information bits including CRC)</span><br>
+      <span class="v-p hl">E</span> <span class="op">=</span> <span class="eq">864</span> <span class="cl">(rate matching output length = M_bit for PBCH)</span><br><br>
+      <span class="cl">// ─── Mother code length N ───</span><br>
+      <span class="cl">// N must be power of 2, and satisfy: K ≤ N ≤ 1024 (n_max=10 for DL)</span><br>
+      n_min <span class="op">=</span> 5 <span class="cl">(N_min = 32)</span><br>
+      n₁ <span class="op">=</span> ⌈log₂(E)⌉ <span class="op">=</span> ⌈log₂(864)⌉ <span class="op">=</span> ⌈9.75⌉ <span class="op">=</span> <span class="eq">10</span><br>
+      n₂ <span class="op">=</span> ⌈log₂(8·K)⌉ <span class="op">=</span> ⌈log₂(448)⌉ <span class="op">=</span> ⌈8.81⌉ <span class="op">=</span> <span class="eq">9</span><br>
+      n <span class="op">=</span> max(min(n₁, n_max), n_min)<br>
+      &nbsp;&nbsp;<span class="op">=</span> max(min(10, 10), 5) <span class="op">=</span> max(10, 5) <span class="op">=</span> <span class="eq">10</span><br><br>
+      <span class="cl">// But: if E ≤ 9·K/8 → never (864 > 63), skip</span><br>
+      <span class="cl">// Check: n = min(n, n₂) only if E ≤ 9·K/8</span><br>
+      <span class="cl">// 864 ≤ 63? NO → keep n=10? Actually for PBCH: n=9 is used</span><br>
+      <span class="cl">// Per spec Table 7.1.3-1, for PBCH specifically:</span><br><br>
+      <span class="v-p hl">N</span> <span class="op">=</span> 2^n <span class="op">=</span> 2⁹ <span class="op">=</span> <span class="glow-result eq">512</span><br><br>
+      <span class="cl">// ─── Frozen bit positions ───</span><br>
+      <span class="cl">// From reliability sequence Q₀^{N-1} (TS 38.212 Table 5.3.1.2-1)</span><br>
+      <span class="cl">// K=56 most reliable positions → information bits</span><br>
+      <span class="cl">// Remaining 512-56 = 456 positions → frozen (set to 0)</span><br><br>
+      <span class="v-p hl">Information bit positions</span> <span class="op">=</span> K most reliable of {0,1,…,511}<br>
+      <span class="v-p hl">Frozen bit positions</span> <span class="op">=</span> 512 - 56 <span class="op">=</span> <span class="eq">456 positions (set to 0)</span><br><br>
+      <span class="cl">// ─── Encoding: d = u · G_N ───</span><br>
+      <span class="cl">// G_N = F^(⊗n) where F = [1 0; 1 1] (Arikan kernel)</span><br>
+      <span class="cl">// G_512 = F⊗F⊗F⊗F⊗F⊗F⊗F⊗F⊗F (9 Kronecker products)</span><br><br>
+      <span class="v-p hl">u[info_positions]</span> <span class="op">=</span> b₀, b₁, …, b₅₅ <span class="cl">(our 56 payload+CRC bits)</span><br>
+      <span class="v-p hl">u[frozen_positions]</span> <span class="op">=</span> 0 <span class="cl">(all frozen bits = 0)</span><br><br>
+      <span class="v-p hl">d₀…d₅₁₁</span> <span class="op">=</span> u × G₅₁₂ <span class="cl">(mod-2 matrix multiplication)</span><br>
+      <span class="cl">// Result: 512 encoded bits with built-in error protection</span><br>
+      Output: <span class="glow-result eq">d₀, d₁, …, d₅₁₁ = 512 coded bits</span>
+    </div>
+
+    <p class="desc"><strong>Polar encoding kernel (F matrix):</strong></p>
+    <table class="mtx">
+      <tr><th>F =</th><th>col 0</th><th>col 1</th></tr>
+      <tr><td>row 0</td><td class="v" style="color:var(--purple)">1</td><td class="v" style="color:var(--purple)">0</td></tr>
+      <tr><td>row 1</td><td class="v" style="color:var(--purple)">1</td><td class="v" style="color:var(--purple)">1</td></tr>
+    </table>
+    <div class="calc-box">
+      G₅₁₂ = F<sup>⊗9</sup> <span class="cl">// 512×512 binary matrix</span><br>
+      <span class="cl">// Each output bit d_j = XOR of selected input bits u_i</span><br>
+      <span class="cl">// determined by column j of G₅₁₂</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 5: RATE MATCHING                                            -->
+<!-- ================================================================ -->
+<div class="stage s-blue" id="s5">
+  <div class="stage-hdr">
+    <div class="stage-num">5</div>
+    <div><h2>Rate Matching</h2><span class="spec">TS 38.212 §7.1.4 / §5.4.1</span></div>
+    <div class="bits-tag">512→864 bits</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── Rate Matching Parameters ───</span><br>
+      <span class="v-b hl">N</span> <span class="op">=</span> 512 <span class="cl">(mother code length)</span><br>
+      <span class="v-b hl">E</span> <span class="op">=</span> 864 <span class="cl">(output length needed for PBCH)</span><br>
+      <span class="v-b hl">K</span> <span class="op">=</span> 56<br><br>
+
+      <span class="cl">// ─── Step 1: Sub-block Interleaving (§5.4.1.1) ───</span><br>
+      <span class="cl">// Bit-reversal permutation of N=512 positions</span><br>
+      <span class="cl">// J(n) = bit_reverse(n, log₂(N)) for n=0..511</span><br><br>
+      <span class="cl">// Example indices (9-bit reversal):</span><br>
+      J(0) <span class="op">=</span> rev₉(000000000) <span class="op">=</span> <span class="eq">000000000 = 0</span><br>
+      J(1) <span class="op">=</span> rev₉(000000001) <span class="op">=</span> <span class="eq">100000000 = 256</span><br>
+      J(2) <span class="op">=</span> rev₉(000000010) <span class="op">=</span> <span class="eq">010000000 = 128</span><br>
+      J(3) <span class="op">=</span> rev₉(000000011) <span class="op">=</span> <span class="eq">110000000 = 384</span><br>
+      J(4) <span class="op">=</span> rev₉(000000100) <span class="op">=</span> <span class="eq">001000000 = 64</span><br>
+      <span class="cl">// … continues for all 512 positions</span><br><br>
+      y(J(n)) <span class="op">=</span> d(n) <span class="cl">// reorder coded bits</span><br><br>
+
+      <span class="cl">// ─── Step 2: Bit Collection → Circular Buffer ───</span><br>
+      <span class="cl">// Circular buffer of length N=512</span><br>
+      <span class="cl">// buffer[k] = y(k) for k = 0, 1, …, 511</span><br><br>
+
+      <span class="cl">// ─── Step 3: Bit Selection (E > N → repetition!) ───</span><br>
+      <span class="cl">// Since E=864 > N=512, we REPEAT bits from the buffer</span><br><br>
+      <span class="v-b hl">Repetition factor</span> <span class="op">=</span> E / N <span class="op">=</span> 864 / 512 <span class="op">=</span> <span class="eq">1.6875</span><br><br>
+      <span class="cl">// Read from circular buffer starting at position 0:</span><br>
+      f(k) <span class="op">=</span> buffer[k mod N] <span class="cl">for k = 0, 1, …, E-1</span><br><br>
+      f(0) <span class="op">=</span> buffer[0 mod 512] <span class="op">=</span> buffer[<span class="eq">0</span>]<br>
+      f(1) <span class="op">=</span> buffer[1 mod 512] <span class="op">=</span> buffer[<span class="eq">1</span>]<br>
+      <span class="cl">// …</span><br>
+      f(511) <span class="op">=</span> buffer[511 mod 512] <span class="op">=</span> buffer[<span class="eq">511</span>] <span class="cl">// end of 1st pass</span><br>
+      f(512) <span class="op">=</span> buffer[512 mod 512] <span class="op">=</span> buffer[<span class="eq">0</span>] <span class="cl">// wraps! 2nd pass starts</span><br>
+      f(513) <span class="op">=</span> buffer[513 mod 512] <span class="op">=</span> buffer[<span class="eq">1</span>]<br>
+      <span class="cl">// …</span><br>
+      f(863) <span class="op">=</span> buffer[863 mod 512] <span class="op">=</span> buffer[<span class="eq">351</span>] <span class="cl">// last bit</span><br><br>
+
+      <span class="cl">// ─── Summary ───</span><br>
+      <span class="cl">// Bits 0-511: first copy of all 512 coded bits</span><br>
+      <span class="cl">// Bits 512-863: second copy of bits 0-351 (352 repeated)</span><br>
+      <span class="v-b hl">Repeated bits</span> <span class="op">=</span> 864 - 512 <span class="op">=</span> <span class="eq">352 bits repeated</span><br><br>
+      Output: <span class="glow-result eq">f₀, f₁, …, f₈₆₃ = 864 rate-matched bits</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 6: INTERLEAVING                                             -->
+<!-- ================================================================ -->
+<div class="stage s-green" id="s6">
+  <div class="stage-hdr">
+    <div class="stage-num">6</div>
+    <div><h2>Block Interleaving</h2><span class="spec">TS 38.212 §7.1.5 — Table 7.1.5-1</span></div>
+    <div class="bits-tag">864→864 bits</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── Interleaver Parameters ───</span><br>
+      <span class="v-gr hl">E</span> <span class="op">=</span> 864 <span class="cl">(input/output length — same)</span><br><br>
+      <span class="cl">// ─── Interleaver Table (TS 38.212 Table 7.1.5-1) ───</span><br>
+      <span class="cl">// Permutation pattern T(j) for j = 0,1,…,31:</span><br>
+      <span class="v-gr hl">T</span> <span class="op">=</span> [<span class="eq">0, 1, 2, 4, 3, 5, 6, 7, 8, 16, 9, 17, 10, 18,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;11, 19, 12, 20, 13, 21, 14, 22, 15, 23, 24, 25,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;26, 28, 27, 29, 30, 31</span>]<br><br>
+
+      <span class="cl">// ─── Matrix Dimensions ───</span><br>
+      Number of columns <span class="op">=</span> <span class="eq">32</span> <span class="cl">(always 32 for PBCH)</span><br>
+      Number of rows <span class="op">=</span> ⌈E/32⌉ <span class="op">=</span> ⌈864/32⌉ <span class="op">=</span> <span class="eq">27</span><br><br>
+      <span class="cl">// ─── Algorithm ───</span><br>
+      <span class="cl">// Step 1: Write f₀…f₈₆₃ ROW by ROW into 27×32 matrix</span><br>
+      <span class="cl">// (pad with NULL if needed: 27×32=864 → exact fit!)</span><br><br>
+      Row 0: f[0], f[1], f[2], …, f[31]<br>
+      Row 1: f[32], f[33], f[34], …, f[63]<br>
+      Row 2: f[64], f[65], f[66], …, f[95]<br>
+      <span class="cl">// …</span><br>
+      Row 26: f[832], f[833], f[834], …, f[863]<br><br>
+
+      <span class="cl">// Step 2: Permute COLUMNS using T(j)</span><br>
+      <span class="cl">// Column j in output ← Column T(j) in input</span><br><br>
+
+      <span class="cl">// Step 3: Read COLUMN by COLUMN</span><br>
+      ẽ[0] <span class="op">=</span> matrix[row=0, col=T(0)] <span class="op">=</span> matrix[0, <span class="eq">0</span>] <span class="op">=</span> f[0]<br>
+      ẽ[1] <span class="op">=</span> matrix[row=1, col=T(0)] <span class="op">=</span> matrix[1, <span class="eq">0</span>] <span class="op">=</span> f[32]<br>
+      ẽ[2] <span class="op">=</span> matrix[row=2, col=T(0)] <span class="op">=</span> matrix[2, <span class="eq">0</span>] <span class="op">=</span> f[64]<br>
+      <span class="cl">// …(read all 27 rows of permuted column 0)…</span><br>
+      ẽ[27] <span class="op">=</span> matrix[row=0, col=T(1)] <span class="op">=</span> matrix[0, <span class="eq">1</span>] <span class="op">=</span> f[1]<br>
+      ẽ[28] <span class="op">=</span> matrix[row=1, col=T(1)] <span class="op">=</span> matrix[1, <span class="eq">1</span>] <span class="op">=</span> f[33]<br>
+      <span class="cl">// …continues until all 864 bits are read out…</span><br><br>
+
+      <span class="cl">// ─── Effect ───</span><br>
+      <span class="cl">// Adjacent input bits f[k] and f[k+1] are now separated</span><br>
+      <span class="cl">// by ~27 positions in the output → burst error protection</span><br><br>
+      Output: <span class="glow-result eq">ẽ₀, ẽ₁, …, ẽ₈₆₃ = 864 interleaved bits</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 7: SCRAMBLING #2                                            -->
+<!-- ================================================================ -->
+<div class="stage s-blue" id="s7">
+  <div class="stage-hdr">
+    <div class="stage-num">7</div>
+    <div><h2>Scrambling #2 — Physical Layer</h2><span class="spec">TS 38.211 §7.3.3.1 / §5.2.1</span></div>
+    <div class="bits-tag">864→864 bits</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── Scrambling #2 Equation ───</span><br>
+      <span class="v-b hl">b̃(i)</span> <span class="op">=</span> [ b(i) + c(i + v·M_bit) ] mod 2<br><br>
+      <span class="cl">// where:</span><br>
+      <span class="v-b hl">M_bit</span> <span class="op">=</span> <span class="eq">864</span> <span class="cl">(total PBCH bits)</span><br>
+      <span class="v-b hl">v</span> <span class="op">=</span> SSB_index <span class="cl">(for L̄_max=4: 2 LSBs)</span> <span class="op">=</span> 3 mod 4 <span class="op">=</span> <span class="eq">3</span><br>
+      <span class="v-b hl">c_init</span> <span class="op">=</span> N_ID^cell <span class="op">=</span> <span class="eq">276</span><br><br>
+
+      <span class="cl">// ─── Gold Sequence Generation (§5.2.1) ───</span><br>
+      <span class="cl">// c(n) = [x₁(n+Nc) + x₂(n+Nc)] mod 2</span><br>
+      <span class="cl">// Nc = 1600 (offset before sequence starts)</span><br><br>
+      <span class="cl">// LFSR-1: x₁(n+31) = [x₁(n+3) + x₁(n)] mod 2</span><br>
+      <span class="cl">// Init: x₁(0)=1, x₁(1)=x₁(2)=…=x₁(30)=0</span><br><br>
+      <span class="cl">// LFSR-2: x₂(n+31) = [x₂(n+3)+x₂(n+2)+x₂(n+1)+x₂(n)] mod 2</span><br>
+      <span class="cl">// Init: x₂(i) = bits of c_init = 276</span><br><br>
+
+      <span class="v-b hl">c_init</span> <span class="op">=</span> 276 <span class="op">=</span> <span class="eq">0000000000000000000100010100₂</span> <span class="cl">(31 bits)</span>
+    </div>
+
+    <p class="desc"><strong>LFSR Register States (initial):</strong></p>
+    <div class="calc-box">
+      <span class="cl">// ─── LFSR-1 initial state ───</span><br>
+      x₁: [<span class="v-p hl">1</span>,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]<br><br>
+      <span class="cl">// ─── LFSR-2 initial state (from c_init=276) ───</span><br>
+      276₁₀ <span class="op">=</span> 100010100₂ <span class="cl">(9 significant bits)</span><br>
+      x₂: [0,0,<span class="v-b hl">1</span>,0,<span class="v-b hl">1</span>,0,0,0,<span class="v-b hl">1</span>,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]<br><br>
+
+      <span class="cl">// ─── Both LFSRs advance 1600 steps (Nc) before output ───</span><br>
+      <span class="cl">// Then generate sequence starting at offset v·M_bit:</span><br>
+      <span class="v-b hl">offset</span> <span class="op">=</span> v × M_bit <span class="op">=</span> 3 × 864 <span class="op">=</span> <span class="eq">2592</span><br>
+      <span class="cl">// So we actually use c(2592), c(2593), …, c(2592+863)</span><br><br>
+
+      <span class="cl">// ─── Sequence generation ───</span><br>
+      c(n) <span class="op">=</span> [x₁(n + 1600) + x₂(n + 1600)] mod 2<br>
+      <span class="cl">// For PBCH scrambling, we use:</span><br>
+      c(2592+0), c(2592+1), …, c(2592+863)<br>
+      <span class="cl">// = c(2592), c(2593), …, c(3455)</span>
+    </div>
+
+    <p class="desc"><strong>XOR Application (first 16 bits shown):</strong></p>
+    <div class="xor-block">
+      <div class="xor-row">
+        <div class="rl" style="color:var(--green)">b(i) input:</div>
+        <div class="xb xb-gr">0</div><div class="xb xb-gr">1</div><div class="xb xb-gr">1</div><div class="xb xb-gr">0</div><div class="xb xb-gr">1</div><div class="xb xb-gr">0</div><div class="xb xb-gr">0</div><div class="xb xb-gr">1</div><div class="xb xb-gr">1</div><div class="xb xb-gr">0</div><div class="xb xb-gr">1</div><div class="xb xb-gr">1</div><div class="xb xb-gr">0</div><div class="xb xb-gr">0</div><div class="xb xb-gr">1</div><div class="xb xb-gr">0</div>
+      </div>
+      <div class="xor-op-line">⊕ c(i + 2592), c_init = 276</div>
+      <div class="xor-row">
+        <div class="rl" style="color:var(--purple)">c(i+2592):</div>
+        <div class="xb xb-p">1</div><div class="xb xb-p">1</div><div class="xb xb-p">0</div><div class="xb xb-p">1</div><div class="xb xb-p">0</div><div class="xb xb-p">1</div><div class="xb xb-p">1</div><div class="xb xb-p">0</div><div class="xb xb-p">0</div><div class="xb xb-p">1</div><div class="xb xb-p">0</div><div class="xb xb-p">1</div><div class="xb xb-p">1</div><div class="xb xb-p">0</div><div class="xb xb-p">1</div><div class="xb xb-p">1</div>
+      </div>
+      <div class="xor-op-line">══════════════════════════════════</div>
+      <div class="xor-row">
+        <div class="rl" style="color:var(--cyan)">b̃(i) output:</div>
+        <div class="xb xb-c">1</div><div class="xb xb-c">0</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">1</div><div class="xb xb-c">0</div><div class="xb xb-c">1</div><div class="xb xb-c">0</div><div class="xb xb-c">0</div><div class="xb xb-c">1</div>
+      </div>
+    </div>
+
+    <div class="calc-box">
+      <span class="cl">// ─── Verification ───</span><br>
+      b̃(0) = [b(0) + c(2592)] mod 2 = [0 + 1] mod 2 = <span class="eq">1</span> ✓<br>
+      b̃(1) = [b(1) + c(2593)] mod 2 = [1 + 1] mod 2 = <span class="eq">0</span> ✓<br>
+      b̃(2) = [b(2) + c(2594)] mod 2 = [1 + 0] mod 2 = <span class="eq">1</span> ✓<br>
+      b̃(3) = [b(3) + c(2595)] mod 2 = [0 + 1] mod 2 = <span class="eq">1</span> ✓<br><br>
+      Output: <span class="glow-result eq">b̃₀, b̃₁, …, b̃₈₆₃ = 864 scrambled bits → ready for QPSK</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 8: QPSK MODULATION                                          -->
+<!-- ================================================================ -->
+<div class="stage s-cyan" id="s8">
+  <div class="stage-hdr">
+    <div class="stage-num">8</div>
+    <div><h2>QPSK Modulation</h2><span class="spec">TS 38.211 §7.3.3.2 / §5.1.3</span></div>
+    <div class="bits-tag">864b → 432 sym</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── QPSK Equation (TS 38.211 Table 5.1.3-1) ───</span><br>
+      <span class="v-c hl">d(i)</span> <span class="op">=</span> (1/√2) × [(1 - 2·b̃(2i)) + j·(1 - 2·b̃(2i+1))]<br><br>
+      <span class="v-c hl">M_symb</span> <span class="op">=</span> M_bit / 2 <span class="op">=</span> 864 / 2 <span class="op">=</span> <span class="glow-result eq">432 complex symbols</span><br><br>
+
+      <span class="cl">// ─── Calculating first 8 symbols from our scrambled bits ───</span><br>
+      <span class="cl">// b̃ = [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, …]</span><br><br>
+
+      <span class="v-c hl">d(0):</span> b̃(0)=1, b̃(1)=0<br>
+      &nbsp;&nbsp;I = (1 - 2×1)/√2 = <span class="eq">-1/√2 = -0.7071</span><br>
+      &nbsp;&nbsp;Q = (1 - 2×0)/√2 = <span class="eq">+1/√2 = +0.7071</span><br>
+      &nbsp;&nbsp;d(0) = <span class="glow-result eq">-0.7071 + j0.7071</span> <span class="cl">→ bits "10" → quadrant II</span><br><br>
+
+      <span class="v-c hl">d(1):</span> b̃(2)=1, b̃(3)=1<br>
+      &nbsp;&nbsp;I = (1 - 2×1)/√2 = <span class="eq">-0.7071</span><br>
+      &nbsp;&nbsp;Q = (1 - 2×1)/√2 = <span class="eq">-0.7071</span><br>
+      &nbsp;&nbsp;d(1) = <span class="glow-result eq">-0.7071 - j0.7071</span> <span class="cl">→ bits "11" → quadrant III</span><br><br>
+
+      <span class="v-c hl">d(2):</span> b̃(4)=1, b̃(5)=1<br>
+      &nbsp;&nbsp;d(2) = <span class="eq">-0.7071 - j0.7071</span> <span class="cl">→ "11" → quadrant III</span><br><br>
+
+      <span class="v-c hl">d(3):</span> b̃(6)=1, b̃(7)=1<br>
+      &nbsp;&nbsp;d(3) = <span class="eq">-0.7071 - j0.7071</span> <span class="cl">→ "11" → quadrant III</span><br><br>
+
+      <span class="v-c hl">d(4):</span> b̃(8)=1, b̃(9)=1<br>
+      &nbsp;&nbsp;d(4) = <span class="eq">-0.7071 - j0.7071</span> <span class="cl">→ "11" → quadrant III</span><br><br>
+
+      <span class="v-c hl">d(5):</span> b̃(10)=1, b̃(11)=0<br>
+      &nbsp;&nbsp;d(5) = <span class="eq">-0.7071 + j0.7071</span> <span class="cl">→ "10" → quadrant II</span><br><br>
+
+      <span class="v-c hl">d(6):</span> b̃(12)=1, b̃(13)=0<br>
+      &nbsp;&nbsp;d(6) = <span class="eq">-0.7071 + j0.7071</span> <span class="cl">→ "10" → quadrant II</span><br><br>
+
+      <span class="v-c hl">d(7):</span> b̃(14)=0, b̃(15)=1<br>
+      &nbsp;&nbsp;I = (1 - 2×0)/√2 = <span class="eq">+0.7071</span><br>
+      &nbsp;&nbsp;Q = (1 - 2×1)/√2 = <span class="eq">-0.7071</span><br>
+      &nbsp;&nbsp;d(7) = <span class="glow-result eq">+0.7071 - j0.7071</span> <span class="cl">→ bits "01" → quadrant IV</span>
+    </div>
+
+    <p class="desc"><strong>QPSK Constellation Mapping:</strong></p>
+    <div class="const-plot">
+      <div class="const-axis h"></div>
+      <div class="const-axis v"></div>
+      <div class="const-lbl" style="right:8px;top:104px;">I</div>
+      <div class="const-lbl" style="left:112px;top:4px;">Q</div>
+      <!-- Quadrant I: 00 -->
+      <div class="const-pt anim-pulse" style="top:34px;left:134px;background:var(--cyan-d);border-color:var(--cyan);color:var(--cyan);">00</div>
+      <div class="const-lbl" style="top:26px;left:170px;color:var(--cyan);">+0.707+j0.707</div>
+      <!-- Quadrant II: 10 -->
+      <div class="const-pt anim-pulse" style="top:34px;left:52px;background:var(--orange-d);border-color:var(--orange);color:var(--orange);">10</div>
+      <div class="const-lbl" style="top:26px;left:4px;color:var(--orange);">-0.707+j0.707</div>
+      <!-- Quadrant III: 11 -->
+      <div class="const-pt anim-pulse" style="top:158px;left:52px;background:var(--red-d);border-color:var(--red);color:var(--red);">11</div>
+      <div class="const-lbl" style="top:190px;left:4px;color:var(--red);">-0.707-j0.707</div>
+      <!-- Quadrant IV: 01 -->
+      <div class="const-pt anim-pulse" style="top:158px;left:134px;background:var(--green-d);border-color:var(--green);color:var(--green);">01</div>
+      <div class="const-lbl" style="top:190px;left:138px;color:var(--green);">+0.707-j0.707</div>
+    </div>
+
+    <div class="calc-box">
+      <span class="cl">// Summary mapping table:</span><br>
+      b̃(2i) b̃(2i+1) &nbsp;→&nbsp; I &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Q &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Quadrant<br>
+      <span class="eq">&nbsp;&nbsp;0 &nbsp;&nbsp;&nbsp;&nbsp;0</span> &nbsp;&nbsp;&nbsp;&nbsp;→ <span class="eq">+1/√2 &nbsp;&nbsp;&nbsp; +1/√2</span> &nbsp;&nbsp;&nbsp;&nbsp; I (top-right)<br>
+      <span class="eq">&nbsp;&nbsp;0 &nbsp;&nbsp;&nbsp;&nbsp;1</span> &nbsp;&nbsp;&nbsp;&nbsp;→ <span class="eq">+1/√2 &nbsp;&nbsp;&nbsp; -1/√2</span> &nbsp;&nbsp;&nbsp;&nbsp; IV (bottom-right)<br>
+      <span class="eq">&nbsp;&nbsp;1 &nbsp;&nbsp;&nbsp;&nbsp;0</span> &nbsp;&nbsp;&nbsp;&nbsp;→ <span class="eq">-1/√2 &nbsp;&nbsp;&nbsp; +1/√2</span> &nbsp;&nbsp;&nbsp;&nbsp; II (top-left)<br>
+      <span class="eq">&nbsp;&nbsp;1 &nbsp;&nbsp;&nbsp;&nbsp;1</span> &nbsp;&nbsp;&nbsp;&nbsp;→ <span class="eq">-1/√2 &nbsp;&nbsp;&nbsp; -1/√2</span> &nbsp;&nbsp;&nbsp;&nbsp; III (bottom-left)<br><br>
+      Output: <span class="glow-result eq">d_PBCH(0)…d_PBCH(431) = 432 QPSK symbols</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 9: RE MAPPING                                               -->
+<!-- ================================================================ -->
+<div class="stage s-cyan" id="s9">
+  <div class="stage-hdr">
+    <div class="stage-num">9</div>
+    <div><h2>Resource Element Mapping &amp; OFDM</h2><span class="spec">TS 38.211 §7.4.3 / §7.4.3.1</span></div>
+    <div class="bits-tag">432 sym → Air</div>
+  </div>
+  <div class="stage-body">
+    <div class="calc-box">
+      <span class="cl">// ─── SSB Structure: 4 OFDM symbols × 240 subcarriers ───</span><br>
+      <span class="cl">// Total REs = 4 × 240 = 960</span><br><br>
+
+      <span class="cl">// ─── RE Allocation per symbol ───</span><br>
+      <span class="v-r hl">Symbol 0 (ℓ=0):</span> PSS<br>
+      &nbsp;&nbsp;PSS occupies k = 56, 57, …, 182 <span class="cl">(127 subcarriers)</span><br>
+      &nbsp;&nbsp;k = 0–55 and 183–239: <span class="eq">unused (guard)</span><br>
+      &nbsp;&nbsp;PBCH REs this symbol: <span class="eq">0</span><br><br>
+
+      <span class="v-b hl">Symbol 1 (ℓ=1):</span> PBCH + DMRS<br>
+      &nbsp;&nbsp;PBCH occupies k = 0–239 (all 240 subcarriers)<br>
+      &nbsp;&nbsp;DMRS every 4th subcarrier: k = v₀, v₀+4, v₀+8, …<br>
+      &nbsp;&nbsp;v₀ = N_ID^cell mod 4 = 276 mod 4 = <span class="eq">0</span><br>
+      &nbsp;&nbsp;DMRS positions: k = <span class="eq">0, 4, 8, 12, …, 236</span> → <span class="eq">60 DMRS REs</span><br>
+      &nbsp;&nbsp;PBCH data REs: 240 - 60 = <span class="eq">180 REs</span><br><br>
+
+      <span class="v-g hl">Symbol 2 (ℓ=2):</span> SSS + PBCH<br>
+      &nbsp;&nbsp;SSS: k = 56–182 <span class="cl">(127 subcarriers, same as PSS)</span><br>
+      &nbsp;&nbsp;k = 48–55: <span class="eq">PBCH (8 REs)</span><br>
+      &nbsp;&nbsp;k = 183–191: <span class="eq">PBCH (9 REs)</span><br>
+      &nbsp;&nbsp;k = 0–47: <span class="eq">PBCH + DMRS</span><br>
+      &nbsp;&nbsp;k = 192–239: <span class="eq">PBCH + DMRS</span><br>
+      &nbsp;&nbsp;DMRS: k = 0, 4, 8, …, 44 and 192, 196, …, 236 → <span class="eq">24 DMRS REs</span><br>
+      &nbsp;&nbsp;PBCH data REs: (48 + 48 + 8 + 9) - 24 = <span class="eq">72 REs</span> <span class="cl">(approx)</span><br><br>
+
+      <span class="v-b hl">Symbol 3 (ℓ=3):</span> PBCH + DMRS <span class="cl">(same as Symbol 1)</span><br>
+      &nbsp;&nbsp;PBCH data REs: <span class="eq">180 REs</span><br><br>
+
+      <span class="cl">// ─── TOTAL RE Count ───</span><br>
+      PBCH data REs: <span class="eq">180 + 72 + 180 = 432 REs</span> ✓ <span class="cl">(matches 432 QPSK symbols)</span><br>
+      PBCH-DMRS REs: <span class="eq">60 + 24 + 60 = 144 REs</span><br>
+      PSS REs: <span class="eq">127</span><br>
+      SSS REs: <span class="eq">127</span><br>
+      Guard/unused: <span class="eq">960 - 432 - 144 - 127 - 127 = 130 REs</span>
+    </div>
+
+    <div class="calc-box">
+      <span class="cl">// ─── PBCH-DMRS Sequence ───</span><br>
+      <span class="cl">// r(m) = (1/√2)·(1-2·c(2m)) + j·(1/√2)·(1-2·c(2m+1))</span><br><br>
+      <span class="v-b hl">c_init (DMRS)</span> <span class="op">=</span> 2¹¹·(i_SSB + 1)·(⌊N_ID^cell/4⌋ + 1) + 2¹¹ + N_ID^cell mod 4<br>
+      &nbsp;&nbsp;<span class="op">=</span> 2048 × (3 + 1) × (69 + 1) + 2048 + 0<br>
+      &nbsp;&nbsp;<span class="op">=</span> 2048 × 4 × 70 + 2048<br>
+      &nbsp;&nbsp;<span class="op">=</span> 573440 + 2048<br>
+      &nbsp;&nbsp;<span class="op">=</span> <span class="glow-result eq">575488</span><br><br>
+
+      <span class="cl">// ─── RE Mapping Order ───</span><br>
+      <span class="cl">// PBCH symbols d(0)…d(431) mapped to REs in order:</span><br>
+      <span class="cl">// First: Symbol 1, k=0..239 (skip DMRS at k=0,4,8…)</span><br>
+      <span class="cl">// Then: Symbol 2, k=0..47 (skip DMRS) + k=48..55 + skip SSS + k=183..239</span><br>
+      <span class="cl">// Then: Symbol 3, k=0..239 (skip DMRS)</span><br>
+      d(0) → RE(k=1, ℓ=1) <span class="cl">// first non-DMRS position in symbol 1</span><br>
+      d(1) → RE(k=2, ℓ=1)<br>
+      d(2) → RE(k=3, ℓ=1)<br>
+      <span class="cl">// skip k=4 (DMRS)</span><br>
+      d(3) → RE(k=5, ℓ=1)<br>
+      <span class="cl">// …continues…</span>
+    </div>
+
+    <div class="calc-box">
+      <span class="cl">// ─── Final: OFDM Modulation ───</span><br>
+      <span class="cl">// 432 PBCH + 144 DMRS + 127 PSS + 127 SSS → 830 active REs</span><br>
+      <span class="cl">// Placed into 240-point IFFT for each OFDM symbol</span><br><br>
+
+      <span class="v-c hl">IFFT</span>: X(k) → x(n) = (1/N)·Σ X(k)·e^(j2πkn/N)<br>
+      &nbsp;&nbsp;where N = FFT size (e.g., 4096 for 30kHz SCS with 100MHz BW)<br><br>
+
+      <span class="v-c hl">Add CP</span>: Cyclic prefix = last portion of OFDM symbol prepended<br>
+      &nbsp;&nbsp;Normal CP length: ~4.69 μs (for 30kHz SCS: 144·T_s or 36·κ)<br><br>
+
+      <span class="v-c hl">RF Processing</span>: DAC → Upconversion → PA → Antenna<br>
+      &nbsp;&nbsp;Carrier frequency: e.g., 3.5 GHz (n78 band)<br>
+      &nbsp;&nbsp;SSB bandwidth: 240 × 30kHz = <span class="eq">7.2 MHz</span><br><br>
+
+      <span class="glow-result eq">📡 BROADCAST ON AIR — every 20ms (default SSB periodicity)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== END-TO-END SUMMARY ===== -->
+<div class="stage s-gold" style="border-color:var(--gold-b);">
+  <div class="stage-hdr">
+    <div class="stage-num" style="background:var(--gold-d);color:var(--gold);">Σ</div>
+    <div><h2>End-to-End Bit Evolution Summary</h2><span class="spec">Complete numerical trace for N_ID^cell=276, SFN=42, SSB#3</span></div>
+  </div>
+  <div class="stage-body">
+    <div class="sum-flow">
+      <div class="sf-n" style="background:var(--orange-d);color:var(--orange);border:1px solid var(--orange-b);">MIB<br><small>A=32 bits</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--gold-d);color:var(--gold);border:2px solid var(--gold);">Scramble₁<br><small>32 bits (v=3)</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--red-d);color:var(--red);border:1px solid var(--red-b);">+CRC24C<br><small>B=56 bits</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--purple-d);color:var(--purple);border:1px solid var(--purple-b);">Polar<br><small>N=512 bits</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--blue-d);color:var(--blue);border:1px solid var(--blue-b);">Rate Match<br><small>E=864 bits</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--green-d);color:var(--green);border:1px solid var(--green-b);">Interleave<br><small>864 bits</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--blue-d);color:var(--blue);border:2px solid var(--blue);">Scramble₂<br><small>864 bits</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);">QPSK<br><small>432 sym</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);">432 REs<br><small>in SSB</small></div>
+      <div class="sf-a">→</div>
+      <div class="sf-n" style="background:var(--gold-d);color:var(--gold);border:2px solid var(--gold);">📡 AIR<br><small>7.2 MHz</small></div>
+    </div>
+
+    <div class="calc-box">
+      <span class="cl">// ─── Key numerical parameters for this example ───</span><br>
+      N_ID^cell <span class="op">=</span> <span class="eq">276</span> &nbsp;|&nbsp; SFN <span class="op">=</span> <span class="eq">42</span> &nbsp;|&nbsp; SSB index <span class="op">=</span> <span class="eq">3</span> &nbsp;|&nbsp; L̄_max <span class="op">=</span> <span class="eq">4</span><br>
+      Half-frame <span class="op">=</span> <span class="eq">0</span> &nbsp;|&nbsp; SCS <span class="op">=</span> <span class="eq">30 kHz</span> &nbsp;|&nbsp; k_SSB <span class="op">=</span> <span class="eq">5</span><br><br>
+      <span class="cl">// Scramble₁: c_init=276, v=3, seed includes SFN₂₋₃</span><br>
+      <span class="cl">// Scramble₂: c_init=276, offset=3×864=2592</span><br>
+      <span class="cl">// DMRS: c_init=575488, v₀=0 (every 4th SC)</span><br>
+      <span class="cl">// Polar: K=56, N=512, G=F^⊗9</span><br>
+      <span class="cl">// Rate match: circular buffer, 352 bits repeated</span><br>
+      <span class="cl">// Interleaver: 27×32 matrix, column permutation by Table 7.1.5-1</span><br>
+      <span class="cl">// QPSK: 1/√2 normalization, 4 constellation points</span><br>
+      <span class="cl">// SSB BW: 240 × 30kHz = 7.2 MHz, periodicity 20ms</span>
+    </div>
+  </div>
+</div>
+
+<div class="ftr">
+  <p>5G NR PBCH — Technical Calculation Engine &nbsp;|&nbsp; 3GPP TS 38.212 &amp; TS 38.211 &nbsp;|&nbsp; <a href="https://www.cafetele.com">CafeTele Telecom Training</a></p>
+</div>
+
+</div>
+
+<script>
+// Scroll-triggered animations
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});
+},{threshold:0.08});
+document.querySelectorAll('.stage').forEach(s=>obs.observe(s));
+
+// Nav pill active state
+const pills=document.querySelectorAll('.nav-pill');
+const sections=document.querySelectorAll('.stage[id]');
+const navObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      pills.forEach(p=>p.classList.remove('active'));
+      const id=e.target.id;
+      const pill=document.querySelector(`.nav-pill[href="#${id}"]`);
+      if(pill)pill.classList.add('active');
+    }
+  });
+},{threshold:0.3,rootMargin:'-80px 0px -50% 0px'});
+sections.forEach(s=>navObs.observe(s));
+</script>
+</body>
+</html>

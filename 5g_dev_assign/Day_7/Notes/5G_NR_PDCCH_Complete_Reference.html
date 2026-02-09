@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PDCCH — Complete Channel Design Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #151d30;
+  --bg-card-alt: #1a2340;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-teal: #14b8a6;
+  --accent-purple: #8b5cf6;
+  --accent-orange: #f59e0b;
+  --accent-pink: #ec4899;
+  --accent-green: #22c55e;
+  --accent-red: #ef4444;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #1e293b;
+  --border-accent: #2d3a56;
+  --glow-blue: rgba(59, 130, 246, 0.15);
+  --glow-cyan: rgba(6, 182, 212, 0.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 15px;
+}
+::selection {
+  background: var(--accent-blue);
+  color: #fff;
+}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 60px 20px;
+  background: radial-gradient(ellipse at 30% 20%, rgba(59,130,246,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(6,182,212,0.08) 0%, transparent 60%),
+              var(--bg-primary);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='60' height='60' patternUnits='userSpaceOnUse'%3E%3Cpath d='M60 0H0v60' fill='none' stroke='%23ffffff' stroke-width='0.3' opacity='0.04'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23g)' width='60' height='60'/%3E%3C/svg%3E");
+  opacity: 1;
+}
+.hero-content { position: relative; z-index: 2; max-width: 900px; }
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  padding: 6px 18px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  animation: fadeDown 0.8s ease;
+}
+.hero-badge::before {
+  content: '';
+  width: 7px; height: 7px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.hero h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 10px;
+  animation: fadeDown 0.8s ease 0.1s both;
+}
+.hero h1 .highlight {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero .subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  animation: fadeDown 0.8s ease 0.2s both;
+}
+.hero-specs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  animation: fadeDown 0.8s ease 0.3s both;
+}
+.hero-spec {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px;
+}
+.hero-spec strong { color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Nav (sticky TOC) ── */
+.toc-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10, 14, 26, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 20px;
+  overflow-x: auto;
+}
+.toc-bar::-webkit-scrollbar { height: 0; }
+.toc-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  gap: 4px;
+  padding: 8px 0;
+}
+.toc-link {
+  white-space: nowrap;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.25s;
+  letter-spacing: 0.3px;
+}
+.toc-link:hover {
+  color: var(--accent-cyan);
+  background: rgba(6,182,212,0.08);
+}
+
+/* ── Layout ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: 64px;
+  animation: fadeIn 0.6s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent-cyan);
+  margin-bottom: 10px;
+}
+.section-label::before {
+  content: '';
+  width: 20px; height: 2px;
+  background: var(--accent-cyan);
+}
+
+h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+.section > .desc {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 28px;
+  max-width: 800px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 20px;
+  transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--border-accent); }
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.card-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.card-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+.card-icon.cyan { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+.card-icon.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+.card-icon.orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+.card-icon.green { background: rgba(34,197,94,0.15); color: var(--accent-green); }
+.card-icon.pink { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+.card-icon.teal { background: rgba(20,184,166,0.15); color: var(--accent-teal); }
+.card-icon.red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+.card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.card p {
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  line-height: 1.75;
+}
+.card p + p { margin-top: 10px; }
+
+/* ── Grid layouts ── */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+
+/* ── Tags ── */
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 2px 3px 2px 0;
+}
+.tag.blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+.tag.cyan { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+.tag.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+.tag.orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+.tag.green { background: rgba(34,197,94,0.15); color: var(--accent-green); }
+.tag.pink { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+.tag.teal { background: rgba(20,184,166,0.15); color: var(--accent-teal); }
+.tag.red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+/* ── Tables ── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin: 16px 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+thead th {
+  background: var(--bg-card-alt);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-cyan);
+  padding: 12px 16px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--border-accent);
+}
+tbody td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+tbody tr:hover { background: rgba(59,130,246,0.04); }
+tbody tr:last-child td { border-bottom: none; }
+td code, p code, li code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  background: rgba(59,130,246,0.1);
+  color: var(--accent-blue);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* ── Diagram boxes ── */
+.diagram-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 24px;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+.diagram-box h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.diagram-box pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ── SVG diagrams ── */
+.svg-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 24px;
+  margin: 20px 0;
+  overflow-x: auto;
+  text-align: center;
+}
+.svg-container svg { max-width: 100%; height: auto; }
+
+/* ── Key-value list ── */
+.kv-list { list-style: none; padding: 0; }
+.kv-list li {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 14px;
+}
+.kv-list li:last-child { border-bottom: none; }
+.kv-label {
+  min-width: 180px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+}
+.kv-value { color: var(--text-secondary); }
+
+/* ── Callout ── */
+.callout {
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  display: flex;
+  gap: 14px;
+}
+.callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.callout.info {
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  color: #93c5fd;
+}
+.callout.warn {
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  color: #fcd34d;
+}
+.callout.tip {
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.2);
+  color: #86efac;
+}
+
+/* ── Flow chart styles ── */
+.flow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+.flow-block {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid;
+  min-width: 120px;
+}
+.flow-arrow {
+  font-size: 20px;
+  color: var(--text-muted);
+}
+
+/* ── Numbered steps ── */
+.steps { counter-reset: step; }
+.step {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 22px;
+  align-items: flex-start;
+}
+.step::before {
+  counter-increment: step;
+  content: counter(step);
+  min-width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-content h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.step-content p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ── Comparison blocks ── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+.compare-card {
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid;
+}
+.compare-card.lte {
+  background: rgba(245,158,11,0.05);
+  border-color: rgba(245,158,11,0.2);
+}
+.compare-card.nr {
+  background: rgba(6,182,212,0.05);
+  border-color: rgba(6,182,212,0.2);
+}
+.compare-card h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.compare-card.lte h4 { color: var(--accent-orange); }
+.compare-card.nr h4 { color: var(--accent-cyan); }
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+footer strong { color: var(--accent-cyan); }
+@media (max-width: 600px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .hero { min-height: 50vh; padding: 40px 16px; }
+  .card { padding: 20px; }
+  .container { padding: 24px 16px; }
+  .kv-list li { flex-direction: column; gap: 2px; }
+  .kv-label { min-width: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<header class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">3GPP TS 38.211 / 38.212 / 38.213</div>
+    <h1>5G NR <span class="highlight">PDCCH</span><br>Complete Channel Design</h1>
+    <p class="subtitle">Physical Downlink Control Channel — Architecture, CORESET, Search Spaces, DCI Formats, Blind Decoding, Beam Management & Every Detail</p>
+    <div class="hero-specs">
+      <div class="hero-spec"><strong>QPSK</strong> Only Modulation</div>
+      <div class="hero-spec"><strong>Polar</strong> Channel Coding</div>
+      <div class="hero-spec"><strong>1–16</strong> CCEs per Candidate</div>
+      <div class="hero-spec"><strong>≤44</strong> Blind Decodes / Slot</div>
+      <div class="hero-spec"><strong>3</strong> CORESET Types</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════ TOC BAR ═══════════════════════ -->
+<nav class="toc-bar">
+  <div class="toc-inner">
+    <a class="toc-link" href="#overview">Overview</a>
+    <a class="toc-link" href="#vs-lte">NR vs LTE</a>
+    <a class="toc-link" href="#coreset">CORESET</a>
+    <a class="toc-link" href="#reg-cce">REG & CCE</a>
+    <a class="toc-link" href="#search-space">Search Space</a>
+    <a class="toc-link" href="#al">Aggregation Levels</a>
+    <a class="toc-link" href="#dci">DCI Formats</a>
+    <a class="toc-link" href="#rnti">RNTI Masking</a>
+    <a class="toc-link" href="#blind-decode">Blind Decoding</a>
+    <a class="toc-link" href="#dmrs">DMRS</a>
+    <a class="toc-link" href="#polar">Polar Coding</a>
+    <a class="toc-link" href="#beam">Beam Mgmt</a>
+    <a class="toc-link" href="#cce-to-reg">CCE-to-REG</a>
+    <a class="toc-link" href="#processing">Processing Chain</a>
+    <a class="toc-link" href="#timing">Timing</a>
+    <a class="toc-link" href="#power">Power Control</a>
+    <a class="toc-link" href="#kpi">KPIs & Optim</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════════════ 1. OVERVIEW ═══════════════════════ -->
+<section class="section" id="overview">
+  <div class="section-label">Section 01</div>
+  <h2>What is PDCCH?</h2>
+  <p class="desc">The Physical Downlink Control Channel (PDCCH) carries Downlink Control Information (DCI) from gNB to UE. It is the most critical downlink physical channel because it tells the UE where its data is, how to decode it, and when to transmit uplink.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">📡</div>
+        <h3>Primary Purpose</h3>
+      </div>
+      <p>PDCCH carries DCI that schedules PDSCH (downlink data), PUSCH (uplink data), triggers SRS, and conveys power control commands. Without PDCCH, UE cannot know where its data is located in the frequency-time grid.</p>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">🔄</div>
+        <h3>Key Innovation in NR</h3>
+      </div>
+      <p>Unlike LTE's fixed control region (first 1–3 OFDM symbols of every subframe), NR PDCCH uses flexible CORESETs — configurable resource blocks in both time and frequency — enabling dynamic, beam-based control channel design.</p>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon purple">📋</div>
+        <h3>3GPP Specifications</h3>
+      </div>
+      <p><strong>TS 38.211</strong> — Physical mapping (REGs, CCEs, DMRS)<br>
+         <strong>TS 38.212</strong> — Channel coding, DCI formats, CRC<br>
+         <strong>TS 38.213</strong> — Search spaces, CORESET, blind decoding<br>
+         <strong>TS 38.214</strong> — Procedures relating to PDCCH</p>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div>PDCCH is always <strong>QPSK modulated</strong> (no higher-order modulation) to ensure robust reception even at cell edge. The robustness is further controlled by adjusting the <strong>Aggregation Level (AL)</strong> — the number of CCEs used per PDCCH candidate.</div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon green">📊</div>
+      <h3>PDCCH at a Glance — Key Parameters</h3>
+    </div>
+    <ul class="kv-list">
+      <li><span class="kv-label">Channel Type</span><span class="kv-value">Downlink Physical Control Channel</span></li>
+      <li><span class="kv-label">Direction</span><span class="kv-value">gNB → UE (Downlink only)</span></li>
+      <li><span class="kv-label">Modulation</span><span class="kv-value">QPSK only (2 bits/symbol)</span></li>
+      <li><span class="kv-label">Channel Coding</span><span class="kv-value">Polar Code (replaces LTE's Tail-Biting Convolutional Code)</span></li>
+      <li><span class="kv-label">CRC Length</span><span class="kv-value">24 bits (CRC-24C for DCI &gt; 12 bits; CRC-16 for DCI ≤ 12 bits)</span></li>
+      <li><span class="kv-label">Smallest Resource Unit</span><span class="kv-value">REG = 1 RB × 1 OFDM symbol (12 subcarriers × 1 symbol)</span></li>
+      <li><span class="kv-label">CCE Size</span><span class="kv-value">6 REGs = 72 subcarriers (of which 54 carry data after DMRS)</span></li>
+      <li><span class="kv-label">Aggregation Levels</span><span class="kv-value">1, 2, 4, 8, 16 CCEs</span></li>
+      <li><span class="kv-label">Duplex Modes</span><span class="kv-value">FDD & TDD (slot-based and mini-slot based)</span></li>
+      <li><span class="kv-label">Reference Signal</span><span class="kv-value">PDCCH DMRS (Demodulation Reference Signal)</span></li>
+      <li><span class="kv-label">Precoding</span><span class="kv-value">Same precoding as DMRS — UE-transparent beamforming</span></li>
+      <li><span class="kv-label">Max Blind Decodes</span><span class="kv-value">44 per slot (for a UE with single DCI size budget)</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 2. NR vs LTE ═══════════════════════ -->
+<section class="section" id="vs-lte">
+  <div class="section-label">Section 02</div>
+  <h2>NR PDCCH vs LTE PDCCH</h2>
+  <p class="desc">5G NR fundamentally redesigned the control channel. Here's a comprehensive comparison highlighting every major difference.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th style="color: var(--accent-orange);">LTE PDCCH</th>
+          <th style="color: var(--accent-cyan);">5G NR PDCCH</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Control Region</strong></td><td>Fixed: first 1–3 OFDM symbols, full BW</td><td>Flexible: CORESET — configurable in time (1–3 symbols) & frequency (subset of RBs)</td></tr>
+        <tr><td><strong>Frequency Span</strong></td><td>Spans entire system bandwidth</td><td>Can span a subset of bandwidth (6 RB granularity)</td></tr>
+        <tr><td><strong>Resource Unit</strong></td><td>REG = 1 subcarrier × 1 symbol; CCE = 36 REs</td><td>REG = 12 subcarriers (1 RB) × 1 symbol; CCE = 6 REGs = 72 REs</td></tr>
+        <tr><td><strong>Aggregation Levels</strong></td><td>1, 2, 4, 8</td><td>1, 2, 4, 8, 16</td></tr>
+        <tr><td><strong>Channel Coding</strong></td><td>Tail-Biting Convolutional Code (TBCC)</td><td>Polar Code</td></tr>
+        <tr><td><strong>Reference Signal</strong></td><td>Cell-specific RS (CRS) — always on</td><td>UE-specific DMRS — only present in CORESET</td></tr>
+        <tr><td><strong>CRC Masking</strong></td><td>16-bit CRC masked with RNTI</td><td>24-bit CRC masked with RNTI (CRC-24C)</td></tr>
+        <tr><td><strong>Beamforming</strong></td><td>Not supported (CRS is cell-wide)</td><td>Fully supported — different beams per CORESET/search space</td></tr>
+        <tr><td><strong>REG Bundling</strong></td><td>Not applicable</td><td>REG bundle sizes: 2, 3, or 6 REGs per bundle</td></tr>
+        <tr><td><strong>CCE-to-REG Mapping</strong></td><td>Interleaved only</td><td>Interleaved or Non-interleaved (configurable)</td></tr>
+        <tr><td><strong>Search Space</strong></td><td>Common & UE-specific (tied to control region)</td><td>Common & UE-specific search spaces with flexible CORESET association</td></tr>
+        <tr><td><strong>Multiple CORESETs</strong></td><td>Not applicable (single control region)</td><td>Up to 3 CORESETs per BWP, up to 5 per cell</td></tr>
+        <tr><td><strong>Monitoring Period</strong></td><td>Every subframe</td><td>Configurable: every slot, every 2 slots, every N slots (slot-level granularity)</td></tr>
+        <tr><td><strong>Bandwidth Part (BWP)</strong></td><td>Not applicable</td><td>PDCCH associated with specific BWP</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <span class="callout-icon">💡</span>
+    <div><strong>Key Takeaway:</strong> In LTE, the control channel was rigid and always-on across full bandwidth. In NR, PDCCH is flexible, beam-aware, and bandwidth-efficient — critical for mmWave bands and massive MIMO deployments.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 3. CORESET ═══════════════════════ -->
+<section class="section" id="coreset">
+  <div class="section-label">Section 03</div>
+  <h2>CORESET — Control Resource Set</h2>
+  <p class="desc">A CORESET defines the time-frequency resources where the UE should search for PDCCH. It is the most fundamental new concept in NR control channel design.</p>
+
+  <div class="svg-container">
+    <h4>CORESET in the Resource Grid</h4>
+    <svg viewBox="0 0 850 380" xmlns="http://www.w3.org/2000/svg" style="max-width:820px;">
+      <defs>
+        <linearGradient id="coresetGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/><stop offset="100%" stop-color="#06b6d4" stop-opacity="0.2"/></linearGradient>
+        <linearGradient id="dataGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22c55e" stop-opacity="0.15"/><stop offset="100%" stop-color="#22c55e" stop-opacity="0.05"/></linearGradient>
+        <pattern id="hashPattern" width="6" height="6" patternUnits="userSpaceOnUse"><line x1="0" y1="6" x2="6" y2="0" stroke="#3b82f6" stroke-width="0.5" opacity="0.4"/></pattern>
+      </defs>
+      <!-- Background grid -->
+      <rect x="100" y="40" width="700" height="300" fill="#111827" rx="6" stroke="#1e293b"/>
+      <!-- Axis labels -->
+      <text x="450" y="365" text-anchor="middle" fill="#64748b" font-size="12" font-family="Space Grotesk">OFDM Symbols (Time →) — 14 symbols per slot</text>
+      <text x="20" y="190" text-anchor="middle" fill="#64748b" font-size="12" font-family="Space Grotesk" transform="rotate(-90,20,190)">Frequency (RBs) →</text>
+      <!-- Symbol columns -->
+      <g font-size="10" fill="#64748b" font-family="JetBrains Mono" text-anchor="middle">
+        <text x="125" y="35">0</text><text x="175" y="35">1</text><text x="225" y="35">2</text><text x="275" y="35">3</text><text x="325" y="35">4</text><text x="375" y="35">5</text><text x="425" y="35">6</text><text x="475" y="35">7</text><text x="525" y="35">8</text><text x="575" y="35">9</text><text x="625" y="35">10</text><text x="675" y="35">11</text><text x="725" y="35">12</text><text x="775" y="35">13</text>
+      </g>
+      <!-- RB labels -->
+      <g font-size="9" fill="#64748b" font-family="JetBrains Mono" text-anchor="end">
+        <text x="96" y="65">RB 47</text><text x="96" y="95">RB 36</text><text x="96" y="125">RB 30</text><text x="96" y="157">RB 24</text><text x="96" y="187">RB 18</text><text x="96" y="217">RB 12</text><text x="96" y="250">RB 6</text><text x="96" y="280">RB 0</text>
+      </g>
+      <!-- Data region (PDSCH) -->
+      <rect x="250" y="40" width="550" height="300" fill="url(#dataGrad)" rx="0"/>
+      <text x="530" y="185" text-anchor="middle" fill="#22c55e" font-size="13" font-family="Space Grotesk" opacity="0.6">PDSCH / Data Region</text>
+      <!-- CORESET 0 (symbols 0-1, RB 6–30) -->
+      <rect x="100" y="110" width="100" height="170" fill="url(#coresetGrad)" rx="3" stroke="#3b82f6" stroke-width="1.5"/>
+      <rect x="100" y="110" width="100" height="170" fill="url(#hashPattern)"/>
+      <text x="150" y="170" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600" font-family="Space Grotesk">CORESET</text>
+      <text x="150" y="186" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600" font-family="Space Grotesk">#0</text>
+      <text x="150" y="205" text-anchor="middle" fill="#60a5fa" font-size="9" font-family="JetBrains Mono">2 sym × 24 RB</text>
+      <!-- CORESET 1 (symbols 0-2, RB 36–47) -->
+      <rect x="100" y="42" width="150" height="60" fill="rgba(139,92,246,0.2)" rx="3" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="175" y="72" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600" font-family="Space Grotesk">CORESET #1</text>
+      <text x="175" y="88" text-anchor="middle" fill="#a78bfa" font-size="9" font-family="JetBrains Mono">3 sym × 12 RB</text>
+      <!-- Legend -->
+      <rect x="580" y="54" width="14" height="14" fill="url(#coresetGrad)" stroke="#3b82f6" rx="2"/>
+      <text x="600" y="65" fill="#94a3b8" font-size="11" font-family="Plus Jakarta Sans">CORESET (PDCCH)</text>
+      <rect x="580" y="78" width="14" height="14" fill="url(#dataGrad)" stroke="#22c55e" stroke-opacity="0.3" rx="2"/>
+      <text x="600" y="89" fill="#94a3b8" font-size="11" font-family="Plus Jakarta Sans">PDSCH Region</text>
+    </svg>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">🔲</div>
+        <h3>CORESET Definition</h3>
+      </div>
+      <p>A CORESET is a set of physical resource blocks (PRBs) within a specific number of OFDM symbols where the UE monitors for PDCCH. It defines the <strong>time-frequency container</strong> for control channel candidates.</p>
+      <ul class="kv-list" style="margin-top:12px;">
+        <li><span class="kv-label">Duration</span><span class="kv-value">1, 2, or 3 consecutive OFDM symbols</span></li>
+        <li><span class="kv-label">Frequency</span><span class="kv-value">Multiples of 6 RBs (6 RB granularity)</span></li>
+        <li><span class="kv-label">Max RBs</span><span class="kv-value">Up to full BWP bandwidth</span></li>
+        <li><span class="kv-label">Min RBs</span><span class="kv-value">6 RBs (1 CCE worth of frequency)</span></li>
+        <li><span class="kv-label">Bitmap</span><span class="kv-value">45-bit frequencyDomainResources bitmap (each bit = 6 RBs)</span></li>
+        <li><span class="kv-label">Max per BWP</span><span class="kv-value">3 CORESETs (CORESET IDs 0–11 across BWPs)</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">⚙️</div>
+        <h3>CORESET Configuration (RRC)</h3>
+      </div>
+      <p>Each CORESET is configured by RRC via <code>ControlResourceSet</code> IE in SIB1, dedicated RRC signaling, or MIB (for CORESET#0).</p>
+      <ul class="kv-list" style="margin-top:12px;">
+        <li><span class="kv-label">controlResourceSetId</span><span class="kv-value">0–11 (ID 0 is special: CORESET#0)</span></li>
+        <li><span class="kv-label">frequencyDomainResources</span><span class="kv-value">45-bit bitmap indicating which 6-RB groups to use</span></li>
+        <li><span class="kv-label">duration</span><span class="kv-value">1, 2, or 3 OFDM symbols</span></li>
+        <li><span class="kv-label">cce-REG-MappingType</span><span class="kv-value">interleaved or nonInterleaved</span></li>
+        <li><span class="kv-label">reg-BundleSize</span><span class="kv-value">2, 3, or 6 (used for interleaved)</span></li>
+        <li><span class="kv-label">interleaverSize</span><span class="kv-value">2, 3, or 6</span></li>
+        <li><span class="kv-label">shiftIndex</span><span class="kv-value">0–274 (Physical Cell ID by default)</span></li>
+        <li><span class="kv-label">precoderGranularity</span><span class="kv-value">sameAsREG-bundle or allContiguousRBs</span></li>
+        <li><span class="kv-label">tci-StatesPDCCH</span><span class="kv-value">TCI states for beam indication (list of up to 64)</span></li>
+        <li><span class="kv-label">pdcch-DMRS-ScramblingID</span><span class="kv-value">Scrambling ID for DMRS sequence</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon orange">📌</div>
+      <h3>Three Types of CORESETs</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Type</th><th>CORESET ID</th><th>Configuration</th><th>Purpose</th><th>Beam</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag orange">CORESET #0</span></td>
+            <td><code>0</code></td>
+            <td>Derived from MIB → <code>pdcch-ConfigSIB1</code> (4 bits index into tables in TS 38.213 Table 13-1 to 13-10)</td>
+            <td>Initial access: carries SIB1 scheduling, Paging, RAR, Msg4. Always on initial DL BWP.</td>
+            <td>SSB beam (QCL with SSB)</td>
+          </tr>
+          <tr>
+            <td><span class="tag blue">CORESET #1–3</span></td>
+            <td><code>1–11</code></td>
+            <td>Configured via dedicated RRC signaling (<code>PDCCH-Config</code> in <code>BWP-DownlinkDedicated</code>)</td>
+            <td>UE-specific scheduling for PDSCH/PUSCH, DL/UL grants, power control</td>
+            <td>Configurable TCI states — can be different beam from SSB</td>
+          </tr>
+          <tr>
+            <td><span class="tag green">CORESET in SIB1</span></td>
+            <td><code>0</code></td>
+            <td>Can be reconfigured in SIB1 with <code>controlResourceSetZero</code></td>
+            <td>Updated common CORESET after SIB1 reception</td>
+            <td>SSB beam</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>CORESET #0 is special:</strong> Its configuration comes from MIB (4-bit index) and uses predefined tables in 3GPP TS 38.213 §13. The UE must decode SSB → MIB → derive CORESET#0 → monitor for SIB1 scheduling DCI (DCI Format 1_0 with SI-RNTI). CORESET#0 always uses <strong>interleaved</strong> CCE-to-REG mapping.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 4. REG & CCE ═══════════════════════ -->
+<section class="section" id="reg-cce">
+  <div class="section-label">Section 04</div>
+  <h2>REG, REG Bundle & CCE Structure</h2>
+  <p class="desc">The fundamental building blocks of PDCCH — from the smallest resource element group to the control channel element.</p>
+
+  <div class="svg-container">
+    <h4>REG → REG Bundle → CCE Hierarchy</h4>
+    <svg viewBox="0 0 840 310" xmlns="http://www.w3.org/2000/svg" style="max-width:820px;">
+      <!-- REG detail -->
+      <rect x="20" y="30" width="180" height="240" fill="#151d30" rx="10" stroke="#1e293b"/>
+      <text x="110" y="22" text-anchor="middle" fill="#3b82f6" font-size="13" font-weight="700" font-family="Space Grotesk">1 REG</text>
+      <!-- 12 subcarriers -->
+      <g>
+        <rect x="45" y="45" width="28" height="22" fill="rgba(6,182,212,0.3)" stroke="#06b6d4" stroke-width="0.8" rx="2"/><text x="59" y="60" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">DMRS</text>
+        <rect x="78" y="45" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/><text x="92" y="60" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">Data</text>
+        <rect x="111" y="45" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="144" y="45" width="28" height="22" fill="rgba(6,182,212,0.3)" stroke="#06b6d4" stroke-width="0.8" rx="2"/><text x="158" y="60" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">DMRS</text>
+        <rect x="45" y="72" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="78" y="72" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="111" y="72" width="28" height="22" fill="rgba(6,182,212,0.3)" stroke="#06b6d4" stroke-width="0.8" rx="2"/><text x="125" y="87" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="JetBrains Mono">DMRS</text>
+        <rect x="144" y="72" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="45" y="99" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="78" y="99" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="111" y="99" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+        <rect x="144" y="99" width="28" height="22" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="0.8" rx="2"/>
+      </g>
+      <text x="110" y="145" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">12 subcarriers</text>
+      <text x="110" y="160" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">× 1 OFDM symbol</text>
+      <text x="110" y="185" text-anchor="middle" fill="#f1f5f9" font-size="11" font-weight="600" font-family="Space Grotesk">= 12 REs total</text>
+      <text x="110" y="205" text-anchor="middle" fill="#06b6d4" font-size="10" font-family="JetBrains Mono">3 DMRS REs</text>
+      <text x="110" y="220" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="JetBrains Mono">9 Data REs</text>
+      <text x="110" y="255" text-anchor="middle" fill="#64748b" font-size="9" font-family="JetBrains Mono">= 1 RB × 1 symbol</text>
+      <!-- Arrow -->
+      <text x="225" y="140" fill="#64748b" font-size="28">→</text>
+      <!-- REG Bundle -->
+      <rect x="260" y="30" width="200" height="240" fill="#151d30" rx="10" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="360" y="22" text-anchor="middle" fill="#8b5cf6" font-size="13" font-weight="700" font-family="Space Grotesk">1 REG Bundle</text>
+      <g>
+        <rect x="278" y="50" width="70" height="40" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="313" y="74" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="Space Grotesk">REG 0</text>
+        <rect x="355" y="50" width="70" height="40" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="390" y="74" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="Space Grotesk">REG 1</text>
+        <rect x="278" y="100" width="70" height="40" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="313" y="124" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="Space Grotesk">REG 2</text>
+        <rect x="355" y="100" width="70" height="40" fill="rgba(59,130,246,0.12)" stroke="#3b82f6" rx="4" stroke-dasharray="4,3"/><text x="390" y="124" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="Space Grotesk" opacity="0.5">(opt.)</text>
+      </g>
+      <text x="360" y="170" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">Bundle Size: 2, 3, or 6 REGs</text>
+      <text x="360" y="190" text-anchor="middle" fill="#c4b5fd" font-size="10" font-family="JetBrains Mono">Same precoder applied</text>
+      <text x="360" y="210" text-anchor="middle" fill="#c4b5fd" font-size="10" font-family="JetBrains Mono">within a bundle</text>
+      <text x="360" y="240" text-anchor="middle" fill="#64748b" font-size="9" font-family="JetBrains Mono">(Enables channel estimation)</text>
+      <!-- Arrow -->
+      <text x="485" y="140" fill="#64748b" font-size="28">→</text>
+      <!-- CCE -->
+      <rect x="520" y="30" width="300" height="240" fill="#151d30" rx="10" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="670" y="22" text-anchor="middle" fill="#06b6d4" font-size="13" font-weight="700" font-family="Space Grotesk">1 CCE = 6 REGs</text>
+      <g>
+        <rect x="535" y="50" width="85" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="577" y="71" text-anchor="middle" fill="#93c5fd" font-size="10">REG 0</text>
+        <rect x="625" y="50" width="85" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="667" y="71" text-anchor="middle" fill="#93c5fd" font-size="10">REG 1</text>
+        <rect x="715" y="50" width="85" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="757" y="71" text-anchor="middle" fill="#93c5fd" font-size="10">REG 2</text>
+        <rect x="535" y="90" width="85" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="577" y="111" text-anchor="middle" fill="#93c5fd" font-size="10">REG 3</text>
+        <rect x="625" y="90" width="85" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="667" y="111" text-anchor="middle" fill="#93c5fd" font-size="10">REG 4</text>
+        <rect x="715" y="90" width="85" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" rx="4"/><text x="757" y="111" text-anchor="middle" fill="#93c5fd" font-size="10">REG 5</text>
+      </g>
+      <text x="670" y="155" text-anchor="middle" fill="#f1f5f9" font-size="11" font-weight="600" font-family="Space Grotesk">Total: 6 × 12 = 72 REs</text>
+      <text x="670" y="175" text-anchor="middle" fill="#06b6d4" font-size="10" font-family="JetBrains Mono">6 × 3 = 18 DMRS REs</text>
+      <text x="670" y="195" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="JetBrains Mono">6 × 9 = 54 Data REs</text>
+      <text x="670" y="220" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600" font-family="Space Grotesk">QPSK: 54 × 2 = 108 bits/CCE</text>
+      <text x="670" y="255" text-anchor="middle" fill="#64748b" font-size="9" font-family="JetBrains Mono">(before rate matching)</text>
+    </svg>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon teal">📐</div>
+      <h3>RE Calculation per CCE</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Count</th><th>Calculation</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>REGs per CCE</td><td><code>6</code></td><td>Fixed by 3GPP specification</td></tr>
+          <tr><td>Subcarriers per REG</td><td><code>12</code></td><td>1 RB = 12 subcarriers</td></tr>
+          <tr><td>Total REs per CCE</td><td><code>72</code></td><td>6 REGs × 12 subcarriers = 72</td></tr>
+          <tr><td>DMRS REs per REG</td><td><code>3</code></td><td>DMRS on subcarrier positions {1, 5, 9} (every 4th SC)</td></tr>
+          <tr><td>Total DMRS per CCE</td><td><code>18</code></td><td>6 REGs × 3 DMRS REs = 18</td></tr>
+          <tr><td>Data REs per CCE</td><td><code>54</code></td><td>72 total − 18 DMRS = 54</td></tr>
+          <tr><td>Bits per CCE (QPSK)</td><td><code>108</code></td><td>54 REs × 2 bits/symbol (QPSK) = 108 bits</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon purple">🔗</div>
+      <h3>REG Bundle Size Rules</h3>
+    </div>
+    <p>REG bundling determines how many REGs share the same precoding. The allowed bundle sizes depend on CORESET duration:</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>CORESET Duration</th><th>Allowed REG Bundle Sizes</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 symbol</td><td><code>2</code> or <code>6</code></td><td>Bundle size 2: bundles within frequency; size 6: entire CCE is one bundle</td></tr>
+          <tr><td>2 symbols</td><td><code>2</code> or <code>6</code></td><td>Bundle can span time and frequency</td></tr>
+          <tr><td>3 symbols</td><td><code>3</code> or <code>6</code></td><td>Bundle size 3: one RB across 3 symbols; size 6: entire CCE</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout tip" style="margin-top:12px;">
+      <span class="callout-icon">💡</span>
+      <div><strong>Why REG Bundling matters:</strong> A larger bundle size means the UE can assume the same precoder across more REs, improving channel estimation accuracy. However, it reduces frequency diversity. For <strong>non-interleaved</strong> mapping, the bundle size is effectively <code>6</code> (entire CCE).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 5. SEARCH SPACE ═══════════════════════ -->
+<section class="section" id="search-space">
+  <div class="section-label">Section 05</div>
+  <h2>Search Space Sets</h2>
+  <p class="desc">A Search Space defines WHERE within a CORESET the UE looks for PDCCH candidates, WHEN it monitors, and WHICH DCI formats to expect.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">🔍</div>
+        <h3>Common Search Space (CSS)</h3>
+      </div>
+      <p>Monitored by ALL UEs in the cell. Used for cell-wide messages.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>CSS Type</th><th>DCI</th><th>RNTI</th></tr></thead>
+          <tbody>
+            <tr><td>Type0-PDCCH CSS</td><td>1_0</td><td>SI-RNTI</td></tr>
+            <tr><td>Type0A-PDCCH CSS</td><td>1_0</td><td>SI-RNTI (Other SIBs)</td></tr>
+            <tr><td>Type1-PDCCH CSS</td><td>1_0</td><td>RA-RNTI, TC-RNTI</td></tr>
+            <tr><td>Type2-PDCCH CSS</td><td>1_0</td><td>P-RNTI</td></tr>
+            <tr><td>Type3-PDCCH CSS</td><td>0_0, 1_0</td><td>INT-RNTI, SFI-RNTI, TPC-RNTI, C-RNTI</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">👤</div>
+        <h3>UE-Specific Search Space (USS)</h3>
+      </div>
+      <p>Unique to each UE. Used for dedicated scheduling.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>DCI Formats</td><td>0_0, 0_1, 0_2, 1_0, 1_1, 1_2</td></tr>
+            <tr><td>RNTI</td><td>C-RNTI, CS-RNTI, MCS-C-RNTI</td></tr>
+            <tr><td>Hashing</td><td>Uses C-RNTI in hashing formula for CCE start position</td></tr>
+            <tr><td>Aggregation Levels</td><td>All: 1, 2, 4, 8, 16</td></tr>
+            <tr><td>Per BWP</td><td>Up to 10 search spaces per BWP</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon green">⚙️</div>
+      <h3>Search Space Configuration (RRC Parameters)</h3>
+    </div>
+    <ul class="kv-list">
+      <li><span class="kv-label">searchSpaceId</span><span class="kv-value">0–39 (ID 0 reserved for CORESET#0)</span></li>
+      <li><span class="kv-label">controlResourceSetId</span><span class="kv-value">Links this search space to a specific CORESET (0–11)</span></li>
+      <li><span class="kv-label">monitoringSlotPeriodicityAndOffset</span><span class="kv-value">Periodicity: {1, 2, 4, 5, 8, 10, 16, 20, 40, 80, 160, 320, 640, 1280, 2560} slots</span></li>
+      <li><span class="kv-label">monitoringSymbolsWithinSlot</span><span class="kv-value">14-bit bitmap — which OFDM symbol(s) within the slot contain the CORESET start</span></li>
+      <li><span class="kv-label">nrofCandidates-per-AL</span><span class="kv-value">Number of PDCCH candidates for each AL: {0, 1, 2, 3, 4, 5, 6, 7, 8}</span></li>
+      <li><span class="kv-label">searchSpaceType</span><span class="kv-value"><code>common</code> or <code>ue-Specific</code></span></li>
+      <li><span class="kv-label">dci-Formats (for USS)</span><span class="kv-value"><code>formats0-0-And-1-0</code> or <code>formats0-1-And-1-1</code></span></li>
+      <li><span class="kv-label">duration</span><span class="kv-value">Number of consecutive slots the search space lasts (1–2559)</span></li>
+    </ul>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div><strong>Relationship:</strong> CORESET = WHERE (resources), Search Space = WHEN + HOW (monitoring occasions, candidates, DCI formats). A Search Space is always associated with exactly one CORESET, but a CORESET can have multiple Search Spaces linked to it.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 6. AGGREGATION LEVELS ═══════════════════════ -->
+<section class="section" id="al">
+  <div class="section-label">Section 06</div>
+  <h2>Aggregation Levels (AL)</h2>
+  <p class="desc">The Aggregation Level determines how many CCEs are combined to carry one DCI. Higher AL = more redundancy = better robustness at lower SINR.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>AL</th><th>CCEs</th><th>REGs</th><th>Data REs</th><th>Coded Bits (QPSK)</th><th>Effective Code Rate (for ~40-bit DCI)</th><th>Typical Use</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tag green">AL 1</span></td><td>1</td><td>6</td><td>54</td><td>108</td><td>~0.59</td><td>Very good SINR, cell center UEs</td></tr>
+        <tr><td><span class="tag cyan">AL 2</span></td><td>2</td><td>12</td><td>108</td><td>216</td><td>~0.30</td><td>Good SINR conditions</td></tr>
+        <tr><td><span class="tag blue">AL 4</span></td><td>4</td><td>24</td><td>216</td><td>432</td><td>~0.15</td><td>Moderate SINR</td></tr>
+        <tr><td><span class="tag purple">AL 8</span></td><td>8</td><td>48</td><td>432</td><td>864</td><td>~0.07</td><td>Poor SINR, cell edge</td></tr>
+        <tr><td><span class="tag red">AL 16</span></td><td>16</td><td>96</td><td>864</td><td>1728</td><td>~0.04</td><td>Very poor SINR, extreme coverage (NR-specific)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <span class="callout-icon">💡</span>
+    <div><strong>AL 16 is new in NR</strong> (LTE max was AL 8). This enables PDCCH coverage extension of up to ~3 dB compared to LTE's maximum, essential for mmWave and coverage-limited scenarios. The code rate formula is: <code>Code Rate = (DCI bits + 24 CRC bits) / (AL × 108 coded bits)</code>.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 7. DCI FORMATS ═══════════════════════ -->
+<section class="section" id="dci">
+  <div class="section-label">Section 07</div>
+  <h2>DCI Formats — Downlink Control Information</h2>
+  <p class="desc">DCI is the payload carried by PDCCH. Each format serves a specific scheduling or control purpose. 5G NR defines several DCI formats for flexibility.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>DCI Format</th><th>Direction</th><th>Purpose</th><th>Search Space</th><th>Key Fields</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag cyan">0_0</span></td>
+          <td>UL Grant</td>
+          <td>Fallback UL scheduling (minimal fields)</td>
+          <td>CSS + USS</td>
+          <td>Freq domain RA, Time domain RA, MCS, NDI, RV, HARQ, TPC, PUSCH resource</td>
+        </tr>
+        <tr>
+          <td><span class="tag blue">0_1</span></td>
+          <td>UL Grant</td>
+          <td>Full-feature UL scheduling</td>
+          <td>USS only</td>
+          <td>+ Carrier indicator, BWP, SRS, Antenna ports, PTRS, CBGTI, DMRS sequence init</td>
+        </tr>
+        <tr>
+          <td><span class="tag purple">0_2</span></td>
+          <td>UL Grant</td>
+          <td>Compact UL scheduling (URLLC)</td>
+          <td>USS only</td>
+          <td>Reduced size for low-latency scheduling</td>
+        </tr>
+        <tr>
+          <td><span class="tag cyan">1_0</span></td>
+          <td>DL Grant</td>
+          <td>Fallback DL scheduling (minimal fields)</td>
+          <td>CSS + USS</td>
+          <td>Freq domain RA, Time domain RA, MCS, NDI, RV, HARQ, DAI, TPC-PUCCH, PDSCH-to-HARQ</td>
+        </tr>
+        <tr>
+          <td><span class="tag blue">1_1</span></td>
+          <td>DL Grant</td>
+          <td>Full-feature DL scheduling</td>
+          <td>USS only</td>
+          <td>+ Carrier indicator, BWP, Antenna ports, TCI, SRS request, CBGTI, CBGFI, DMRS seq</td>
+        </tr>
+        <tr>
+          <td><span class="tag purple">1_2</span></td>
+          <td>DL Grant</td>
+          <td>Compact DL scheduling (URLLC)</td>
+          <td>USS only</td>
+          <td>Reduced size for low-latency scheduling</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_0</span></td>
+          <td>—</td>
+          <td>Slot Format Indicator (SFI)</td>
+          <td>CSS</td>
+          <td>Indicates DL/UL/Flexible per symbol for dynamic TDD</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_1</span></td>
+          <td>—</td>
+          <td>Pre-emption Indication</td>
+          <td>CSS</td>
+          <td>Notifies UEs that their PDSCH was pre-empted by URLLC traffic</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_2</span></td>
+          <td>—</td>
+          <td>TPC for PUCCH</td>
+          <td>CSS</td>
+          <td>Group TPC commands for PUCCH power control</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_3</span></td>
+          <td>—</td>
+          <td>TPC for SRS</td>
+          <td>CSS</td>
+          <td>Group TPC commands for SRS power control</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_4</span></td>
+          <td>—</td>
+          <td>Cancellation Indication (Rel-16)</td>
+          <td>CSS</td>
+          <td>Indicates UL transmission cancellation</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_5</span></td>
+          <td>—</td>
+          <td>Availability Indicator for soft resources (IAB)</td>
+          <td>CSS</td>
+          <td>For IAB (Integrated Access & Backhaul) nodes</td>
+        </tr>
+        <tr>
+          <td><span class="tag orange">2_6</span></td>
+          <td>—</td>
+          <td>Power saving (Rel-16)</td>
+          <td>CSS</td>
+          <td>DCI for UE power saving operations</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon blue">📝</div>
+      <h3>DCI Format 1_1 — Detailed Field Breakdown</h3>
+    </div>
+    <p>This is the most common and feature-rich DL scheduling DCI. Here is every field:</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>DCI format identifier</td><td>1</td><td>Differentiates DCI 1_1 from 0_1 (same size)</td></tr>
+          <tr><td>Carrier indicator</td><td>0 or 3</td><td>Cross-carrier scheduling (if configured)</td></tr>
+          <tr><td>BWP indicator</td><td>0, 1, or 2</td><td>Indicates active DL BWP</td></tr>
+          <tr><td>Frequency domain resource assignment</td><td>Variable</td><td>RB allocation (Type 0 bitmap or Type 1 RIV)</td></tr>
+          <tr><td>Time domain resource assignment</td><td>0–4</td><td>Index into RRC-configured TDRA table (K0, SLIV, mapping type)</td></tr>
+          <tr><td>VRB-to-PRB mapping</td><td>0 or 1</td><td>Non-interleaved or interleaved VRB mapping</td></tr>
+          <tr><td>PRB bundling size indicator</td><td>0 or 1</td><td>Wideband or narrowband DMRS bundling</td></tr>
+          <tr><td>Rate matching indicator</td><td>0, 1, or 2</td><td>Rate matching around configured resources</td></tr>
+          <tr><td>ZP CSI-RS trigger</td><td>0, 1, or 2</td><td>Triggers ZP-CSI-RS for rate matching</td></tr>
+          <tr><td>MCS (5 bits)</td><td>5</td><td>Modulation & Coding Scheme index (0–31)</td></tr>
+          <tr><td>New Data Indicator (NDI)</td><td>1</td><td>Toggles for new TB vs retransmission</td></tr>
+          <tr><td>Redundancy Version (RV)</td><td>2</td><td>HARQ redundancy version (0, 1, 2, 3)</td></tr>
+          <tr><td>HARQ process number</td><td>4</td><td>HARQ process ID (up to 16 processes)</td></tr>
+          <tr><td>Downlink Assignment Index (DAI)</td><td>0, 2, or 4</td><td>For HARQ-ACK codebook determination</td></tr>
+          <tr><td>TPC command for PUCCH</td><td>2</td><td>Power control: {−1, 0, +1, +3} dB</td></tr>
+          <tr><td>PUCCH resource indicator</td><td>3</td><td>Indicates which PUCCH resource for HARQ-ACK</td></tr>
+          <tr><td>PDSCH-to-HARQ_feedback timing</td><td>3</td><td>K1 value — slots between PDSCH and HARQ-ACK</td></tr>
+          <tr><td>Antenna port(s)</td><td>4–6</td><td>DMRS port(s) and number of layers</td></tr>
+          <tr><td>TCI (Transmission Config Indicator)</td><td>0 or 3</td><td>Beam indication — QCL relationship for PDSCH DMRS</td></tr>
+          <tr><td>SRS request</td><td>2 or 3</td><td>Triggers aperiodic SRS</td></tr>
+          <tr><td>CBG Transmission Info (CBGTI)</td><td>0, 2, 4, 6, 8</td><td>Which code block groups are transmitted (CBG-based retransmission)</td></tr>
+          <tr><td>CBG Flushing Info (CBGFI)</td><td>0 or 1</td><td>Flush previously received CBGs</td></tr>
+          <tr><td>DMRS sequence init</td><td>0 or 1</td><td>DMRS scrambling identity selection</td></tr>
+          <tr><td>Padding</td><td>Variable</td><td>Zero-padding to align DCI sizes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>DCI Size Alignment:</strong> 3GPP requires that Format 0_0 and 1_0 are <strong>zero-padded to the same size</strong> to reduce blind decode attempts. Similarly, Format 0_1 and 1_1 are aligned. This is called "DCI size budgeting" — a UE monitors at most 4 different DCI sizes (3 for CSS + 1 for USS, or 2 for CSS + 2 for USS).</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 8. RNTI MASKING ═══════════════════════ -->
+<section class="section" id="rnti">
+  <div class="section-label">Section 08</div>
+  <h2>RNTI — CRC Masking & Addressing</h2>
+  <p class="desc">The UE determines if a PDCCH candidate is meant for it by checking if the CRC (masked with an RNTI) matches. This is how PDCCH "addresses" different UEs and message types.</p>
+
+  <div class="diagram-box">
+    <h4>CRC Masking Process</h4>
+    <pre>
+  DCI Payload (variable bits)
+       │
+       ▼
+  ┌────────────┐
+  │ CRC-24C    │  ← 24-bit CRC generated from DCI payload
+  │ Calculation│
+  └─────┬──────┘
+        │  24-bit CRC
+        ▼
+  ┌────────────┐
+  │  XOR with  │  ← CRC ⊕ RNTI (16-bit RNTI padded to 24 bits)
+  │    RNTI    │
+  └─────┬──────┘
+        │  Masked CRC (24 bits)
+        ▼
+  ┌────────────────────────────────┐
+  │ DCI Payload + Masked CRC (24) │  → Polar Encoded → Rate Matched → QPSK → Map to CCEs
+  └────────────────────────────────┘
+
+  UE Side: Decode → Compute CRC → XOR with its RNTI(s) → If CRC = 0, DCI is for this UE
+    </pre>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>RNTI</th><th>Value / Range</th><th>Purpose</th><th>DCI Format(s)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tag cyan">C-RNTI</span></td><td>0x0001–0xFFEF</td><td>UE-specific scheduling (RRC Connected)</td><td>0_0, 0_1, 1_0, 1_1</td></tr>
+        <tr><td><span class="tag blue">CS-RNTI</span></td><td>0x0001–0xFFEF</td><td>Configured scheduling (Semi-Persistent)</td><td>0_0, 0_1, 1_0, 1_1</td></tr>
+        <tr><td><span class="tag purple">TC-RNTI</span></td><td>0x0001–0xFFEF</td><td>Temporary C-RNTI during RACH (Msg3/Msg4)</td><td>0_0, 1_0</td></tr>
+        <tr><td><span class="tag orange">RA-RNTI</span></td><td>0x0001–0xFFFF</td><td>Random Access Response scheduling</td><td>1_0</td></tr>
+        <tr><td><span class="tag green">SI-RNTI</span></td><td>0xFFFF</td><td>System Information (SIB1, Other SIBs)</td><td>1_0</td></tr>
+        <tr><td><span class="tag pink">P-RNTI</span></td><td>0xFFFE</td><td>Paging</td><td>1_0</td></tr>
+        <tr><td><span class="tag teal">INT-RNTI</span></td><td>0x0001–0xFFEF</td><td>Pre-emption indication (URLLC)</td><td>2_1</td></tr>
+        <tr><td><span class="tag orange">SFI-RNTI</span></td><td>0x0001–0xFFEF</td><td>Slot Format Indication (Dynamic TDD)</td><td>2_0</td></tr>
+        <tr><td><span class="tag blue">TPC-PUCCH-RNTI</span></td><td>0x0001–0xFFEF</td><td>Group TPC for PUCCH</td><td>2_2</td></tr>
+        <tr><td><span class="tag purple">TPC-SRS-RNTI</span></td><td>0x0001–0xFFEF</td><td>Group TPC for SRS</td><td>2_3</td></tr>
+        <tr><td><span class="tag red">TPC-PUSCH-RNTI</span></td><td>0x0001–0xFFEF</td><td>Group TPC for PUSCH</td><td>0_0</td></tr>
+        <tr><td><span class="tag green">MCS-C-RNTI</span></td><td>0x0001–0xFFEF</td><td>Low-BLER operation (uses MCS offset table)</td><td>0_0, 0_1, 1_0, 1_1</td></tr>
+        <tr><td><span class="tag cyan">SP-CSI-RNTI</span></td><td>0x0001–0xFFEF</td><td>Semi-Persistent CSI reporting on PUSCH</td><td>0_1</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 9. BLIND DECODING ═══════════════════════ -->
+<section class="section" id="blind-decode">
+  <div class="section-label">Section 09</div>
+  <h2>Blind Decoding (BD)</h2>
+  <p class="desc">Since the UE doesn't know which CCE positions carry its DCI, it must try decoding multiple candidates across multiple aggregation levels. This is called blind decoding.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">🎯</div>
+      <h3>Max Blind Decode Attempts per Slot</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Search Space Type</th><th>AL 1</th><th>AL 2</th><th>AL 4</th><th>AL 8</th><th>AL 16</th><th>Total Candidates</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>CSS (Type 0/0A/2)</strong></td><td>0</td><td>0</td><td>4</td><td>2</td><td>0</td><td>6</td></tr>
+          <tr><td><strong>CSS (Type 1)</strong></td><td>0</td><td>0</td><td>4</td><td>2</td><td>0</td><td>6</td></tr>
+          <tr><td><strong>USS</strong></td><td>0–8</td><td>0–8</td><td>0–8</td><td>0–8</td><td>0–8</td><td>Configurable</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;">The <strong>maximum total blind decodes per slot per scheduled cell</strong> is governed by the UE capability:</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>μ (SCS)</th><th>Max BD per slot</th><th>Max non-overlapping CCEs</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0 (15 kHz)</td><td>44</td><td>56</td></tr>
+          <tr><td>1 (30 kHz)</td><td>36</td><td>56</td></tr>
+          <tr><td>2 (60 kHz)</td><td>22</td><td>48</td></tr>
+          <tr><td>3 (120 kHz)</td><td>20</td><td>32</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon purple">🧮</div>
+      <h3>PDCCH Candidate CCE Start Position (Hashing Formula)</h3>
+    </div>
+    <p>The starting CCE index for candidate <code>m<sub>s</sub></code> at aggregation level <code>L</code> is:</p>
+    <div class="diagram-box" style="margin:12px 0;">
+      <pre>
+  CCE_index = L × { (Y_p,n_s,f + ⌊m_s · N_CCE / (L · M_s,max)⌋ + n_CI) mod ⌊N_CCE / L⌋ }
+
+  Where:
+    L         = Aggregation Level (1, 2, 4, 8, 16)
+    Y_p,n_s,f = Hashing variable (depends on RNTI for USS; fixed for CSS)
+    m_s       = PDCCH candidate index (0, 1, 2, ..., M_s,max − 1)
+    N_CCE     = Total number of CCEs in the CORESET
+    M_s,max   = Number of PDCCH candidates for this AL in this search space
+    n_CI      = Carrier indicator field value (0 if no cross-carrier scheduling)
+
+  For CSS: Y_p,n_s,f = 0 (deterministic positions)
+  For USS: Y_p,n_s,f = (A_p × Y_p,(n_s,f − 1)) mod D
+           where A_p ∈ {39827, 39829, 39839}, D = 65537
+           Y_p,−1 = n_RNTI (the UE's C-RNTI)
+      </pre>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div>The hashing ensures different UEs look at different CCE positions, distributing PDCCH candidates across the CORESET. In CSS, all UEs check the same positions (Y=0), enabling cell-wide broadcasts.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 10. DMRS ═══════════════════════ -->
+<section class="section" id="dmrs">
+  <div class="section-label">Section 10</div>
+  <h2>PDCCH DMRS</h2>
+  <p class="desc">Unlike LTE (which uses CRS), NR PDCCH uses UE-specific DMRS embedded within the CORESET for demodulation. This enables per-UE beamforming of the control channel.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">📶</div>
+        <h3>DMRS Properties</h3>
+      </div>
+      <ul class="kv-list">
+        <li><span class="kv-label">Density</span><span class="kv-value">3 DMRS REs per REG (subcarrier positions k = 1, 5, 9 within each RB)</span></li>
+        <li><span class="kv-label">Ratio</span><span class="kv-value">25% of REs are DMRS (3 out of 12 per REG)</span></li>
+        <li><span class="kv-label">Sequence Type</span><span class="kv-value">Pseudo-random Gold sequence (length-31 m-sequence)</span></li>
+        <li><span class="kv-label">Modulation</span><span class="kv-value">QPSK (same as PDCCH data)</span></li>
+        <li><span class="kv-label">Scrambling Init</span><span class="kv-value"><code>c_init = (2^17 × (14·n_s,f + l + 1) × (2·n_ID + 1) + 2·n_ID) mod 2^31</code></span></li>
+        <li><span class="kv-label">n_ID</span><span class="kv-value">pdcch-DMRS-ScramblingID if configured, else Physical Cell ID</span></li>
+        <li><span class="kv-label">Power Boosting</span><span class="kv-value">DMRS uses same power as PDCCH data REs (β_PDCCH_DMRS = 0 dB)</span></li>
+        <li><span class="kv-label">Precoding</span><span class="kv-value">Same precoding as PDCCH data (co-precoded DMRS)</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">🆚</div>
+        <h3>Why DMRS Instead of CRS?</h3>
+      </div>
+      <p><strong>LTE Problem:</strong> CRS is always transmitted across full bandwidth in every subframe, regardless of whether PDCCH is present. This wastes resources and prevents UE-specific beamforming of the control channel.</p>
+      <p><strong>NR Solution:</strong> PDCCH DMRS is only transmitted within the CORESET where PDCCH candidates exist. This enables:</p>
+      <p>• <strong>Beamforming:</strong> Each CORESET can have a different beam (TCI state), so PDCCH can be beamformed to specific UEs or directions.</p>
+      <p>• <strong>Energy Efficiency:</strong> No DMRS outside CORESET — saves gNB power.</p>
+      <p>• <strong>Flexible Scheduling:</strong> DMRS density is fixed per REG, but total overhead scales with CORESET size.</p>
+      <p>• <strong>Multi-TRP:</strong> Different CORESETs can use DMRS from different TCI states (different transmission points).</p>
+    </div>
+  </div>
+
+  <div class="svg-container">
+    <h4>DMRS Positions Within One REG (1 RB × 1 Symbol)</h4>
+    <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" style="max-width:680px;">
+      <g transform="translate(30,20)">
+        <rect x="0" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="25" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=0</text><text x="25" y="18" text-anchor="middle" fill="#60a5fa" font-size="9" font-family="JetBrains Mono">Data</text>
+        <rect x="54" y="30" width="50" height="50" fill="rgba(6,182,212,0.35)" stroke="#06b6d4" stroke-width="2" rx="3"/><text x="79" y="60" text-anchor="middle" fill="#fff" font-size="10" font-family="JetBrains Mono" font-weight="700">k=1</text><text x="79" y="18" text-anchor="middle" fill="#06b6d4" font-size="9" font-weight="700" font-family="JetBrains Mono">DMRS</text>
+        <rect x="108" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="133" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=2</text>
+        <rect x="162" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="187" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=3</text>
+        <rect x="216" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="241" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=4</text>
+        <rect x="270" y="30" width="50" height="50" fill="rgba(6,182,212,0.35)" stroke="#06b6d4" stroke-width="2" rx="3"/><text x="295" y="60" text-anchor="middle" fill="#fff" font-size="10" font-family="JetBrains Mono" font-weight="700">k=5</text><text x="295" y="18" text-anchor="middle" fill="#06b6d4" font-size="9" font-weight="700" font-family="JetBrains Mono">DMRS</text>
+        <rect x="324" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="349" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=6</text>
+        <rect x="378" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="403" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=7</text>
+        <rect x="432" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="457" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=8</text>
+        <rect x="486" y="30" width="50" height="50" fill="rgba(6,182,212,0.35)" stroke="#06b6d4" stroke-width="2" rx="3"/><text x="511" y="60" text-anchor="middle" fill="#fff" font-size="10" font-family="JetBrains Mono" font-weight="700">k=9</text><text x="511" y="18" text-anchor="middle" fill="#06b6d4" font-size="9" font-weight="700" font-family="JetBrains Mono">DMRS</text>
+        <rect x="540" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="565" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=10</text>
+        <rect x="594" y="30" width="50" height="50" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" rx="3"/><text x="619" y="60" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="JetBrains Mono">k=11</text>
+      </g>
+      <text x="350" y="110" text-anchor="middle" fill="#64748b" font-size="11" font-family="Plus Jakarta Sans">← 12 Subcarriers (1 RB) — DMRS at positions 1, 5, 9 (every 4th subcarrier) →</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 11. POLAR CODING ═══════════════════════ -->
+<section class="section" id="polar">
+  <div class="section-label">Section 11</div>
+  <h2>Polar Code — Channel Coding for PDCCH</h2>
+  <p class="desc">5G NR replaces LTE's Tail-Biting Convolutional Code with Polar Codes for control channels. This provides superior performance at short block lengths.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">🧬</div>
+        <h3>Polar Code Parameters</h3>
+      </div>
+      <ul class="kv-list">
+        <li><span class="kv-label">Mother Code Length</span><span class="kv-value">N = 2^n (n = 5 to 10, i.e., 32 to 1024)</span></li>
+        <li><span class="kv-label">Information Bits (K)</span><span class="kv-value">DCI payload + 24 CRC bits</span></li>
+        <li><span class="kv-label">Coded Bits (E)</span><span class="kv-value">AL × 108 (after rate matching)</span></li>
+        <li><span class="kv-label">CRC Polynomial</span><span class="kv-value">CRC-24C: g(x) = x^24 + x^23 + x^21 + ... + 1</span></li>
+        <li><span class="kv-label">Distributed CRC</span><span class="kv-value">CRC bits are interleaved within polar code for early termination</span></li>
+        <li><span class="kv-label">Decoding</span><span class="kv-value">Successive Cancellation List (SCL) decoder with CRC-aided selection (CA-SCL)</span></li>
+        <li><span class="kv-label">List Size</span><span class="kv-value">Typically L=8 in commercial UEs</span></li>
+        <li><span class="kv-label">Rate Matching</span><span class="kv-value">Repetition (E > N), Puncturing, or Shortening (E < N)</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">📈</div>
+        <h3>Why Polar Code for PDCCH?</h3>
+      </div>
+      <p><strong>Short Block Length Performance:</strong> Polar codes approach the Shannon capacity limit at short block lengths (typical DCI is 20–140 bits), outperforming both TBCC and Turbo codes in this regime.</p>
+      <p><strong>CRC-Aided List Decoding:</strong> The distributed CRC within the polar code enables the decoder to identify the correct codeword from a list of candidates, significantly improving BLER performance.</p>
+      <p><strong>Low-Complexity Encoding:</strong> Polar encoding is a simple matrix multiplication with the Kronecker product of the 2×2 kernel matrix F = [1 0; 1 1], resulting in O(N log N) complexity.</p>
+      <p><strong>Flexible Rate Matching:</strong> The polar code natively supports any rate through repetition, puncturing, or shortening, making it ideal for the variable DCI sizes and aggregation levels in NR.</p>
+    </div>
+  </div>
+
+  <div class="diagram-box">
+    <h4>PDCCH Encoding Chain</h4>
+    <pre>
+  DCI Payload (K_0 bits)
+       │
+       ▼
+  ┌──────────────┐
+  │ CRC-24C      │ → Append 24-bit CRC → K = K_0 + 24
+  │ Attachment    │ → XOR last 16 CRC bits with RNTI
+  └──────┬───────┘
+         │
+         ▼
+  ┌──────────────┐
+  │ Polar Encode │ → K info bits + (N−K) frozen bits → N coded bits
+  │ (N = 2^n)    │ → Channel reliability ranking determines info/frozen positions
+  └──────┬───────┘
+         │
+         ▼
+  ┌──────────────┐
+  │ Sub-block    │ → Bit-reversal permutation of encoded bits
+  │ Interleaver  │
+  └──────┬───────┘
+         │
+         ▼
+  ┌──────────────┐
+  │ Rate Matching│ → Output E = AL × 108 bits
+  │ (RM)         │ → Circular buffer: Repetition if E > N, Puncturing if E < N
+  └──────┬───────┘
+         │
+         ▼
+  ┌──────────────┐
+  │ QPSK         │ → E/2 complex symbols
+  │ Modulation   │
+  └──────┬───────┘
+         │
+         ▼
+  Map to CCEs → REGs → Resource Elements in CORESET
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 12. BEAM MANAGEMENT ═══════════════════════ -->
+<section class="section" id="beam">
+  <div class="section-label">Section 12</div>
+  <h2>Beam Management for PDCCH</h2>
+  <p class="desc">One of NR's most significant advances — PDCCH can be beamformed using TCI states, enabling directed control channel transmission in FR2 (mmWave).</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon pink">📡</div>
+        <h3>TCI States for PDCCH</h3>
+      </div>
+      <p>Each CORESET can be configured with up to <strong>64 TCI (Transmission Configuration Indicator) states</strong>. A TCI state defines the QCL (Quasi Co-Location) relationship between the PDCCH DMRS and a reference signal (SSB or CSI-RS).</p>
+      <p><strong>QCL Types for PDCCH:</strong></p>
+      <p>• <strong>QCL-TypeA:</strong> Doppler shift, Doppler spread, average delay, delay spread</p>
+      <p>• <strong>QCL-TypeD:</strong> Spatial Rx parameter (beam direction) — most important for FR2</p>
+      <p>The active TCI state determines which beam the gNB uses to transmit PDCCH and which beam the UE uses to receive it.</p>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon teal">🔄</div>
+        <h3>PDCCH Beam Indication Flow</h3>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-content">
+            <h4>SSB-Based Initial Beam</h4>
+            <p>During initial access, CORESET#0 is QCL'd with the SSB. UE uses the SSB beam for receiving PDCCH.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>TCI State Configuration</h4>
+            <p>Via RRC, gNB configures <code>tci-StatesPDCCH</code> with multiple TCI states, each pointing to a CSI-RS or SSB.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>TCI State Activation</h4>
+            <p>gNB activates a specific TCI state for the CORESET via MAC-CE (MAC Control Element). This changes the PDCCH beam.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Beam Failure Recovery</h4>
+            <p>If PDCCH beam quality drops below threshold, UE triggers BFR procedure: detects failure via BFD-RS, selects new candidate beam, sends PRACH/dedicated SR.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div><strong>FR1 vs FR2:</strong> In FR1 (sub-6 GHz), PDCCH beamforming is optional — many deployments use wide beams. In FR2 (mmWave, 24.25–52.6 GHz), narrow-beam PDCCH is essential due to higher path loss. Each CORESET can have a different beam, enabling multi-panel/multi-beam PDCCH monitoring.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 13. CCE-to-REG MAPPING ═══════════════════════ -->
+<section class="section" id="cce-to-reg">
+  <div class="section-label">Section 13</div>
+  <h2>CCE-to-REG Mapping</h2>
+  <p class="desc">How CCEs are mapped to physical REGs within the CORESET. NR supports two modes: interleaved and non-interleaved.</p>
+
+  <div class="compare-grid">
+    <div class="compare-card lte">
+      <h4>⊞ Interleaved Mapping</h4>
+      <p style="color:var(--text-secondary);font-size:14px;">REG bundles of a CCE are distributed (scattered) across the CORESET in frequency. This provides <strong>frequency diversity</strong>.</p>
+      <ul class="kv-list" style="margin-top:12px;">
+        <li><span class="kv-label">Diversity</span><span class="kv-value">High frequency diversity</span></li>
+        <li><span class="kv-label">Beamforming</span><span class="kv-value">Difficult (REGs spread across bandwidth)</span></li>
+        <li><span class="kv-label">Use Case</span><span class="kv-value">CSS (common messages), FR1 macro cells</span></li>
+        <li><span class="kv-label">CORESET#0</span><span class="kv-value">Always interleaved</span></li>
+        <li><span class="kv-label">Parameters</span><span class="kv-value">reg-BundleSize, interleaverSize, shiftIndex</span></li>
+        <li><span class="kv-label">Interleaver</span><span class="kv-value">Row-column interleaver with R rows × C columns</span></li>
+      </ul>
+    </div>
+    <div class="compare-card nr">
+      <h4>▬ Non-Interleaved Mapping</h4>
+      <p style="color:var(--text-secondary);font-size:14px;">REGs of a CCE are contiguous (localized) in frequency. This enables <strong>UE-specific beamforming</strong>.</p>
+      <ul class="kv-list" style="margin-top:12px;">
+        <li><span class="kv-label">Diversity</span><span class="kv-value">Low frequency diversity (localized)</span></li>
+        <li><span class="kv-label">Beamforming</span><span class="kv-value">Excellent — contiguous RBs enable narrow beam</span></li>
+        <li><span class="kv-label">Use Case</span><span class="kv-value">USS (UE-specific), FR2 mmWave, massive MIMO</span></li>
+        <li><span class="kv-label">REG Bundle Size</span><span class="kv-value">Always 6 (entire CCE = 1 bundle)</span></li>
+        <li><span class="kv-label">Precoder</span><span class="kv-value">Same precoder across entire CCE — maximum beamforming gain</span></li>
+        <li><span class="kv-label">Channel Est.</span><span class="kv-value">Best channel estimation (all REGs contiguous)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diagram-box" style="margin-top:20px;">
+    <h4>Interleaver Operation (Row-Column Interleaving)</h4>
+    <pre>
+  Given: CORESET has N_REG_bundle REG-bundles, interleaverSize = R
+
+  Step 1: Arrange REG-bundle indices into matrix (R rows × C columns):
+          C = N_REG_bundle / R
+
+           Col 0   Col 1   Col 2   ...   Col C-1
+  Row 0  [  0       1       2     ...    C-1    ]
+  Row 1  [  C      C+1     C+2    ...    2C-1   ]
+  ...
+  Row R-1[ (R-1)C  ...                   RC-1   ]
+
+  Step 2: Read out column-by-column:
+          {0, C, 2C, ..., (R-1)C, 1, C+1, 2C+1, ...}
+
+  Step 3: Apply cyclic shift by shiftIndex (default = PCI mod N_REG_bundle)
+          This randomizes mapping per cell to reduce inter-cell interference
+
+  Result: REG bundles of each CCE are spread across different frequency positions
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 14. PROCESSING CHAIN ═══════════════════════ -->
+<section class="section" id="processing">
+  <div class="section-label">Section 14</div>
+  <h2>Complete PDCCH Processing Chain</h2>
+  <p class="desc">End-to-end signal processing from DCI generation at gNB to DCI extraction at UE.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">🏗️</div>
+      <h3>gNB Transmitter Side</h3>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-content">
+          <h4>DCI Payload Generation</h4>
+          <p>MAC scheduler generates DCI fields (frequency allocation, MCS, HARQ, TPC, etc.) based on scheduling decisions. Payload size depends on DCI format and configuration.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>CRC Attachment & RNTI Masking</h4>
+          <p>24-bit CRC (CRC-24C) is computed from DCI payload and appended. The last 16 bits of CRC are XORed with the target UE's RNTI.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Polar Encoding</h4>
+          <p>K information bits (DCI + CRC) are encoded using polar code. Frozen bit positions determined by channel reliability sequence. Output: N = 2^n coded bits.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Rate Matching</h4>
+          <p>Polar coded bits are rate-matched to produce exactly E = AL × 108 bits. Uses circular buffer with repetition (if E > N) or puncturing/shortening (if E < N).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Scrambling</h4>
+          <p>Rate-matched bits are scrambled with pseudo-random sequence initialized by <code>c_init = n_RNTI × 2^16 + n_ID</code>, where n_ID is the PDCCH DMRS scrambling ID or PCI.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>QPSK Modulation</h4>
+          <p>Scrambled bits are mapped to QPSK symbols: {00 → 1/√2(1+j), 01 → 1/√2(1−j), 10 → 1/√2(−1+j), 11 → 1/√2(−1−j)}. Output: E/2 complex symbols.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>CCE-to-REG Mapping</h4>
+          <p>Modulated symbols are mapped to allocated CCEs within the CORESET. CCE-to-REG mapping (interleaved or non-interleaved) determines physical positions.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>DMRS Insertion & Precoding</h4>
+          <p>PDCCH DMRS symbols are inserted at subcarrier positions {1, 5, 9} per RB. Both DMRS and data are precoded with the same beamforming weights (from TCI state).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>OFDM Signal Generation</h4>
+          <p>Precoded symbols are mapped to the resource grid, IFFT is applied, CP is added, and the signal is transmitted over the air.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon cyan">📱</div>
+      <h3>UE Receiver Side</h3>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-content">
+          <h4>CORESET Resource Identification</h4>
+          <p>UE identifies the CORESET time-frequency resources based on RRC configuration (or MIB for CORESET#0).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>OFDM Demodulation</h4>
+          <p>Remove CP, perform FFT, extract symbols from CORESET REGs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Channel Estimation (via DMRS)</h4>
+          <p>Estimate channel from DMRS positions (k=1,5,9). Interpolate across REG bundle for data subcarriers. Apply MMSE or LS channel estimation.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Equalization & Soft Demapping</h4>
+          <p>Apply channel inverse (ZF or MMSE equalization). Compute soft bits (LLRs) from received QPSK symbols.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Descrambling</h4>
+          <p>Descramble soft bits using the same pseudo-random sequence as the transmitter.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Rate De-matching</h4>
+          <p>Combine repeated bits, insert placeholder LLRs for punctured/shortened positions.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>Polar Decoding (CA-SCL)</h4>
+          <p>Apply Successive Cancellation List (SCL) decoder with list size L (typically 8). Use distributed CRC for path selection.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>CRC Check & RNTI Verification</h4>
+          <p>Compute CRC of decoded DCI payload. XOR with UE's RNTI(s). If remainder = 0, the DCI is successfully decoded and addressed to this UE.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-content">
+          <h4>DCI Interpretation</h4>
+          <p>Parse the DCI fields according to the detected format. Extract scheduling information (RB allocation, MCS, HARQ, timing) and proceed with PDSCH reception or PUSCH preparation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 15. TIMING ═══════════════════════ -->
+<section class="section" id="timing">
+  <div class="section-label">Section 15</div>
+  <h2>PDCCH Monitoring & Timing</h2>
+  <p class="desc">PDCCH monitoring occasions define exactly when the UE checks for PDCCH candidates. This is critical for UE power saving and latency.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">⏱️</div>
+        <h3>Monitoring Periodicity</h3>
+      </div>
+      <p>Configured via <code>monitoringSlotPeriodicityAndOffset</code>:</p>
+      <p>Available periodicities (in slots): <code>1, 2, 4, 5, 8, 10, 16, 20, 40, 80, 160, 320, 640, 1280, 2560</code></p>
+      <p>The <strong>monitoring occasion</strong> occurs in slot <code>n</code> when: <code>(n − offset) mod periodicity == 0</code></p>
+      <p>The UE only needs to check for PDCCH in these specific slots, saving power in all other slots.</p>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">📊</div>
+        <h3>Slot-Level Monitoring</h3>
+      </div>
+      <p><code>monitoringSymbolsWithinSlot</code> is a 14-bit bitmap:</p>
+      <p>Each bit corresponds to one OFDM symbol (0–13). A '1' indicates the CORESET starts at that symbol.</p>
+      <p><strong>Example:</strong> <code>10000010000000</code> means CORESET starts at symbol 0 and symbol 6 — two monitoring occasions per slot.</p>
+      <p>The CORESET then occupies the configured <code>duration</code> symbols starting from each indicated position.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon blue">🔋</div>
+      <h3>PDCCH-Based Power Saving (DRX Integration)</h3>
+    </div>
+    <p>PDCCH monitoring is tightly integrated with Discontinuous Reception (DRX):</p>
+    <p>• <strong>On-Duration:</strong> UE monitors PDCCH at configured monitoring occasions</p>
+    <p>• <strong>Inactivity Timer:</strong> Starts after each PDCCH-based scheduling; UE keeps monitoring</p>
+    <p>• <strong>DRX Cycle:</strong> If no scheduling, UE enters sleep after inactivity timer expires</p>
+    <p>• <strong>C-DRX (Connected DRX):</strong> PDCCH monitoring confined to on-duration periods</p>
+    <p>• <strong>PDCCH Skipping (Rel-16):</strong> gNB can indicate via DCI 2_6 that UE can skip PDCCH monitoring for upcoming slots</p>
+    <p>• <strong>Search Space Group Switching (Rel-16):</strong> Switch between two groups of search spaces for different monitoring loads</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 16. POWER CONTROL ═══════════════════════ -->
+<section class="section" id="power">
+  <div class="section-label">Section 16</div>
+  <h2>PDCCH Power Control</h2>
+  <p class="desc">How the gNB controls PDCCH transmit power to balance coverage, capacity, and inter-cell interference.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon red">⚡</div>
+      <h3>Power Control Aspects</h3>
+    </div>
+    <ul class="kv-list">
+      <li><span class="kv-label">PDCCH EPRE</span><span class="kv-value">Energy Per Resource Element — controlled by gNB (vendor-specific implementation)</span></li>
+      <li><span class="kv-label">DMRS Power</span><span class="kv-value">Same EPRE as PDCCH data (β_PDCCH_DMRS = 0 dB offset)</span></li>
+      <li><span class="kv-label">Power Boosting</span><span class="kv-value">gNB can boost CORESET power relative to PDSCH — improves control channel reliability</span></li>
+      <li><span class="kv-label">Aggregation Level</span><span class="kv-value">Effectively provides "soft power control" — higher AL = lower code rate = better coverage</span></li>
+      <li><span class="kv-label">CORESET-Specific Power</span><span class="kv-value">Different CORESETs can have different power levels — enable multi-beam power optimization</span></li>
+      <li><span class="kv-label">ssb-PerRB-PDCCH</span><span class="kv-value">Power ratio between SSB RE EPRE and PDCCH RE EPRE (signaled in SIB1)</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════ 17. KPIs & OPTIMIZATION ═══════════════════════ -->
+<section class="section" id="kpi">
+  <div class="section-label">Section 17</div>
+  <h2>KPIs, Troubleshooting & Optimization</h2>
+  <p class="desc">Practical KPIs and optimization strategies for PDCCH in live networks — essential for RF engineers and network optimization professionals.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">📊</div>
+        <h3>Key Performance Indicators</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>KPI</th><th>Target</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>PDCCH BLER</td><td>&lt; 1%</td><td>Block Error Rate of PDCCH candidates</td></tr>
+            <tr><td>DCI Detection Rate</td><td>&gt; 99%</td><td>Successful DCI decodes / total DCI sent</td></tr>
+            <tr><td>Avg Aggregation Level</td><td>&lt; 4</td><td>Lower = more capacity; higher = better coverage</td></tr>
+            <tr><td>CCE Utilization</td><td>&lt; 70%</td><td>Ratio of used CCEs to total available CCEs</td></tr>
+            <tr><td>PDCCH Capacity</td><td>—</td><td>Max UEs schedulable per slot (depends on AL mix)</td></tr>
+            <tr><td>Blocking Rate</td><td>&lt; 2%</td><td>Scheduling opportunities lost due to CCE shortage</td></tr>
+            <tr><td>Beam Failure Rate</td><td>&lt; 0.1%</td><td>Rate of PDCCH beam failures (FR2)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">🔧</div>
+        <h3>Optimization Strategies</h3>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-content">
+            <h4>CORESET Size Optimization</h4>
+            <p>Balance between PDCCH capacity (more RBs/symbols = more CCEs) and PDSCH throughput (fewer CORESET symbols = more for data). Monitor CCE blocking to determine if CORESET is undersized.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>AL Distribution Tuning</h4>
+            <p>Optimize AL selection thresholds. Aggressive (lower AL) saves CCEs but risks PDCCH BLER. Conservative (higher AL) ensures reliability but limits capacity. Target: minimize average AL while keeping BLER &lt; 1%.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>PDCCH Power Boosting</h4>
+            <p>Increase CORESET EPRE relative to PDSCH by 3–6 dB to improve PDCCH SINR. This allows using lower AL, freeing CCEs for more UEs.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Search Space Periodicity Tuning</h4>
+            <p>Reduce monitoring periodicity for low-traffic UEs (saves UE power). Increase for latency-sensitive UEs. Balance between capacity and responsiveness.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Multi-CORESET Strategy</h4>
+            <p>Use separate CORESETs for CSS vs USS. Dedicate a small CORESET for common messages and a larger one for UE-specific scheduling. In FR2, use different beams per CORESET for coverage.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon red">🔍</div>
+      <h3>Common PDCCH Issues & Troubleshooting</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Issue</th><th>Symptom</th><th>Root Cause</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td>High PDCCH BLER</td><td>Missed DL/UL grants, retransmissions</td><td>Low SINR, insufficient AL, interference</td><td>Increase AL threshold, boost CORESET power, reduce inter-cell interference</td></tr>
+          <tr><td>CCE Blocking</td><td>Scheduling delays, reduced throughput</td><td>Too many UEs, high average AL, small CORESET</td><td>Increase CORESET size, optimize AL distribution, add second CORESET</td></tr>
+          <tr><td>Beam Failure (FR2)</td><td>PDCCH reception lost, RLF</td><td>UE mobility, beam misalignment</td><td>Configure more TCI states, tune BFD thresholds, faster beam recovery</td></tr>
+          <tr><td>Excessive Power Consumption</td><td>Fast UE battery drain</td><td>Too frequent PDCCH monitoring</td><td>Enable C-DRX, increase monitoring periodicity, PDCCH skipping</td></tr>
+          <tr><td>RACH Failure</td><td>UE can't decode RAR (Msg2)</td><td>CORESET#0 misconfiguration, poor coverage</td><td>Verify MIB PDCCH-ConfigSIB1 index, check CORESET#0 size vs SSB SCS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon purple">📐</div>
+      <h3>PDCCH Capacity Calculation Example</h3>
+    </div>
+    <div class="diagram-box">
+      <pre>
+  Given:
+    BWP Bandwidth    = 100 MHz @ 30 kHz SCS → 273 RBs
+    CORESET Duration = 2 OFDM symbols
+    CORESET RBs      = 48 RBs (configured via 45-bit bitmap)
+    CCE-to-REG       = Non-interleaved
+
+  Step 1: Total REGs in CORESET
+    = 48 RBs × 2 symbols = 96 REGs
+
+  Step 2: Total CCEs in CORESET
+    = 96 REGs / 6 REGs per CCE = 16 CCEs
+
+  Step 3: PDCCH Candidates per slot (example AL mix):
+    AL 1: 16 CCEs / 1 CCE per candidate  = 16 candidates max
+    AL 2: 16 CCEs / 2 CCEs per candidate  = 8 candidates max
+    AL 4: 16 CCEs / 4 CCEs per candidate  = 4 candidates max
+    AL 8: 16 CCEs / 8 CCEs per candidate  = 2 candidates max
+    AL 16: 16 CCEs / 16 CCEs per candidate = 1 candidate max
+
+  Step 4: Practical throughput impact
+    CORESET overhead = (48 RBs × 2 sym) / (273 RBs × 14 sym) ≈ 2.5% of slot resources
+    → Minimal impact on PDSCH throughput while supporting up to 16 UE schedules/slot
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SUMMARY ═══════════════════════ -->
+<section class="section" id="summary">
+  <div class="section-label">Summary</div>
+  <h2>PDCCH Design — Complete Architecture Map</h2>
+  <p class="desc">Every component of the 5G NR PDCCH system and how they interconnect.</p>
+
+  <div class="diagram-box">
+    <h4>Full PDCCH Architecture Flow</h4>
+    <pre>
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                         gNB MAC Scheduler                          │
+  │  ┌───────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────────┐ │
+  │  │ UL Grant  │  │ DL Grant │  │ TPC/SFI  │  │ Pre-emption/Power │ │
+  │  │ DCI 0_0/1 │  │ DCI 1_0/1│  │ DCI 2_x  │  │ DCI 2_1/2_6      │ │
+  │  └─────┬─────┘  └─────┬────┘  └─────┬────┘  └────────┬──────────┘ │
+  └────────┼───────────────┼─────────────┼────────────────┼────────────┘
+           └───────────────┼─────────────┼────────────────┘
+                           ▼
+                ┌─────────────────────┐
+                │  CRC-24C + RNTI XOR │ ← C-RNTI / SI-RNTI / P-RNTI / RA-RNTI
+                └──────────┬──────────┘
+                           ▼
+                ┌─────────────────────┐
+                │    Polar Encoding   │ ← N = 2^n coded bits
+                └──────────┬──────────┘
+                           ▼
+                ┌─────────────────────┐
+                │    Rate Matching    │ ← E = AL × 108 bits
+                └──────────┬──────────┘
+                           ▼
+                ┌─────────────────────┐
+                │    Scrambling       │ ← c_init = f(RNTI, n_ID)
+                └──────────┬──────────┘
+                           ▼
+                ┌─────────────────────┐
+                │  QPSK Modulation    │ ← 2 bits/symbol
+                └──────────┬──────────┘
+                           ▼
+           ┌───────────────┴───────────────┐
+           │      CCE-to-REG Mapping       │
+           │  ┌──────────┐ ┌─────────────┐ │
+           │  │Interleaved│ │Non-Interleav│ │
+           │  │(diversity)│ │(beamforming)│ │
+           │  └──────────┘ └─────────────┘ │
+           └───────────────┬───────────────┘
+                           ▼
+                ┌─────────────────────┐
+                │   CORESET Mapping   │ ← Freq: 6-RB granularity bitmap
+                │                     │ ← Time: 1/2/3 OFDM symbols
+                │   + DMRS Insertion  │ ← k = {1, 5, 9} per RB
+                └──────────┬──────────┘
+                           ▼
+                ┌─────────────────────┐
+                │ Beamforming/Precod  │ ← TCI State → QCL → Beam
+                └──────────┬──────────┘
+                           ▼
+                ┌─────────────────────┐
+                │  OFDM (IFFT + CP)   │ → Over-the-Air
+                └─────────────────────┘
+                           ▼
+  ═══════════════════ AIR INTERFACE ═══════════════════
+                           ▼
+                ┌─────────────────────┐
+                │ UE: OFDM Demod      │
+                │ → Ch. Est. (DMRS)   │
+                │ → Equalization      │
+                │ → Descramble        │
+                │ → Rate De-match     │
+                │ → Polar Decode (SCL)│
+                │ → CRC ⊕ RNTI Check │
+                │ → DCI Extraction    │
+                └─────────────────────┘
+    </pre>
+  </div>
+
+  <div class="grid-4" style="margin-top:24px;">
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:28px;margin-bottom:6px;">🔲</div>
+      <div style="font-size:22px;font-weight:700;color:var(--accent-cyan);font-family:'JetBrains Mono';">3</div>
+      <div style="font-size:12px;color:var(--text-muted);">Max CORESETs/BWP</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:28px;margin-bottom:6px;">🔍</div>
+      <div style="font-size:22px;font-weight:700;color:var(--accent-blue);font-family:'JetBrains Mono';">10</div>
+      <div style="font-size:12px;color:var(--text-muted);">Max Search Spaces/BWP</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:28px;margin-bottom:6px;">📋</div>
+      <div style="font-size:22px;font-weight:700;color:var(--accent-purple);font-family:'JetBrains Mono';">13+</div>
+      <div style="font-size:12px;color:var(--text-muted);">DCI Formats</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:28px;margin-bottom:6px;">🎯</div>
+      <div style="font-size:22px;font-weight:700;color:var(--accent-orange);font-family:'JetBrains Mono';">44</div>
+      <div style="font-size:12px;color:var(--text-muted);">Max Blind Decodes/Slot</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <p>5G NR PDCCH Complete Reference — Based on <strong>3GPP TS 38.211, 38.212, 38.213, 38.214</strong> (Rel-15/16/17)</p>
+  <p style="margin-top:6px;">Created for <strong>CafeTele Telecom Training</strong> — www.cafetele.com</p>
+</footer>
+
+</body>
+</html>

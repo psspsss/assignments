@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCI Payload Constructor — Interactive 5G NR PDCCH Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-dark: #0a0e27;
+  --bg-mid: #141b3d;
+  --bg-card: #1a2249;
+  --accent-cyan: #00ffff;
+  --accent-pink: #ff2e97;
+  --accent-yellow: #ffd700;
+  --accent-green: #00ff88;
+  --accent-orange: #ff6b35;
+  --text-primary: #e8f1ff;
+  --text-secondary: #8a9bba;
+  --border: #2d3a5f;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Animated background */
+.bg-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.15;
+  background: 
+    radial-gradient(circle at 20% 50%, var(--accent-cyan) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--accent-pink) 0%, transparent 50%),
+    radial-gradient(circle at 40% 90%, var(--accent-yellow) 0%, transparent 50%);
+  animation: bgPulse 15s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.1); }
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: slideDown 1s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink), var(--accent-yellow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+.header .subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+.header .badge {
+  display: inline-block;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+/* Real-world analogy section - ENHANCED */
+.analogy-section {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-yellow);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.analogy-section::before {
+  content: '📡';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 60px;
+  opacity: 0.3;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.analogy-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-yellow);
+  font-size: 28px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analogy-section p {
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.analogy-section strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.analogy-highlight {
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 4px solid var(--accent-yellow);
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+/* NEW: Animated diagram container */
+.analogy-diagram {
+  margin: 30px 0;
+  padding: 30px;
+  background: rgba(10, 14, 39, 0.6);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.diagram-title {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-cyan);
+  font-size: 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Traffic Controller Animation */
+.traffic-scene {
+  position: relative;
+  height: 400px;
+  background: linear-gradient(to bottom, #1a2249 0%, #0a0e27 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.road {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: #2d3a5f;
+  border-top: 3px dashed var(--accent-yellow);
+}
+
+.intersection {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); transform: translateX(-50%) scale(1); }
+  50% { box-shadow: 0 0 50px rgba(0, 255, 255, 0.8); transform: translateX(-50%) scale(1.1); }
+}
+
+.car {
+  position: absolute;
+  width: 60px;
+  height: 40px;
+  background: var(--accent-pink);
+  border-radius: 8px 8px 4px 4px;
+  bottom: 40px;
+  animation: driveAcross 5s linear infinite;
+  box-shadow: 0 4px 10px rgba(255, 46, 151, 0.4);
+}
+
+.car::before {
+  content: '🚗';
+  position: absolute;
+  font-size: 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes driveAcross {
+  0% { left: -80px; }
+  100% { left: 100%; }
+}
+
+.car:nth-child(3) {
+  animation-delay: 1.5s;
+  background: var(--accent-green);
+  bottom: 60px;
+}
+
+.car:nth-child(4) {
+  animation-delay: 3s;
+  background: var(--accent-orange);
+  bottom: 80px;
+}
+
+.signal-label {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 2px solid var(--accent-cyan);
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  color: var(--accent-cyan);
+  animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* NEW: Letter Sorting Animation */
+.sorting-scene {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+  min-height: 300px;
+}
+
+.sorting-station {
+  background: var(--bg-mid);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sorting-station h4 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-cyan);
+  font-size: 14px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.letter {
+  width: 50px;
+  height: 35px;
+  background: var(--accent-pink);
+  border-radius: 4px;
+  margin: 8px auto;
+  position: relative;
+  animation: sortLetter 3s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(255, 46, 151, 0.3);
+}
+
+.letter::before {
+  content: '✉️';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+}
+
+@keyframes sortLetter {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  25% { transform: translateY(-10px) rotate(-5deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-10px) rotate(5deg); }
+}
+
+.letter:nth-child(2) { animation-delay: 0.5s; background: var(--accent-green); }
+.letter:nth-child(3) { animation-delay: 1s; background: var(--accent-orange); }
+.letter:nth-child(4) { animation-delay: 1.5s; background: var(--accent-yellow); }
+
+.arrow-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--accent-cyan);
+  animation: slideRight 1.5s ease-in-out infinite;
+}
+
+@keyframes slideRight {
+  0%, 100% { transform: translateX(-5px); opacity: 0.5; }
+  50% { transform: translateX(5px); opacity: 1; }
+}
+
+/* Technical Details Section */
+.tech-details {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-pink);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  animation: fadeIn 1s ease-out 0.4s both;
+}
+
+.tech-details h3 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-pink);
+  font-size: 22px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.tech-card {
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.tech-card:hover {
+  border-color: var(--accent-pink);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(255, 46, 151, 0.2);
+}
+
+.tech-card h4 {
+  font-family: 'Space Mono', monospace;
+  color: var(--accent-cyan);
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tech-card p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tech-card code {
+  background: var(--bg-dark);
+  color: var(--accent-yellow);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+}
+
+/* Comparison Section */
+.comparison-section {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-green);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  animation: fadeIn 1s ease-out 0.5s both;
+}
+
+.comparison-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-green);
+  font-size: 24px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.comparison-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.comparison-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.format-compare-btn {
+  background: var(--bg-mid);
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 120px;
+}
+
+.format-compare-btn span {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.format-compare-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-green);
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+
+.format-compare-btn.active {
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  color: var(--bg-dark);
+  border-color: var(--accent-green);
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
+}
+
+.comparison-table-container {
+  overflow-x: auto;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  background: var(--bg-mid);
+  padding: 20px;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+}
+
+.comparison-table th {
+  background: var(--bg-dark);
+  color: var(--accent-cyan);
+  padding: 15px 10px;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.comparison-table th.format-col {
+  text-align: center;
+  font-size: 11px;
+  min-width: 100px;
+}
+
+.comparison-table th.format-col.active {
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  color: var(--bg-dark);
+}
+
+.comparison-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.comparison-table td:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 200px;
+}
+
+.comparison-table td.value-cell {
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent-yellow);
+}
+
+.comparison-table td.value-cell.highlight {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent-green);
+}
+
+.comparison-table tr:hover {
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.comparison-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.insight-card {
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+  border-color: var(--accent-green);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 255, 136, 0.2);
+}
+
+.insight-card h4 {
+  font-family: 'Space Mono', monospace;
+  color: var(--accent-green);
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.insight-card p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.insight-card strong {
+  color: var(--text-primary);
+}
+
+/* Input controls */
+.controls-section {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  animation: fadeIn 1s ease-out 0.6s both;
+}
+
+.controls-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-cyan);
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.control-item {
+  background: var(--bg-mid);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.control-item:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 255, 255, 0.2);
+}
+
+.control-item label {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--accent-cyan);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.control-item input, .control-item select {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.control-item input:focus, .control-item select:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.control-item .hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.calculate-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+  border: none;
+  color: var(--bg-dark);
+  padding: 18px;
+  border-radius: 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.calculate-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.calculate-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.calculate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+}
+
+/* Output sections */
+.output-section {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  animation: fadeIn 1s ease-out 0.9s both;
+}
+
+.output-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-green);
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.bit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.bit-cell {
+  aspect-ratio: 1;
+  background: var(--bg-mid);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bit-cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.bit-cell:hover::before {
+  left: 100%;
+}
+
+.bit-cell:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 20px var(--accent-cyan);
+}
+
+.bit-0 {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.bit-1 {
+  color: var(--accent-pink);
+  border-color: var(--accent-pink);
+  background: rgba(255, 46, 151, 0.1);
+}
+
+.field-info {
+  background: var(--bg-mid);
+  border-left: 4px solid var(--accent-yellow);
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+}
+
+.field-label {
+  color: var(--accent-yellow);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.field-value {
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* Assembly visualization */
+.assembly-section {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-orange);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+}
+
+.assembly-section h2 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-orange);
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.assembly-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.anim-btn {
+  background: var(--bg-mid);
+  border: 2px solid var(--accent-orange);
+  color: var(--accent-orange);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.anim-btn:hover {
+  background: var(--accent-orange);
+  color: var(--bg-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+}
+
+.assembly-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.assembly-step {
+  background: var(--bg-mid);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  opacity: 0.5;
+  transition: all 0.5s ease;
+  position: relative;
+}
+
+.assembly-step.animate {
+  opacity: 1;
+  border-color: var(--accent-orange);
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3);
+}
+
+.step-number {
+  position: absolute;
+  top: -15px;
+  left: 20px;
+  background: var(--accent-orange);
+  color: var(--bg-dark);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.step-title {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-cyan);
+  font-size: 16px;
+  margin-bottom: 12px;
+  padding-top: 10px;
+}
+
+.step-desc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Layer visualization */
+.assembly-layers {
+  position: relative;
+  height: 400px;
+  margin: 40px 0;
+  background: var(--bg-mid);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.assembly-layer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.assembly-layer.show {
+  opacity: 1;
+}
+
+.layer-1 {
+  top: 20px;
+  background: linear-gradient(135deg, var(--accent-cyan), rgba(0, 255, 255, 0.3));
+  border: 2px solid var(--accent-cyan);
+}
+
+.layer-2 {
+  top: 100px;
+  background: linear-gradient(135deg, var(--accent-pink), rgba(255, 46, 151, 0.3));
+  border: 2px solid var(--accent-pink);
+}
+
+.layer-3 {
+  top: 180px;
+  background: linear-gradient(135deg, var(--accent-yellow), rgba(255, 215, 0, 0.3));
+  border: 2px solid var(--accent-yellow);
+}
+
+.layer-4 {
+  top: 260px;
+  background: linear-gradient(135deg, var(--accent-green), rgba(0, 255, 136, 0.3));
+  border: 2px solid var(--accent-green);
+}
+
+.layer-connector {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  background: linear-gradient(to bottom, var(--accent-orange), transparent);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.layer-connector.show {
+  opacity: 1;
+}
+
+/* SVG Construction diagram */
+.svg-construction {
+  margin: 40px 0;
+  overflow-x: auto;
+}
+
+.svg-animate-in {
+  opacity: 0;
+  animation: svgSlideIn 0.8s ease-out forwards;
+}
+
+@keyframes svgSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.svg-hover-box:hover {
+  cursor: pointer;
+  filter: brightness(1.3);
+}
+
+/* Particles background */
+.particle {
+  position: fixed;
+  width: 3px;
+  height: 3px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 36px;
+  }
+  
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .assembly-steps {
+    grid-template-columns: 1fr;
+  }
+  
+  .bit-grid {
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+    gap: 6px;
+  }
+  
+  .sorting-scene {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stage sections */
+.stage {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.stage-number {
+  position: absolute;
+  top: -20px;
+  left: 30px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+  color: var(--bg-dark);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 24px;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+}
+
+@keyframes rotate360 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.stage h3 {
+  font-family: 'Orbitron', monospace;
+  color: var(--accent-cyan);
+  font-size: 22px;
+  margin-bottom: 20px;
+  padding-top: 10px;
+}
+
+.stage-description {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="bg-animation"></div>
+
+<div class="container">
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">3GPP TS 38.212 Compliant</div>
+    <h1>DCI PAYLOAD CONSTRUCTOR</h1>
+    <p class="subtitle">Interactive 5G NR PDCCH Downlink Control Information Simulator</p>
+  </div>
+
+  <!-- ENHANCED Real-world Analogy Section -->
+  <div class="analogy-section">
+    <h2>🚦 Understanding DCI: The Traffic Controller of 5G</h2>
+    
+    <p>Imagine a busy city intersection during rush hour. Without a traffic controller, cars would crash, pedestrians would be confused, and chaos would reign. In the world of 5G networks, <strong>DCI (Downlink Control Information)</strong> plays exactly this role — it's the traffic controller that tells every device when to send data, how much bandwidth to use, and which "lane" (frequency channel) to drive on.</p>
+
+    <div class="analogy-diagram">
+      <div class="diagram-title">🚦 The Traffic Controller Analogy</div>
+      <div class="traffic-scene">
+        <div class="signal-label">DCI = Traffic Signals 🚦</div>
+        <div class="intersection">🚦</div>
+        <div class="road"></div>
+        <div class="car"></div>
+        <div class="car"></div>
+        <div class="car"></div>
+      </div>
+    </div>
+
+    <div class="analogy-highlight">
+      <p><strong>🎯 What Does DCI Actually Do?</strong></p>
+      <p>Think of your smartphone trying to download a video. The cell tower (base station) needs to tell your phone:</p>
+      <ul style="margin-left: 20px; margin-top: 10px; line-height: 2;">
+        <li><strong>"WHEN"</strong> to listen (like saying "your turn is in 5 milliseconds")</li>
+        <li><strong>"WHERE"</strong> to look (which frequency band — like which lane on the highway)</li>
+        <li><strong>"HOW MUCH"</strong> data is coming (resource blocks — like how many lanes you can use)</li>
+        <li><strong>"HOW FAST"</strong> to expect it (modulation scheme — like speed limit)</li>
+      </ul>
+    </div>
+
+    <p><strong>📬 The Letter Sorting Analogy</strong></p>
+    <p>Another way to think about DCI is like a postal service sorting facility. When thousands of letters arrive, they need to be sorted by:</p>
+    
+    <div class="analogy-diagram">
+      <div class="diagram-title">📬 DCI as a Postal Sorting System</div>
+      <div class="sorting-scene">
+        <div class="sorting-station">
+          <h4>📥 Incoming Data</h4>
+          <div class="letter"></div>
+          <div class="letter"></div>
+          <div class="letter"></div>
+          <div class="letter"></div>
+        </div>
+        <div class="sorting-station" style="display: flex; align-items: center; justify-content: center;">
+          <div class="arrow-flow">⟹⟹⟹</div>
+        </div>
+        <div class="sorting-station">
+          <h4>📤 Sorted & Delivered</h4>
+          <div class="letter"></div>
+          <div class="letter"></div>
+          <div class="letter"></div>
+          <div class="letter"></div>
+        </div>
+      </div>
+    </div>
+
+    <ul style="margin-left: 20px; margin-top: 15px; line-height: 2;">
+      <li><strong>Destination:</strong> Which user device (your phone vs. your neighbor's)</li>
+      <li><strong>Priority:</strong> Urgent video call vs. background email sync</li>
+      <li><strong>Size:</strong> Small text message vs. large video file</li>
+      <li><strong>Delivery Method:</strong> Express (high bandwidth) vs. standard (lower bandwidth)</li>
+    </ul>
+
+    <p style="margin-top: 20px;"><strong>🔧 Building the DCI Payload</strong></p>
+    <p>The DCI payload is like packing all these instructions into a small, efficient package. Just like a shipping label has multiple fields (address, tracking number, weight, delivery speed), a DCI message has multiple fields packed into <strong>42 bits of information</strong>. Each bit carries critical meaning:</p>
+
+    <ul style="margin-left: 20px; margin-top: 10px; line-height: 2;">
+      <li><strong>Frequency Domain (13 bits):</strong> "Use lanes 10-25 on the highway" — which frequencies to use</li>
+      <li><strong>Time Domain (4 bits):</strong> "Start in 3 time slots" — when to begin transmission</li>
+      <li><strong>MCS (5 bits):</strong> "Speed limit is 250 Mbps" — how fast the data will travel</li>
+      <li><strong>NDI (1 bit):</strong> "This is NEW data" — not a retransmission</li>
+      <li><strong>RV (2 bits):</strong> "Redundancy version 0" — error correction method</li>
+      <li><strong>HARQ (4 bits):</strong> "Process ID #7" — which data stream this belongs to</li>
+    </ul>
+
+    <p style="margin-top: 20px; color: var(--accent-green); font-weight: 600;">💡 <em>Just like how a traffic light changes from red to green in milliseconds, DCI messages are sent every few milliseconds to coordinate thousands of devices accessing the 5G network simultaneously. Without DCI, your phone wouldn't know when it's "allowed" to receive or send data — resulting in data collisions and network chaos!</em></p>
+  </div>
+
+  <!-- NEW: Technical Details Section -->
+  <div class="tech-details">
+    <h3>⚙️ Technical Deep Dive: DCI Format 1_0 Architecture</h3>
+    
+    <p style="margin-bottom: 20px; color: var(--text-secondary);">DCI Format 1_0 is used for scheduling PDSCH (Physical Downlink Shared Channel) transmissions. It's the most common format for delivering user data in 5G NR networks. Here's what makes it technically sophisticated:</p>
+
+    <div class="tech-grid">
+      <div class="tech-card">
+        <h4>🎯 Frequency Domain Resource Assignment</h4>
+        <p>Uses <code>13 bits</code> to encode resource allocation using <strong>Type 1 FDRA</strong>. This allows the base station to assign any combination of Resource Blocks (RBs) from the 48 available RBs in a typical carrier bandwidth.</p>
+        <p style="margin-top: 10px;"><strong>Formula:</strong> Total combinations = 2^13 = 8,192 possible resource allocation patterns</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>⏱️ Time Domain Resource Assignment</h4>
+        <p>The <code>4-bit</code> TDRA field indexes into a lookup table (configured via RRC) that defines:</p>
+        <ul style="margin-left: 15px; margin-top: 8px; font-size: 12px; line-height: 1.8;">
+          <li>K0: Slot offset (0-32 slots)</li>
+          <li>S: Starting symbol within slot (0-13)</li>
+          <li>L: Duration in OFDM symbols (1-14)</li>
+        </ul>
+        <p style="margin-top: 8px;"><strong>Purpose:</strong> Enables flexible scheduling across time slots with microsecond precision</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>📊 Modulation & Coding Scheme</h4>
+        <p>The <code>5-bit</code> MCS index maps to a combination of:</p>
+        <ul style="margin-left: 15px; margin-top: 8px; font-size: 12px; line-height: 1.8;">
+          <li><strong>Modulation:</strong> QPSK, 16QAM, 64QAM, or 256QAM</li>
+          <li><strong>Code Rate:</strong> From R=0.12 to R=0.95</li>
+          <li><strong>Spectral Efficiency:</strong> Up to 7.4 bits/symbol</li>
+        </ul>
+        <p style="margin-top: 8px;">Higher MCS = Faster data but requires better signal quality (higher SNR)</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>🔄 HARQ Process Management</h4>
+        <p>The <code>4-bit</code> HARQ Process Number identifies one of 16 independent retransmission processes. This enables <strong>parallel data streams</strong> with individual error recovery.</p>
+        <p style="margin-top: 10px;"><strong>Stop-and-Wait Protocol:</strong> Each HARQ process waits for ACK/NACK before reusing that process ID</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>🆕 New Data Indicator</h4>
+        <p>The <code>1-bit</code> NDI toggles (0→1 or 1→0) to signal <strong>new data transmission</strong> vs. retransmission of the same data.</p>
+        <p style="margin-top: 10px;"><strong>Key Concept:</strong> If NDI doesn't toggle, the UE knows to soft-combine the retransmission with previously received data for error correction (Chase combining)</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>🔁 Redundancy Version</h4>
+        <p>The <code>2-bit</code> RV field selects which portion of the rate-matched code block to transmit (RV ∈ {0, 1, 2, 3}).</p>
+        <p style="margin-top: 10px;"><strong>Use Case:</strong> Incremental Redundancy (IR-HARQ) — each retransmission sends different parity bits to improve error correction without full retransmission</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>📡 TCI State Indicator</h4>
+        <p>The <code>3-bit</code> TCI field points to configured beam pairs for multi-beam operation, critical for <strong>mmWave beamforming</strong>.</p>
+        <p style="margin-top: 10px;"><strong>Beam Management:</strong> Enables dynamic beam switching without RRC reconfiguration, essential for mobility at high frequencies (&gt;24 GHz)</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>📶 Antenna Ports Indicator</h4>
+        <p>The <code>2-bit</code> field selects DMRS (Demodulation Reference Signal) port configuration for MIMO:</p>
+        <ul style="margin-left: 15px; margin-top: 8px; font-size: 12px; line-height: 1.8;">
+          <li>00: Single antenna port</li>
+          <li>01-11: Multi-antenna configurations (2×2, 4×4 MIMO)</li>
+        </ul>
+      </div>
+
+      <div class="tech-card">
+        <h4>🔐 CRC Attachment & Scrambling</h4>
+        <p>After payload construction, a <code>24-bit CRC</code> is attached and XOR-scrambled with the <strong>RNTI</strong> (Radio Network Temporary Identifier).</p>
+        <p style="margin-top: 10px;"><strong>Security Benefit:</strong> Only the intended UE (with matching RNTI) can successfully decode the DCI — provides implicit addressing</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>📏 Payload Size Calculation</h4>
+        <p><strong>Total DCI 1_0 Size:</strong></p>
+        <p style="font-family: 'Space Mono', monospace; margin-top: 8px; color: var(--accent-yellow);">
+          Payload = 34 bits (core fields)<br>
+          + 3 bits (TCI)<br>
+          + 2 bits (Antenna)<br>
+          + 3 bits (Reserved)<br>
+          = <strong>42 bits</strong>
+        </p>
+        <p style="margin-top: 10px;">Plus 24-bit CRC → <strong>66 bits total</strong> before channel coding</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>🌐 Channel Coding: Polar Codes</h4>
+        <p>DCI uses <strong>Polar codes</strong> (not LDPC) for channel coding, optimized for short block lengths.</p>
+        <p style="margin-top: 10px;"><strong>Advantage:</strong> Polar codes achieve near-Shannon-limit performance for control channels, outperforming traditional convolutional codes</p>
+      </div>
+
+      <div class="tech-card">
+        <h4>⚡ Aggregation Level & PDCCH</h4>
+        <p>DCI is transmitted on PDCCH using <strong>Aggregation Levels</strong> (AL): 1, 2, 4, 8, or 16 CCEs (Control Channel Elements).</p>
+        <p style="margin-top: 10px;"><strong>Adaptive Link:</strong> Higher AL = More repetition = Better reliability in poor channel conditions (but consumes more control resources)</p>
+      </div>
+    </div>
+
+    <div class="analogy-highlight" style="margin-top: 30px;">
+      <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 10px;">🔬 Real-World Performance Impact:</p>
+      <p>A typical 5G cell tower transmits DCI messages every <strong>1 millisecond</strong> (slot duration in FR1). With support for up to <strong>16 HARQ processes</strong> per user and <strong>hundreds of simultaneous users</strong>, the base station generates and transmits <strong>thousands of DCI messages per second</strong>. Efficient DCI design is critical because control channel overhead directly impacts spectral efficiency — every bit used for control is a bit not available for user data!</p>
+    </div>
+  </div>
+
+  <!-- NEW: DCI Format Comparison Section -->
+  <div class="comparison-section">
+    <h2>🔍 DCI Format Configuration Comparison</h2>
+    <p class="comparison-subtitle">See how configuration components change across different DCI formats</p>
+    
+    <div class="comparison-controls">
+      <button class="format-compare-btn active" data-format="0_0">Format 0_0<br><span>Fallback UL</span></button>
+      <button class="format-compare-btn" data-format="0_1">Format 0_1<br><span>Scheduled UL</span></button>
+      <button class="format-compare-btn" data-format="1_0">Format 1_0<br><span>Fallback DL</span></button>
+      <button class="format-compare-btn" data-format="1_1">Format 1_1<br><span>Scheduled DL</span></button>
+      <button class="format-compare-btn" data-format="2_0">Format 2_0<br><span>Slot Format</span></button>
+      <button class="format-compare-btn" data-format="2_1">Format 2_1<br><span>PRB/Symbol</span></button>
+    </div>
+
+    <div class="comparison-table-container">
+      <table class="comparison-table" id="comparisonTable">
+        <thead>
+          <tr>
+            <th>Configuration Component</th>
+            <th class="format-col active" data-format="0_0">Format 0_0</th>
+            <th class="format-col" data-format="0_1">Format 0_1</th>
+            <th class="format-col" data-format="1_0">Format 1_0</th>
+            <th class="format-col" data-format="1_1">Format 1_1</th>
+            <th class="format-col" data-format="2_0">Format 2_0</th>
+            <th class="format-col" data-format="2_1">Format 2_1</th>
+          </tr>
+        </thead>
+        <tbody id="comparisonTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="comparison-insights">
+      <div class="insight-card">
+        <h4>✅ What Stays the Same</h4>
+        <p><strong>System Configuration Parameters:</strong> Parameters like BWP size, carrier bandwidth, and resource allocation type are system-wide settings that remain available across all formats.</p>
+        <p style="margin-top: 10px;"><strong>Core Mechanisms:</strong> RNTI-CRC scrambling, Polar coding, and PDCCH aggregation levels work the same way for all DCI formats.</p>
+      </div>
+
+      <div class="insight-card">
+        <h4>🔄 What Changes</h4>
+        <p><strong>Field Definitions:</strong> Each format has completely different fields tailored to its purpose (UL scheduling vs DL scheduling vs group signaling).</p>
+        <p style="margin-top: 10px;"><strong>Bit Allocations:</strong> The number of bits allocated to each field varies significantly. For example, Frequency Domain bits range from 8 to 16 bits depending on format.</p>
+        <p style="margin-top: 10px;"><strong>Payload Size:</strong> Total payload size differs across formats based on their field configurations.</p>
+      </div>
+
+      <div class="insight-card">
+        <h4>🎯 Format Purposes</h4>
+        <ul style="margin-left: 15px; margin-top: 8px; font-size: 13px; line-height: 1.8;">
+          <li><strong>Format 0_x:</strong> Uplink scheduling (PUSCH)</li>
+          <li><strong>Format 1_x:</strong> Downlink scheduling (PDSCH)</li>
+          <li><strong>Format 2_x:</strong> Group-common signaling</li>
+          <li><strong>Fallback (x_0):</strong> Minimal, robust formats</li>
+          <li><strong>Scheduled (x_1):</strong> Feature-rich, flexible formats</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Controls Section -->
+  <div class="controls-section">
+    <h2>⚡ DCI Payload Configuration</h2>
+    <div class="controls-grid">
+      
+      <div class="control-item" style="grid-column: 1 / -1; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--accent-cyan);">
+        <label style="color: var(--accent-cyan); font-weight: 700;">DCI Format Identifier</label>
+        <select id="dciFormat" style="font-weight: 700; color: var(--accent-cyan);">
+          <option value="0_0">DCI Format 0_0 (Fallback UL)</option>
+          <option value="0_1">DCI Format 0_1 (Scheduled UL)</option>
+          <option value="1_0">DCI Format 1_0 (Fallback DL)</option>
+          <option value="1_1" selected>DCI Format 1_1 (Scheduled DL)</option>
+          <option value="2_0">DCI Format 2_0 (Slot Format)</option>
+          <option value="2_1">DCI Format 2_1 (PRB/Symbol)</option>
+        </select>
+        <div class="hint">Format identifier (implicit via RNTI-CRC scrambling, not encoded in payload)</div>
+      </div>
+      
+      <div class="control-item">
+        <label>Frequency Domain Resource (bits)</label>
+        <input type="number" id="freqDomainBits" value="13" min="1" max="20">
+        <div class="hint">Typical: 13 bits for Type 1 FDRA</div>
+      </div>
+
+      <div class="control-item">
+        <label>Frequency Domain Value</label>
+        <input type="number" id="freqDomainVal" value="5432" min="0" max="8191">
+        <div class="hint">Resource allocation pattern (0-8191)</div>
+      </div>
+
+      <div class="control-item">
+        <label>Time Domain Resource (bits)</label>
+        <input type="number" id="timeDomainBits" value="4" min="1" max="8">
+        <div class="hint">TDRA table index</div>
+      </div>
+
+      <div class="control-item">
+        <label>Time Domain Value</label>
+        <input type="number" id="timeDomainVal" value="3" min="0" max="15">
+        <div class="hint">Slot + symbol configuration</div>
+      </div>
+
+      <div class="control-item">
+        <label>VRB-to-PRB Mapping</label>
+        <input type="number" id="vrbToPrbBits" value="1" min="1" max="2">
+        <div class="hint">0: Non-interleaved, 1: Interleaved</div>
+      </div>
+
+      <div class="control-item">
+        <label>VRB-to-PRB Value</label>
+        <input type="number" id="vrbToPrbVal" value="1" min="0" max="1">
+        <div class="hint">Mapping type selector</div>
+      </div>
+
+      <div class="control-item">
+        <label>Modulation & Coding (bits)</label>
+        <input type="number" id="mcsBits" value="5" min="1" max="8">
+        <div class="hint">MCS index field size</div>
+      </div>
+
+      <div class="control-item">
+        <label>MCS Index</label>
+        <input type="number" id="mcsVal" value="16" min="0" max="31">
+        <div class="hint">Index into MCS table (0-31)</div>
+      </div>
+
+      <div class="control-item">
+        <label>New Data Indicator</label>
+        <input type="number" id="ndiVal" value="1" min="0" max="1">
+        <div class="hint">0: Retransmission, 1: New data</div>
+      </div>
+
+      <div class="control-item">
+        <label>Redundancy Version (bits)</label>
+        <input type="number" id="rvBits" value="2" min="1" max="3">
+        <div class="hint">RV field size</div>
+      </div>
+
+      <div class="control-item">
+        <label>RV Value</label>
+        <input type="number" id="rvVal" value="0" min="0" max="3">
+        <div class="hint">RV ∈ {0, 1, 2, 3}</div>
+      </div>
+
+      <div class="control-item">
+        <label>HARQ Process (bits)</label>
+        <input type="number" id="harqBits" value="4" min="1" max="5">
+        <div class="hint">Process ID field size</div>
+      </div>
+
+      <div class="control-item">
+        <label>HARQ Process ID</label>
+        <input type="number" id="harqVal" value="7" min="0" max="15">
+        <div class="hint">Process number (0-15)</div>
+      </div>
+
+      <div class="control-item">
+        <label>Downlink Assignment Index (bits)</label>
+        <input type="number" id="daiBits" value="2" min="1" max="4">
+        <div class="hint">DAI counter size</div>
+      </div>
+
+      <div class="control-item">
+        <label>DAI Value</label>
+        <input type="number" id="daiVal" value="1" min="0" max="3">
+        <div class="hint">Assignment counter</div>
+      </div>
+
+      <div class="control-item">
+        <label>TPC Command (bits)</label>
+        <input type="number" id="tpcBits" value="2" min="1" max="3">
+        <div class="hint">Power control command</div>
+      </div>
+
+      <div class="control-item">
+        <label>TPC Value</label>
+        <input type="number" id="tpcVal" value="2" min="0" max="3">
+        <div class="hint">0: -1dB, 1: 0dB, 2: +1dB, 3: +3dB</div>
+      </div>
+
+      <div class="control-item">
+        <label>PUCCH Resource (bits)</label>
+        <input type="number" id="pucchBits" value="3" min="1" max="4">
+        <div class="hint">PUCCH resource indicator</div>
+      </div>
+
+      <div class="control-item">
+        <label>PUCCH Value</label>
+        <input type="number" id="pucchVal" value="4" min="0" max="7">
+        <div class="hint">Resource configuration index</div>
+      </div>
+
+      <div class="control-item">
+        <label>PDSCH-to-HARQ Timing (bits)</label>
+        <input type="number" id="k1Bits" value="3" min="1" max="4">
+        <div class="hint">K1 timing field</div>
+      </div>
+
+      <div class="control-item">
+        <label>K1 Timing Value</label>
+        <input type="number" id="k1Val" value="5" min="0" max="7">
+        <div class="hint">Slots between PDSCH and HARQ-ACK</div>
+      </div>
+
+      <div class="control-item">
+        <label>TCI State</label>
+        <select id="tciState">
+          <option value="0">TCI State 0</option>
+          <option value="1">TCI State 1</option>
+          <option value="2" selected>TCI State 2</option>
+          <option value="3">TCI State 3</option>
+          <option value="4">TCI State 4</option>
+          <option value="5">TCI State 5</option>
+          <option value="6">TCI State 6</option>
+          <option value="7">TCI State 7</option>
+        </select>
+        <div class="hint">Beam configuration for FR2</div>
+      </div>
+
+      <div class="control-item">
+        <label>Antenna Ports</label>
+        <select id="antennaPorts">
+          <option value="0">Single Port</option>
+          <option value="1" selected>Port 1000</option>
+          <option value="2">Ports 1000-1001</option>
+          <option value="3">Multi-layer</option>
+        </select>
+        <div class="hint">DMRS antenna configuration</div>
+      </div>
+
+    </div>
+    
+    <button class="calculate-btn" onclick="generateDCI()">🚀 CONSTRUCT DCI PAYLOAD</button>
+  </div>
+
+  <!-- Stage 1: Individual Field Outputs -->
+  <div class="stage">
+    <div class="stage-number">1</div>
+    <h3>📊 Individual Field Encoding</h3>
+    <p class="stage-description">Each DCI field is independently encoded into its binary representation. These fields control different aspects of the downlink transmission scheduling.</p>
+    <div id="individualFields"></div>
+  </div>
+
+  <!-- Stage 2: 34-bit Core Payload -->
+  <div class="stage">
+    <div class="stage-number">2</div>
+    <h3>🔗 Core Payload Assembly (34 bits)</h3>
+    <p class="stage-description">The first 10 fields are concatenated to form the 34-bit core DCI payload according to 3GPP TS 38.212 specification.</p>
+    <div id="dci34Output"></div>
+  </div>
+
+  <!-- Stage 3: Additional Fields -->
+  <div class="stage">
+    <div class="stage-number">3</div>
+    <h3>➕ Additional Field Integration</h3>
+    <p class="stage-description">TCI State, Antenna Ports, and Reserved bits are added to extend the payload to the final 42-bit format.</p>
+    <div id="additionalFields"></div>
+  </div>
+
+  <!-- Stage 4: Final 42-bit Payload -->
+  <div class="stage">
+    <div class="stage-number">4</div>
+    <h3>✅ Complete DCI Payload (42 bits)</h3>
+    <p class="stage-description">The final 42-bit payload ready for CRC attachment and polar channel coding. This message will be transmitted on PDCCH.</p>
+    <div id="payload42Output"></div>
+  </div>
+
+  <!-- Assembly Visualization Section -->
+  <div class="assembly-section">
+    <h2>🎬 Payload Assembly Animation</h2>
+    
+    <div class="assembly-controls">
+      <button class="anim-btn" onclick="replayAssembly()">🔄 Replay Full Assembly</button>
+      <button class="anim-btn" onclick="stepByStep()">⏭️ Step-by-Step Mode</button>
+      <button class="anim-btn" onclick="waveAnimation()">🌊 Wave Animation</button>
+      <button class="anim-btn" onclick="animateBitFlow()">⚡ Bit Flow Effect</button>
+    </div>
+
+    <div class="assembly-steps" id="assemblySteps"></div>
+    
+    <div class="assembly-layers" id="assemblyLayers"></div>
+    
+    <div class="svg-construction" id="svgConstruction"></div>
+  </div>
+
+</div>
+
+<script>
+// Particle system for background
+function createParticles() {
+  for (let i = 0; i < 50; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+    particle.style.animationDelay = Math.random() * 5 + 's';
+    
+    const colors = ['var(--accent-cyan)', 'var(--accent-pink)', 'var(--accent-yellow)'];
+    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+    
+    document.body.appendChild(particle);
+    
+    // Animate particles
+    const tx = (Math.random() - 0.5) * 200;
+    const ty = (Math.random() - 0.5) * 200;
+    
+    particle.animate([
+      { transform: 'translate(0, 0)' },
+      { transform: `translate(${tx}px, ${ty}px)` }
+    ], {
+      duration: parseFloat(particle.style.animationDuration) * 1000,
+      iterations: Infinity,
+      direction: 'alternate',
+      easing: 'ease-in-out'
+    });
+  }
+}
+
+// Ripple effect for buttons
+function createRipple(event) {
+  const button = event.currentTarget;
+  const ripple = document.createElement('span');
+  const rect = button.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const x = event.clientX - rect.left - size / 2;
+  const y = event.clientY - rect.top - size / 2;
+
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = x + 'px';
+  ripple.style.top = y + 'px';
+  ripple.style.position = 'absolute';
+  ripple.style.borderRadius = '50%';
+  ripple.style.background = 'rgba(255, 255, 255, 0.5)';
+  ripple.style.pointerEvents = 'none';
+  ripple.style.transform = 'scale(0)';
+  ripple.style.animation = 'ripple-effect 0.6s ease-out';
+
+  button.appendChild(ripple);
+
+  setTimeout(() => ripple.remove(), 600);
+}
+
+// Add ripple animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes ripple-effect {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
+
+// DCI Generation function
+let currentPayload = null; // Store payload globally for animations
+
+function generateDCI() {
+  // Gather inputs
+  const freqDomainBits = parseInt(document.getElementById('freqDomainBits').value);
+  const freqDomainVal = parseInt(document.getElementById('freqDomainVal').value);
+  const timeDomainBits = parseInt(document.getElementById('timeDomainBits').value);
+  const timeDomainVal = parseInt(document.getElementById('timeDomainVal').value);
+  const vrbToPrbBits = parseInt(document.getElementById('vrbToPrbBits').value);
+  const vrbToPrbVal = parseInt(document.getElementById('vrbToPrbVal').value);
+  const mcsBits = parseInt(document.getElementById('mcsBits').value);
+  const mcsVal = parseInt(document.getElementById('mcsVal').value);
+  const ndiVal = parseInt(document.getElementById('ndiVal').value);
+  const rvBits = parseInt(document.getElementById('rvBits').value);
+  const rvVal = parseInt(document.getElementById('rvVal').value);
+  const harqBits = parseInt(document.getElementById('harqBits').value);
+  const harqVal = parseInt(document.getElementById('harqVal').value);
+  const daiBits = parseInt(document.getElementById('daiBits').value);
+  const daiVal = parseInt(document.getElementById('daiVal').value);
+  const tpcBits = parseInt(document.getElementById('tpcBits').value);
+  const tpcVal = parseInt(document.getElementById('tpcVal').value);
+  const pucchBits = parseInt(document.getElementById('pucchBits').value);
+  const pucchVal = parseInt(document.getElementById('pucchVal').value);
+  const k1Bits = parseInt(document.getElementById('k1Bits').value);
+  const k1Val = parseInt(document.getElementById('k1Val').value);
+  const tciState = parseInt(document.getElementById('tciState').value);
+  const antennaPorts = parseInt(document.getElementById('antennaPorts').value);
+
+  // Binary conversion helper
+  const toBinary = (val, bits) => val.toString(2).padStart(bits, '0');
+
+  // Generate binary representations
+  const freqDomainBinary = toBinary(freqDomainVal, freqDomainBits);
+  const timeDomainBinary = toBinary(timeDomainVal, timeDomainBits);
+  const vrbToPrbBinary = toBinary(vrbToPrbVal, vrbToPrbBits);
+  const mcsBinary = toBinary(mcsVal, mcsBits);
+  const ndiBinary = toBinary(ndiVal, 1);
+  const rvBinary = toBinary(rvVal, rvBits);
+  const harqBinary = toBinary(harqVal, harqBits);
+  const daiBinary = toBinary(daiVal, daiBits);
+  const tpcBinary = toBinary(tpcVal, tpcBits);
+  const pucchBinary = toBinary(pucchVal, pucchBits);
+  const k1Binary = toBinary(k1Val, k1Bits);
+  const tciStateBinary = toBinary(tciState, 3);
+  const antennaPortsBinary = toBinary(antennaPorts, 2);
+  const reserved = '000'; // 3 bits reserved
+
+  // Assemble 34-bit core DCI
+  const dci34bits = 
+    freqDomainBinary + 
+    timeDomainBinary + 
+    vrbToPrbBinary + 
+    mcsBinary + 
+    ndiBinary + 
+    rvBinary + 
+    harqBinary + 
+    daiBinary + 
+    tpcBinary + 
+    pucchBinary + 
+    k1Binary;
+
+  // Assemble final 42-bit payload
+  const payload42bits = dci34bits + tciStateBinary + antennaPortsBinary + reserved;
+
+  // Create payload object
+  const payload = {
+    freqDomainBinary, timeDomainBinary, vrbToPrbBinary, mcsBinary,
+    ndiBinary, rvBinary, harqBinary, daiBinary, tpcBinary,
+    pucchBinary, k1Binary, tciStateBinary, antennaPortsBinary,
+    reserved, dci34bits, payload42bits,
+    freqDomainBits, timeDomainBits, vrbToPrbBits, mcsBits,
+    rvBits, harqBits, daiBits, tpcBits, pucchBits, k1Bits
+  };
+  
+  // Store globally for replay
+  currentPayload = payload;
+
+  // Display outputs
+  displayIndividualFields(payload);
+  display34BitPayload(payload);
+  displayAdditionalFields(payload);
+  display42BitPayload(payload);
+  createAssemblySteps(payload);
+  createAssemblyLayers(payload);
+  createSVGConstruction(payload);
+  
+  // Trigger animations
+  setTimeout(() => waveAnimation(), 500);
+  setTimeout(() => animateBitFlow(), 1000);
+}
+
+function displayIndividualFields(p) {
+  const container = document.getElementById('individualFields');
+  const fields = [
+    { label: 'Frequency Domain', binary: p.freqDomainBinary, bits: p.freqDomainBits, color: 'cyan' },
+    { label: 'Time Domain', binary: p.timeDomainBinary, bits: p.timeDomainBits, color: 'pink' },
+    { label: 'VRB-to-PRB', binary: p.vrbToPrbBinary, bits: p.vrbToPrbBits, color: 'yellow' },
+    { label: 'Modulation & Coding', binary: p.mcsBinary, bits: p.mcsBits, color: 'green' },
+    { label: 'New Data Indicator', binary: p.ndiBinary, bits: 1, color: 'orange' },
+    { label: 'Redundancy Version', binary: p.rvBinary, bits: p.rvBits, color: 'cyan' },
+    { label: 'HARQ Process', binary: p.harqBinary, bits: p.harqBits, color: 'pink' },
+    { label: 'Downlink Assignment', binary: p.daiBinary, bits: p.daiBits, color: 'yellow' },
+    { label: 'TPC Command', binary: p.tpcBinary, bits: p.tpcBits, color: 'green' },
+    { label: 'PUCCH Resource', binary: p.pucchBinary, bits: p.pucchBits, color: 'orange' },
+    { label: 'PDSCH-to-HARQ (K1)', binary: p.k1Binary, bits: p.k1Bits, color: 'cyan' }
+  ];
+
+  let html = '<div class="controls-grid">';
+  fields.forEach(field => {
+    html += `
+      <div class="field-info">
+        <div class="field-label">${field.label} (${field.bits} bit${field.bits > 1 ? 's' : ''})</div>
+        <div class="field-value">${field.binary}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function display34BitPayload(p) {
+  const container = document.getElementById('dci34Output');
+  const bits = p.dci34bits.split('');
+  
+  let html = '<div class="bit-grid">';
+  bits.forEach((bit, i) => {
+    html += `<div class="bit-cell bit-${bit}" style="animation-delay: ${i * 0.01}s">${bit}</div>`;
+  });
+  html += '</div>';
+  
+  html += `
+    <div class="field-info">
+      <div class="field-label">34-bit Core Payload (Binary)</div>
+      <div class="field-value">${p.dci34bits}</div>
+    </div>
+    <div class="field-info">
+      <div class="field-label">34-bit Core Payload (Hexadecimal)</div>
+      <div class="field-value">${parseInt(p.dci34bits, 2).toString(16).toUpperCase().padStart(9, '0')}</div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
+function displayAdditionalFields(p) {
+  const container = document.getElementById('additionalFields');
+  container.innerHTML = `
+    <div class="controls-grid">
+      <div class="field-info">
+        <div class="field-label">TCI State (3 bits)</div>
+        <div class="field-value">${p.tciStateBinary}</div>
+      </div>
+      <div class="field-info">
+        <div class="field-label">Antenna Ports (2 bits)</div>
+        <div class="field-value">${p.antennaPortsBinary}</div>
+      </div>
+      <div class="field-info">
+        <div class="field-label">Reserved (3 bits)</div>
+        <div class="field-value">${p.reserved}</div>
+      </div>
+    </div>
+  `;
+}
+
+function display42BitPayload(p) {
+  const container = document.getElementById('payload42Output');
+  const bits = p.payload42bits.split('');
+  
+  let html = '<div class="bit-grid">';
+  bits.forEach((bit, i) => {
+    html += `<div class="bit-cell bit-${bit}" style="animation-delay: ${i * 0.01}s">${bit}</div>`;
+  });
+  html += '</div>';
+  
+  html += `
+    <div class="field-info">
+      <div class="field-label">42-bit Final Payload (Binary)</div>
+      <div class="field-value">${p.payload42bits}</div>
+    </div>
+    <div class="field-info">
+      <div class="field-label">42-bit Final Payload (Hexadecimal)</div>
+      <div class="field-value">${parseInt(p.payload42bits, 2).toString(16).toUpperCase().padStart(11, '0')}</div>
+    </div>
+    <div class="field-info">
+      <div class="field-label">Next Processing Step</div>
+      <div class="field-value" style="color: var(--accent-green);">
+        → 24-bit CRC Attachment → Polar Channel Coding → Rate Matching → PDCCH Transmission
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
+// Assembly animation functions
+function createAssemblySteps(p) {
+  const container = document.getElementById('assemblySteps');
+  const steps = [
+    { title: 'Frequency Allocation', desc: `${p.freqDomainBits}-bit field defines which resource blocks the UE should use for reception` },
+    { title: 'Time Scheduling', desc: `${p.timeDomainBits}-bit field specifies when the transmission starts and its duration` },
+    { title: 'Resource Mapping', desc: `${p.vrbToPrbBits}-bit field determines how virtual RBs map to physical RBs` },
+    { title: 'Modulation Selection', desc: `${p.mcsBits}-bit MCS index determines data rate and error protection level` },
+    { title: 'HARQ Management', desc: `${p.harqBits}-bit process ID enables parallel transmission streams with individual ACK/NACK` },
+    { title: 'Power Control', desc: `${p.tpcBits}-bit TPC adjusts uplink transmission power dynamically` },
+    { title: 'Beam Configuration', desc: `3-bit TCI selects optimal beam pair for mmWave operation` },
+    { title: 'Final Assembly', desc: `All fields concatenated into 42-bit payload ready for CRC and channel coding` }
+  ];
+
+  let html = '';
+  steps.forEach((step, i) => {
+    html += `
+      <div class="assembly-step" style="animation-delay: ${i * 0.1}s">
+        <div class="step-number">${i + 1}</div>
+        <div class="step-title">${step.title}</div>
+        <div class="step-desc">${step.desc}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  
+  // Trigger animation
+  setTimeout(() => {
+    document.querySelectorAll('.assembly-step').forEach(step => {
+      step.classList.add('animate');
+    });
+  }, 100);
+}
+
+function createAssemblyLayers(p) {
+  const container = document.getElementById('assemblyLayers');
+  container.innerHTML = `
+    <div class="assembly-layer layer-1">
+      <span>Layer 1: Core Scheduling Fields (34 bits)</span>
+    </div>
+    <div class="layer-connector" style="top: 80px; height: 20px;"></div>
+    <div class="assembly-layer layer-2">
+      <span>Layer 2: + TCI State (3 bits) = 37 bits</span>
+    </div>
+    <div class="layer-connector" style="top: 160px; height: 20px;"></div>
+    <div class="assembly-layer layer-3">
+      <span>Layer 3: + Antenna Ports (2 bits) = 39 bits</span>
+    </div>
+    <div class="layer-connector" style="top: 240px; height: 20px;"></div>
+    <div class="assembly-layer layer-4">
+      <span>Layer 4: + Reserved (3 bits) = 42 bits COMPLETE</span>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    document.querySelectorAll('.assembly-layer').forEach(layer => {
+      layer.classList.add('show');
+    });
+    document.querySelectorAll('.layer-connector').forEach(conn => {
+      conn.classList.add('show');
+    });
+  }, 100);
+}
+
+function waveAnimation() {
+  const steps = document.querySelectorAll('.assembly-step');
+  steps.forEach((step, i) => {
+    setTimeout(() => {
+      step.style.transform = 'scale(1.1)';
+      step.style.borderColor = 'var(--accent-yellow)';
+      setTimeout(() => {
+        step.style.transform = '';
+        step.style.borderColor = '';
+      }, 300);
+    }, i * 150);
+  });
+}
+
+function animateBitFlow() {
+  const bitCells = document.querySelectorAll('.bit-cell');
+  bitCells.forEach((cell, i) => {
+    setTimeout(() => {
+      cell.style.transform = 'scale(1.3) rotate(360deg)';
+      cell.style.boxShadow = '0 0 30px var(--accent-cyan)';
+      setTimeout(() => {
+        cell.style.transform = '';
+        cell.style.boxShadow = '';
+      }, 400);
+    }, i * 20);
+  });
+}
+
+// SVG Construction Diagram
+function createSVGConstruction(p) {
+  const container = document.getElementById('svgConstruction');
+  
+  const svg = `
+    <svg viewBox="0 0 800 600" style="width: 100%; height: auto; background: var(--bg-mid); border-radius: 16px; padding: 20px;">
+      <!-- Gradient definitions -->
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#00ffff;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#ff2e97;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#ffd700;stop-opacity:1" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      <!-- Title -->
+      <text x="400" y="30" text-anchor="middle" fill="#00ffff" font-family="Orbitron, monospace" font-size="20" font-weight="900">DCI PAYLOAD CONSTRUCTION FLOW</text>
+      
+      <!-- Individual field boxes (top row) -->
+      <g class="svg-animate-in" style="animation-delay: 0.2s">
+        <rect x="50" y="60" width="100" height="50" rx="8" fill="#141b3d" stroke="#00ffff" stroke-width="2" class="svg-hover-box"/>
+        <text x="100" y="80" text-anchor="middle" fill="#00ffff" font-family="Space Mono, monospace" font-size="10">Freq (${p.freqDomainBits}b)</text>
+        <text x="100" y="95" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="8">${p.freqDomainBinary.substring(0, 8)}...</text>
+      </g>
+      
+      <g class="svg-animate-in" style="animation-delay: 0.4s">
+        <rect x="170" y="60" width="80" height="50" rx="8" fill="#141b3d" stroke="#ff2e97" stroke-width="2" class="svg-hover-box"/>
+        <text x="210" y="80" text-anchor="middle" fill="#ff2e97" font-family="Space Mono, monospace" font-size="10">Time (${p.timeDomainBits}b)</text>
+        <text x="210" y="95" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="8">${p.timeDomainBinary}</text>
+      </g>
+      
+      <g class="svg-animate-in" style="animation-delay: 0.6s">
+        <rect x="270" y="60" width="100" height="50" rx="8" fill="#141b3d" stroke="#ffd700" stroke-width="2" class="svg-hover-box"/>
+        <text x="320" y="80" text-anchor="middle" fill="#ffd700" font-family="Space Mono, monospace" font-size="10">MCS (${p.mcsBits}b)</text>
+        <text x="320" y="95" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="8">${p.mcsBinary}</text>
+      </g>
+      
+      <g class="svg-animate-in" style="animation-delay: 0.8s">
+        <rect x="390" y="60" width="90" height="50" rx="8" fill="#141b3d" stroke="#00ff88" stroke-width="2" class="svg-hover-box"/>
+        <text x="435" y="80" text-anchor="middle" fill="#00ff88" font-family="Space Mono, monospace" font-size="10">HARQ (${p.harqBits}b)</text>
+        <text x="435" y="95" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="8">${p.harqBinary}</text>
+      </g>
+      
+      <g class="svg-animate-in" style="animation-delay: 1.0s">
+        <rect x="500" y="60" width="250" height="50" rx="8" fill="#141b3d" stroke="#ff6b35" stroke-width="2" class="svg-hover-box"/>
+        <text x="625" y="80" text-anchor="middle" fill="#ff6b35" font-family="Space Mono, monospace" font-size="10">Other Fields (12b total)</text>
+        <text x="625" y="95" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="8">NDI, RV, DAI, TPC, PUCCH, K1</text>
+      </g>
+      
+      <!-- Convergence arrows with animation -->
+      <g class="svg-animate-in" style="animation-delay: 1.6s">
+        <line x1="100" y1="110" x2="250" y2="290" stroke="#ff2e97" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="210" y1="110" x2="320" y2="290" stroke="#ff2e97" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="320" y1="110" x2="380" y2="290" stroke="#ff2e97" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="435" y1="110" x2="440" y2="290" stroke="#ff2e97" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="625" y1="110" x2="550" y2="290" stroke="#ff2e97" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+      </g>
+      
+      <!-- 34-bit intermediate with pulse -->
+      <g class="svg-animate-in" style="animation-delay: 1.8s">
+        <rect x="200" y="290" width="400" height="60" rx="10" fill="#1a2249" stroke="url(#grad1)" stroke-width="3" filter="url(#glow)">
+          <animate attributeName="stroke-width" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+        </rect>
+        <text x="400" y="312" text-anchor="middle" fill="#00ffff" font-family="Orbitron, monospace" font-size="14" font-weight="700">34-bit DCI Control Fields</text>
+        <text x="400" y="335" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="9">${p.dci34bits.substring(0, 17)}...</text>
+      </g>
+      
+      <!-- Arrow down with pulse -->
+      <g class="svg-animate-in" style="animation-delay: 2.0s">
+        <line x1="400" y1="350" x2="400" y2="380" stroke="#ffd700" stroke-width="3">
+          <animate attributeName="y1" values="350;355;350" dur="1s" repeatCount="indefinite"/>
+          <animate attributeName="y2" values="380;385;380" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <polygon points="400,380 395,370 405,370" fill="#ffd700">
+          <animateTransform attributeName="transform" type="translate" values="0,0; 0,5; 0,0" dur="1s" repeatCount="indefinite"/>
+        </polygon>
+      </g>
+      
+      <!-- Additional fields with animation -->
+      <g class="svg-animate-in" style="animation-delay: 2.2s">
+        <rect x="150" y="390" width="150" height="45" rx="8" fill="#141b3d" stroke="#ff6b35" stroke-width="2" class="svg-hover-box"/>
+        <text x="225" y="410" text-anchor="middle" fill="#ffd700" font-family="Space Mono, monospace" font-size="10">TCI (3b)</text>
+        <text x="225" y="425" text-anchor="middle" fill="#ff6b35" font-family="Space Mono, monospace" font-size="9">${p.tciStateBinary}</text>
+      </g>
+      
+      <g class="svg-animate-in" style="animation-delay: 2.3s">
+        <rect x="320" y="390" width="150" height="45" rx="8" fill="#141b3d" stroke="#ff6b35" stroke-width="2" class="svg-hover-box"/>
+        <text x="395" y="410" text-anchor="middle" fill="#ffd700" font-family="Space Mono, monospace" font-size="10">Antenna (2b)</text>
+        <text x="395" y="425" text-anchor="middle" fill="#ff6b35" font-family="Space Mono, monospace" font-size="9">${p.antennaPortsBinary}</text>
+      </g>
+      
+      <g class="svg-animate-in" style="animation-delay: 2.4s">
+        <rect x="490" y="390" width="150" height="45" rx="8" fill="#141b3d" stroke="#ff6b35" stroke-width="2" class="svg-hover-box"/>
+        <text x="565" y="410" text-anchor="middle" fill="#ffd700" font-family="Space Mono, monospace" font-size="10">Reserved (3b)</text>
+        <text x="565" y="425" text-anchor="middle" fill="#ff6b35" font-family="Space Mono, monospace" font-size="9">${p.reserved}</text>
+      </g>
+      
+      <!-- Convergence to final with animation -->
+      <g class="svg-animate-in" style="animation-delay: 2.6s">
+        <line x1="225" y1="435" x2="350" y2="480" stroke="#00ff88" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="395" y1="435" x2="400" y2="480" stroke="#00ff88" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="565" y1="435" x2="450" y2="480" stroke="#00ff88" stroke-width="2" stroke-dasharray="5,5">
+          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+      </g>
+      
+      <!-- Final 42-bit payload with maximum emphasis -->
+      <g class="svg-animate-in" style="animation-delay: 2.8s">
+        <rect x="150" y="490" width="500" height="80" rx="12" fill="#1a2249" stroke="url(#grad2)" stroke-width="4" filter="url(#glow)">
+          <animate attributeName="stroke-width" values="4;6;4" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="fill-opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite"/>
+        </rect>
+        <text x="400" y="515" text-anchor="middle" fill="#00ff88" font-family="Orbitron, monospace" font-size="16" font-weight="900">
+          COMPLETE DCI PAYLOAD
+          <animate attributeName="fill" values="#00ff88;#00ffff;#00ff88" dur="2s" repeatCount="indefinite"/>
+        </text>
+        <text x="400" y="535" text-anchor="middle" fill="#ffd700" font-family="Space Mono, monospace" font-size="11">42 bits → Ready for CRC & Channel Coding</text>
+        <text x="400" y="555" text-anchor="middle" fill="#8a9bba" font-family="Space Mono, monospace" font-size="8">${p.payload42bits.substring(0, 21)}...${p.payload42bits.substring(21)}</text>
+      </g>
+    </svg>
+  `;
+  
+  container.innerHTML = svg;
+  
+  // Add interactive hover effects to SVG boxes
+  setTimeout(() => {
+    document.querySelectorAll('.svg-hover-box').forEach(box => {
+      box.style.cursor = 'pointer';
+      box.addEventListener('mouseenter', function() {
+        this.setAttribute('stroke-width', '4');
+        this.setAttribute('filter', 'url(#glow)');
+      });
+      box.addEventListener('mouseleave', function() {
+        this.setAttribute('stroke-width', '2');
+        this.removeAttribute('filter');
+      });
+    });
+  }, 100);
+}
+
+// Animation control functions
+function replayAssembly() {
+  if (!currentPayload) return; // Need payload data first
+  
+  // Reset all animations
+  document.querySelectorAll('.assembly-step').forEach(step => {
+    step.classList.remove('animate');
+  });
+  document.querySelectorAll('.assembly-layer').forEach(layer => {
+    layer.classList.remove('show');
+  });
+  document.querySelectorAll('.layer-connector').forEach(conn => {
+    conn.classList.remove('show');
+  });
+  
+  // Replay
+  setTimeout(() => {
+    createAssemblySteps(currentPayload);
+    createAssemblyLayers(currentPayload);
+    createSVGConstruction(currentPayload);
+    
+    // Trigger wave animation
+    setTimeout(() => waveAnimation(), 500);
+    setTimeout(() => animateBitFlow(), 1000);
+  }, 100);
+}
+
+let stepIndex = 0;
+function stepByStep() {
+  const steps = document.querySelectorAll('.assembly-step');
+  if (stepIndex >= steps.length) stepIndex = 0;
+  
+  steps.forEach(s => s.classList.remove('animate'));
+  steps[stepIndex].classList.add('animate');
+  steps[stepIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  
+  // Add emphasis animation
+  const step = steps[stepIndex];
+  step.style.transform = 'scale(1.05)';
+  step.style.boxShadow = '0 0 40px var(--accent-cyan)';
+  setTimeout(() => {
+    step.style.transform = '';
+    step.style.boxShadow = '';
+  }, 500);
+  
+  stepIndex++;
+}
+
+// DCI Format configurations based on 3GPP TS 38.212
+function applyDCIFormatConfig(format) {
+  const configs = {
+    '0_0': { // Fallback UL
+      freqDomainBits: 13, freqDomainVal: 4096,
+      timeDomainBits: 4, timeDomainVal: 2,
+      vrbToPrbBits: 1, vrbToPrbVal: 0,
+      mcsBits: 5, mcsVal: 10,
+      ndiVal: 1,
+      rvBits: 2, rvVal: 0,
+      harqBits: 4, harqVal: 3,
+      daiBits: 2, daiVal: 0,
+      tpcBits: 2, tpcVal: 1,
+      pucchBits: 3, pucchVal: 2,
+      k1Bits: 3, k1Val: 4
+    },
+    '0_1': { // Scheduled UL
+      freqDomainBits: 16, freqDomainVal: 32768,
+      timeDomainBits: 4, timeDomainVal: 3,
+      vrbToPrbBits: 1, vrbToPrbVal: 1,
+      mcsBits: 5, mcsVal: 15,
+      ndiVal: 1,
+      rvBits: 2, rvVal: 0,
+      harqBits: 4, harqVal: 5,
+      daiBits: 2, daiVal: 1,
+      tpcBits: 2, tpcVal: 2,
+      pucchBits: 3, pucchVal: 3,
+      k1Bits: 3, k1Val: 6
+    },
+    '1_0': { // Fallback DL
+      freqDomainBits: 13, freqDomainVal: 5140,
+      timeDomainBits: 4, timeDomainVal: 3,
+      vrbToPrbBits: 1, vrbToPrbVal: 0,
+      mcsBits: 5, mcsVal: 12,
+      ndiVal: 1,
+      rvBits: 2, rvVal: 0,
+      harqBits: 4, harqVal: 4,
+      daiBits: 2, daiVal: 1,
+      tpcBits: 2, tpcVal: 1,
+      pucchBits: 3, pucchVal: 2,
+      k1Bits: 3, k1Val: 4
+    },
+    '1_1': { // Scheduled DL (default)
+      freqDomainBits: 13, freqDomainVal: 5432,
+      timeDomainBits: 4, timeDomainVal: 3,
+      vrbToPrbBits: 1, vrbToPrbVal: 1,
+      mcsBits: 5, mcsVal: 16,
+      ndiVal: 1,
+      rvBits: 2, rvVal: 0,
+      harqBits: 4, harqVal: 7,
+      daiBits: 2, daiVal: 1,
+      tpcBits: 2, tpcVal: 2,
+      pucchBits: 3, pucchVal: 4,
+      k1Bits: 3, k1Val: 5
+    },
+    '2_0': { // Slot Format Indication
+      freqDomainBits: 10, freqDomainVal: 512,
+      timeDomainBits: 3, timeDomainVal: 2,
+      vrbToPrbBits: 1, vrbToPrbVal: 0,
+      mcsBits: 4, mcsVal: 8,
+      ndiVal: 0,
+      rvBits: 2, rvVal: 0,
+      harqBits: 3, harqVal: 2,
+      daiBits: 2, daiVal: 0,
+      tpcBits: 2, tpcVal: 1,
+      pucchBits: 2, pucchVal: 1,
+      k1Bits: 2, k1Val: 2
+    },
+    '2_1': { // PRB/Symbol Indication
+      freqDomainBits: 8, freqDomainVal: 128,
+      timeDomainBits: 3, timeDomainVal: 1,
+      vrbToPrbBits: 1, vrbToPrbVal: 0,
+      mcsBits: 4, mcsVal: 6,
+      ndiVal: 0,
+      rvBits: 2, rvVal: 0,
+      harqBits: 3, harqVal: 1,
+      daiBits: 2, daiVal: 0,
+      tpcBits: 2, tpcVal: 1,
+      pucchBits: 2, pucchVal: 0,
+      k1Bits: 2, k1Val: 1
+    }
+  };
+  
+  const config = configs[format];
+  if (!config) return;
+  
+  // Apply configuration to all fields
+  document.getElementById('freqDomainBits').value = config.freqDomainBits;
+  document.getElementById('freqDomainVal').value = config.freqDomainVal;
+  document.getElementById('timeDomainBits').value = config.timeDomainBits;
+  document.getElementById('timeDomainVal').value = config.timeDomainVal;
+  document.getElementById('vrbToPrbBits').value = config.vrbToPrbBits;
+  document.getElementById('vrbToPrbVal').value = config.vrbToPrbVal;
+  document.getElementById('mcsBits').value = config.mcsBits;
+  document.getElementById('mcsVal').value = config.mcsVal;
+  document.getElementById('ndiVal').value = config.ndiVal;
+  document.getElementById('rvBits').value = config.rvBits;
+  document.getElementById('rvVal').value = config.rvVal;
+  document.getElementById('harqBits').value = config.harqBits;
+  document.getElementById('harqVal').value = config.harqVal;
+  document.getElementById('daiBits').value = config.daiBits;
+  document.getElementById('daiVal').value = config.daiVal;
+  document.getElementById('tpcBits').value = config.tpcBits;
+  document.getElementById('tpcVal').value = config.tpcVal;
+  document.getElementById('pucchBits').value = config.pucchBits;
+  document.getElementById('pucchVal').value = config.pucchVal;
+  document.getElementById('k1Bits').value = config.k1Bits;
+  document.getElementById('k1Val').value = config.k1Val;
+  
+  // Auto-generate DCI with new configuration
+  generateDCI();
+}
+
+// Comparison table functionality
+function populateComparisonTable() {
+  const configs = {
+    '0_0': { freqDomainBits: 13, freqDomainVal: 4096, timeDomainBits: 4, timeDomainVal: 2, vrbToPrbBits: 1, vrbToPrbVal: 0, mcsBits: 5, mcsVal: 10, ndiVal: 1, rvBits: 2, rvVal: 0, harqBits: 4, harqVal: 3, daiBits: 2, daiVal: 0, tpcBits: 2, tpcVal: 1, pucchBits: 3, pucchVal: 2, k1Bits: 3, k1Val: 4 },
+    '0_1': { freqDomainBits: 16, freqDomainVal: 32768, timeDomainBits: 4, timeDomainVal: 3, vrbToPrbBits: 1, vrbToPrbVal: 1, mcsBits: 5, mcsVal: 15, ndiVal: 1, rvBits: 2, rvVal: 0, harqBits: 4, harqVal: 5, daiBits: 2, daiVal: 1, tpcBits: 2, tpcVal: 2, pucchBits: 3, pucchVal: 3, k1Bits: 3, k1Val: 6 },
+    '1_0': { freqDomainBits: 13, freqDomainVal: 5140, timeDomainBits: 4, timeDomainVal: 3, vrbToPrbBits: 1, vrbToPrbVal: 0, mcsBits: 5, mcsVal: 12, ndiVal: 1, rvBits: 2, rvVal: 0, harqBits: 4, harqVal: 4, daiBits: 2, daiVal: 1, tpcBits: 2, tpcVal: 1, pucchBits: 3, pucchVal: 2, k1Bits: 3, k1Val: 4 },
+    '1_1': { freqDomainBits: 13, freqDomainVal: 5432, timeDomainBits: 4, timeDomainVal: 3, vrbToPrbBits: 1, vrbToPrbVal: 1, mcsBits: 5, mcsVal: 16, ndiVal: 1, rvBits: 2, rvVal: 0, harqBits: 4, harqVal: 7, daiBits: 2, daiVal: 1, tpcBits: 2, tpcVal: 2, pucchBits: 3, pucchVal: 4, k1Bits: 3, k1Val: 5 },
+    '2_0': { freqDomainBits: 10, freqDomainVal: 512, timeDomainBits: 3, timeDomainVal: 2, vrbToPrbBits: 1, vrbToPrbVal: 0, mcsBits: 4, mcsVal: 8, ndiVal: 0, rvBits: 2, rvVal: 0, harqBits: 3, harqVal: 2, daiBits: 2, daiVal: 0, tpcBits: 2, tpcVal: 1, pucchBits: 2, pucchVal: 1, k1Bits: 2, k1Val: 2 },
+    '2_1': { freqDomainBits: 8, freqDomainVal: 128, timeDomainBits: 3, timeDomainVal: 1, vrbToPrbBits: 1, vrbToPrbVal: 0, mcsBits: 4, mcsVal: 6, ndiVal: 0, rvBits: 2, rvVal: 0, harqBits: 3, harqVal: 1, daiBits: 2, daiVal: 0, tpcBits: 2, tpcVal: 1, pucchBits: 2, pucchVal: 0, k1Bits: 2, k1Val: 1 }
+  };
+
+  const fields = [
+    { name: 'Frequency Domain (bits)', key: 'freqDomainBits' },
+    { name: 'Frequency Domain Value', key: 'freqDomainVal' },
+    { name: 'Time Domain (bits)', key: 'timeDomainBits' },
+    { name: 'Time Domain Value', key: 'timeDomainVal' },
+    { name: 'VRB-to-PRB Mapping (bits)', key: 'vrbToPrbBits' },
+    { name: 'VRB-to-PRB Value', key: 'vrbToPrbVal' },
+    { name: 'MCS (bits)', key: 'mcsBits' },
+    { name: 'MCS Index', key: 'mcsVal' },
+    { name: 'New Data Indicator', key: 'ndiVal' },
+    { name: 'Redundancy Version (bits)', key: 'rvBits' },
+    { name: 'RV Value', key: 'rvVal' },
+    { name: 'HARQ Process (bits)', key: 'harqBits' },
+    { name: 'HARQ Value', key: 'harqVal' },
+    { name: 'DAI (bits)', key: 'daiBits' },
+    { name: 'DAI Value', key: 'daiVal' },
+    { name: 'TPC (bits)', key: 'tpcBits' },
+    { name: 'TPC Value', key: 'tpcVal' },
+    { name: 'PUCCH Resource (bits)', key: 'pucchBits' },
+    { name: 'PUCCH Value', key: 'pucchVal' },
+    { name: 'K1 Timing (bits)', key: 'k1Bits' },
+    { name: 'K1 Value', key: 'k1Val' }
+  ];
+
+  const tbody = document.getElementById('comparisonTableBody');
+  tbody.innerHTML = '';
+
+  fields.forEach(field => {
+    const row = document.createElement('tr');
+    
+    // Field name
+    const nameCell = document.createElement('td');
+    nameCell.textContent = field.name;
+    row.appendChild(nameCell);
+
+    // Values for each format
+    ['0_0', '0_1', '1_0', '1_1', '2_0', '2_1'].forEach(format => {
+      const valueCell = document.createElement('td');
+      valueCell.className = 'value-cell';
+      valueCell.textContent = configs[format][field.key];
+      valueCell.dataset.format = format;
+      row.appendChild(valueCell);
+    });
+
+    tbody.appendChild(row);
+  });
+}
+
+function updateComparisonHighlight(selectedFormat) {
+  // Update button states
+  document.querySelectorAll('.format-compare-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.format === selectedFormat) {
+      btn.classList.add('active');
+    }
+  });
+
+  // Update table header highlights
+  document.querySelectorAll('.format-col').forEach(col => {
+    col.classList.remove('active');
+    if (col.dataset.format === selectedFormat) {
+      col.classList.add('active');
+    }
+  });
+
+  // Highlight selected column values
+  document.querySelectorAll('.value-cell').forEach(cell => {
+    cell.classList.remove('highlight');
+    if (cell.dataset.format === selectedFormat) {
+      cell.classList.add('highlight');
+    }
+  });
+}
+
+// Initialize on page load
+window.addEventListener('load', () => {
+  // Create particle system
+  createParticles();
+  
+  // Add ripple effect to all buttons
+  document.querySelectorAll('.calculate-btn, .anim-btn').forEach(button => {
+    button.addEventListener('click', createRipple);
+  });
+  
+  // Initial generation
+  setTimeout(() => generateDCI(), 500);
+  
+  // Initialize comparison table
+  populateComparisonTable();
+  updateComparisonHighlight('0_0');
+  
+  // Comparison button handlers
+  document.querySelectorAll('.format-compare-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      updateComparisonHighlight(this.dataset.format);
+    });
+  });
+  
+  // DCI Format selector change handler
+  document.getElementById('dciFormat').addEventListener('change', function(e) {
+    applyDCIFormatConfig(e.target.value);
+  });
+  
+  // Add hover sound effect simulation (visual feedback)
+  document.querySelectorAll('.control-item').forEach(item => {
+    item.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-4px) scale(1.02)';
+    });
+    item.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+    });
+  });
+  
+  // Bit cells interactive effects
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.bit-cell')) {
+      const cell = e.target.closest('.bit-cell');
+      const rect = cell.getBoundingClientRect();
+      
+      // Create sparkle effect
+      for (let i = 0; i < 5; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.style.position = 'fixed';
+        sparkle.style.left = rect.left + rect.width / 2 + 'px';
+        sparkle.style.top = rect.top + rect.height / 2 + 'px';
+        sparkle.style.width = '4px';
+        sparkle.style.height = '4px';
+        sparkle.style.borderRadius = '50%';
+        sparkle.style.background = 'var(--accent-yellow)';
+        sparkle.style.pointerEvents = 'none';
+        sparkle.style.zIndex = '10000';
+        
+        document.body.appendChild(sparkle);
+        
+        const angle = (i / 5) * Math.PI * 2;
+        const distance = 30 + Math.random() * 20;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        sparkle.animate([
+          { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+          { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+          duration: 500 + Math.random() * 300,
+          easing: 'ease-out'
+        });
+        
+        setTimeout(() => sparkle.remove(), 800);
+      }
+    }
+  });
+  
+  // Add pulse animation to stage numbers on scroll into view
+  const observerOptions = {
+    threshold: 0.5
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const stageNumber = entry.target.querySelector('.stage-number');
+        if (stageNumber) {
+          stageNumber.style.animation = 'rotate360 1s ease-out, bounce 0.5s ease-out';
+          setTimeout(() => {
+            stageNumber.style.animation = '';
+          }, 1000);
+        }
+      }
+    });
+  }, observerOptions);
+  
+  document.querySelectorAll('.stage').forEach(stage => {
+    observer.observe(stage);
+  });
+});
+</script>
+
+</body>
+</html>

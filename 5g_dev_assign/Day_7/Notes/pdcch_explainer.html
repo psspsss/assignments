@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDCCH Physical Layer Processing — Step-by-Step Animated Explainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06080d;
+  --bg2: #0a0e17;
+  --bg3: #0f1520;
+  --bg4: #151d2c;
+  --bg5: #1a2436;
+  --bdr: #1c2640;
+  --bdr2: #28365a;
+  --txt: #e4eaf4;
+  --dim: #8194b4;
+  --muted: #4e6080;
+  --orange: #f59e0b;
+  --orange2: #fbbf24;
+  --orange-bg: rgba(245,158,11,0.10);
+  --blue: #3b82f6;
+  --blue2: #60a5fa;
+  --blue-bg: rgba(59,130,246,0.10);
+  --cyan: #06b6d4;
+  --cyan-bg: rgba(6,182,212,0.10);
+  --green: #10b981;
+  --green-bg: rgba(16,185,129,0.10);
+  --purple: #a855f7;
+  --purple-bg: rgba(168,85,247,0.10);
+  --red: #ef4444;
+  --pink: #ec4899;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;}
+::selection{background:var(--orange);color:#000;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+
+/* ══════ HERO ══════ */
+.hero{
+  text-align:center;padding:56px 24px 32px;position:relative;
+}
+.hero::before{
+  content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+  width:800px;height:500px;
+  background:radial-gradient(ellipse,rgba(245,158,11,0.04) 0%,rgba(59,130,246,0.02) 40%,transparent 70%);
+  pointer-events:none;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Fira Code',monospace;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  color:var(--orange);background:var(--orange-bg);
+  border:1px solid rgba(245,158,11,0.18);padding:6px 20px;border-radius:24px;
+  margin-bottom:18px;animation:fadeUp .7s ease both;
+}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+.hero h1{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;letter-spacing:-1px;line-height:1.15;
+  animation:fadeUp .7s ease .1s both;
+}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--orange) 0%,var(--blue) 50%,var(--purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero .sub{color:var(--dim);font-size:15px;margin-top:8px;animation:fadeUp .7s ease .2s both;}
+.hero .sub2{color:var(--muted);font-size:12px;margin-top:6px;font-family:'Fira Code',monospace;animation:fadeUp .7s ease .25s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══════ NAVIGATION STEPPER ══════ */
+.stepper-nav{
+  display:flex;justify-content:center;align-items:center;gap:4px;
+  padding:12px 24px 28px;flex-wrap:wrap;
+  animation:fadeUp .6s ease .3s both;
+}
+.step-dot{
+  width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:12px;font-weight:700;
+  background:var(--bg3);border:1.5px solid var(--bdr);color:var(--muted);
+  cursor:pointer;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative;
+}
+.step-dot:hover{border-color:var(--bdr2);color:var(--dim);transform:translateY(-2px);}
+.step-dot.active{
+  border-color:var(--orange);color:var(--orange);background:var(--orange-bg);
+  box-shadow:0 0 20px rgba(245,158,11,0.12);transform:scale(1.08);
+}
+.step-dot.visited{border-color:rgba(16,185,129,0.3);color:var(--green);}
+.step-dot.visited::after{
+  content:'✓';position:absolute;top:-4px;right:-4px;
+  font-size:8px;background:var(--green);color:#000;
+  width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+}
+.step-connector{width:16px;height:2px;background:var(--bdr);border-radius:1px;}
+.step-connector.done{background:linear-gradient(90deg,var(--green),var(--orange));}
+
+/* ══════ MAIN CONTAINER ══════ */
+.main{max-width:1100px;margin:0 auto;padding:0 24px 80px;}
+
+/* ══════ STEP CARD ══════ */
+.step-card{
+  display:none;
+  animation:cardIn .5s ease both;
+}
+.step-card.active{display:block;}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+.card-inner{
+  background:var(--bg2);
+  border:1.5px solid var(--bdr);
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+}
+.card-inner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:20px 20px 0 0;
+}
+
+/* Card color themes */
+.card-inner.t-orange::before{background:linear-gradient(90deg,var(--orange),rgba(245,158,11,0.2));}
+.card-inner.t-purple::before{background:linear-gradient(90deg,var(--purple),rgba(168,85,247,0.2));}
+.card-inner.t-cyan::before{background:linear-gradient(90deg,var(--cyan),rgba(6,182,212,0.2));}
+.card-inner.t-blue::before{background:linear-gradient(90deg,var(--blue),rgba(59,130,246,0.2));}
+.card-inner.t-green::before{background:linear-gradient(90deg,var(--green),rgba(16,185,129,0.2));}
+.card-inner.t-red::before{background:linear-gradient(90deg,var(--red),rgba(239,68,68,0.2));}
+
+/* Card header */
+.card-head{
+  display:flex;align-items:center;gap:18px;
+  padding:28px 32px 20px;
+  border-bottom:1px solid var(--bdr);
+}
+.card-step-num{
+  width:52px;height:52px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:20px;font-weight:800;
+  flex-shrink:0;
+}
+.card-step-num.n-orange{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(245,158,11,0.2);}
+.card-step-num.n-purple{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(168,85,247,0.2);}
+.card-step-num.n-cyan{background:var(--cyan-bg);color:var(--cyan);border:1px solid rgba(6,182,212,0.2);}
+.card-step-num.n-blue{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(59,130,246,0.2);}
+.card-step-num.n-green{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,0.2);}
+.card-step-num.n-red{background:rgba(239,68,68,0.10);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+
+.card-head-text h2{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:800;letter-spacing:-0.5px;
+}
+.card-head-text .spec{
+  font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);margin-top:3px;
+}
+
+/* Card body */
+.card-body{padding:28px 32px 32px;}
+
+/* ══════ EXPLANATION TEXT ══════ */
+.explain{
+  font-size:15px;line-height:1.75;color:var(--dim);margin-bottom:24px;
+}
+.explain strong{color:var(--txt);font-weight:600;}
+.explain .hl-orange{color:var(--orange);font-weight:600;}
+.explain .hl-blue{color:var(--blue);font-weight:600;}
+.explain .hl-purple{color:var(--purple);font-weight:600;}
+.explain .hl-cyan{color:var(--cyan);font-weight:600;}
+.explain .hl-green{color:var(--green);font-weight:600;}
+.explain .hl-red{color:var(--red);font-weight:600;}
+.explain code{
+  font-family:'Fira Code',monospace;font-size:13px;
+  background:var(--bg4);padding:2px 8px;border-radius:6px;
+  border:1px solid var(--bdr);color:var(--orange2);
+}
+
+/* ══════ ANIMATION BOXES ══════ */
+.anim-box{
+  background:var(--bg);
+  border:1.5px solid var(--bdr);
+  border-radius:16px;
+  padding:24px;
+  margin:20px 0;
+  position:relative;
+  overflow:hidden;
+}
+.anim-box .anim-title{
+  font-family:'Fira Code',monospace;font-size:11px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:16px;
+}
+
+/* ── BIT STREAM VISUALIZATION ── */
+.bit-stream{
+  display:flex;gap:3px;flex-wrap:wrap;justify-content:center;
+  margin:12px 0;
+}
+.bit{
+  width:28px;height:28px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:11px;font-weight:700;
+  opacity:0;transform:scale(0);
+  animation:bitPop .3s ease both;
+}
+@keyframes bitPop{to{opacity:1;transform:scale(1);}}
+
+.bit.payload{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.bit.crc{background:rgba(245,158,11,0.15);color:var(--orange);border:1px solid rgba(245,158,11,0.25);}
+.bit.coded{background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.25);}
+.bit.matched{background:rgba(6,182,212,0.15);color:var(--cyan);border:1px solid rgba(6,182,212,0.25);}
+.bit.scrambled{background:rgba(59,130,246,0.15);color:var(--blue2);border:1px solid rgba(59,130,246,0.25);}
+.bit.symbol{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+.bit.dmrs{background:rgba(245,158,11,0.2);color:var(--orange);border:1px solid rgba(245,158,11,0.3);}
+.bit.re-data{background:rgba(59,130,246,0.2);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+
+.bit-label{
+  display:flex;align-items:center;gap:8px;margin-top:10px;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);
+}
+.bit-label .bl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* ── FLOW ARROW ── */
+.flow-arrow{
+  text-align:center;margin:16px 0;position:relative;height:40px;
+}
+.flow-arrow::before{
+  content:'';position:absolute;left:50%;top:0;
+  width:2px;height:100%;
+  background:linear-gradient(180deg,var(--bdr2),transparent);
+}
+.flow-arrow .fa-dot{
+  position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:8px;height:8px;border-radius:50%;
+  animation:flowDot 1.5s ease-in-out infinite;
+}
+@keyframes flowDot{
+  0%{top:0;opacity:0;}15%{opacity:1;}85%{opacity:1;}100%{top:calc(100% - 8px);opacity:0;}
+}
+.flow-arrow .fa-tri{
+  position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
+  font-size:12px;
+}
+
+/* ── FORMULA BOX ── */
+.formula-box{
+  background:var(--bg3);
+  border:1px solid var(--bdr);border-left:3px solid var(--orange);
+  border-radius:0 10px 10px 0;
+  padding:16px 20px;margin:16px 0;
+  font-family:'Fira Code',monospace;font-size:14px;
+  color:var(--orange2);line-height:1.8;
+}
+.formula-box .f-label{
+  font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;font-family:'DM Sans',sans-serif;
+}
+
+/* ── KEY POINT CALLOUT ── */
+.key-point{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--bg3);border:1px solid var(--bdr);border-radius:12px;
+  padding:16px 18px;margin:16px 0;
+}
+.key-point .kp-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.key-point .kp-text{font-size:14px;line-height:1.6;color:var(--dim);}
+.key-point .kp-text strong{color:var(--txt);}
+
+/* ── CCE GRID (Step 7) ── */
+.cce-grid-demo{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:3px;
+  max-width:420px;margin:16px auto;
+  background:var(--bg2);border:2px solid var(--bdr);border-radius:14px;padding:10px;
+}
+.cce-c{
+  aspect-ratio:1/1.8;border-radius:4px;
+  opacity:0;transform:scaleY(0);transition:all .35s ease;min-height:18px;
+}
+.cce-c.on{opacity:1;transform:scaleY(1);}
+.cce-c.d-dmrs{background:var(--orange);box-shadow:0 0 6px rgba(245,158,11,0.3);}
+.cce-c.d-data{background:var(--blue);box-shadow:0 0 6px rgba(59,130,246,0.2);}
+
+.cce-axis{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:3px;
+  max-width:420px;margin:0 auto 4px;padding:0 10px;
+}
+.cce-axis span{text-align:center;font-family:'Fira Code',monospace;font-size:8px;color:var(--muted);}
+
+.cce-reg-label{
+  display:flex;justify-content:center;gap:12px;margin-top:10px;flex-wrap:wrap;
+}
+.cce-reg-label span{
+  font-family:'Fira Code',monospace;font-size:10px;color:var(--muted);
+  background:var(--bg3);padding:3px 10px;border-radius:6px;border:1px solid var(--bdr);
+}
+
+/* ── AGGREGATION TABLE ── */
+.agg-table-wrap{
+  overflow-x:auto;border:1.5px solid var(--bdr);border-radius:14px;
+  background:var(--bg2);margin:20px 0;
+}
+.agg-table{width:100%;border-collapse:collapse;font-size:13px;}
+.agg-table thead th{
+  background:var(--bg4);font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--orange);padding:14px 16px;text-align:center;border-bottom:2px solid var(--bdr2);white-space:nowrap;
+}
+.agg-table tbody td{
+  padding:11px 16px;text-align:center;border-bottom:1px solid var(--bdr);
+  color:var(--dim);font-family:'Fira Code',monospace;font-size:13px;font-weight:500;
+  transition:all .3s;
+}
+.agg-table tbody tr{opacity:0;animation:rowIn .4s ease both;}
+.agg-table tbody tr:nth-child(1){animation-delay:.1s;}
+.agg-table tbody tr:nth-child(2){animation-delay:.2s;}
+.agg-table tbody tr:nth-child(3){animation-delay:.3s;}
+.agg-table tbody tr:nth-child(4){animation-delay:.4s;}
+.agg-table tbody tr:nth-child(5){animation-delay:.5s;}
+@keyframes rowIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+.agg-table tbody tr:hover{background:rgba(245,158,11,0.03);}
+.agg-table tbody tr:hover td{color:var(--txt);}
+.agg-table tbody tr:last-child td{border-bottom:none;}
+.agg-table tbody td:first-child{font-weight:700;color:var(--orange);}
+.al-bar{height:6px;border-radius:3px;margin:4px auto 0;max-width:160px;}
+.al-bar.b1{width:6%;background:linear-gradient(90deg,var(--green),var(--cyan));}
+.al-bar.b2{width:13%;background:linear-gradient(90deg,var(--cyan),var(--blue));}
+.al-bar.b4{width:25%;background:linear-gradient(90deg,var(--blue),var(--purple));}
+.al-bar.b8{width:50%;background:linear-gradient(90deg,var(--purple),var(--orange));}
+.al-bar.b16{width:100%;background:linear-gradient(90deg,var(--orange),var(--red));}
+
+/* ══════ NAVIGATION BUTTONS ══════ */
+.card-nav{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:20px 32px 24px;border-top:1px solid var(--bdr);
+}
+.nav-btn{
+  font-family:'Fira Code',monospace;font-size:12px;font-weight:600;
+  padding:10px 24px;border-radius:10px;border:1px solid var(--bdr);
+  background:var(--bg3);color:var(--dim);cursor:pointer;
+  transition:all .3s;letter-spacing:.5px;display:flex;align-items:center;gap:8px;
+}
+.nav-btn:hover{border-color:var(--orange);color:var(--orange);background:var(--orange-bg);transform:translateY(-1px);}
+.nav-btn:disabled{opacity:.3;cursor:default;transform:none !important;border-color:var(--bdr) !important;color:var(--muted) !important;background:var(--bg3) !important;}
+.nav-btn.primary{background:var(--orange-bg);color:var(--orange);border-color:rgba(245,158,11,0.25);}
+.nav-btn.primary:hover{box-shadow:0 0 20px rgba(245,158,11,0.12);}
+.step-count{font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);}
+
+/* ══════ PROCESSING CHAIN MINI ══════ */
+.mini-chain{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  margin:16px 0;flex-wrap:wrap;
+}
+.mc-box{
+  padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;
+  font-family:'Fira Code',monospace;border:1px solid var(--bdr);
+  background:var(--bg3);color:var(--muted);transition:all .4s;white-space:nowrap;
+}
+.mc-box.mc-active{transform:scale(1.05);}
+.mc-box.mc-orange.mc-active{border-color:rgba(245,158,11,0.4);color:var(--orange);background:var(--orange-bg);box-shadow:0 0 16px rgba(245,158,11,0.1);}
+.mc-box.mc-purple.mc-active{border-color:rgba(168,85,247,0.4);color:var(--purple);background:var(--purple-bg);box-shadow:0 0 16px rgba(168,85,247,0.1);}
+.mc-box.mc-cyan.mc-active{border-color:rgba(6,182,212,0.4);color:var(--cyan);background:var(--cyan-bg);box-shadow:0 0 16px rgba(6,182,212,0.1);}
+.mc-box.mc-blue.mc-active{border-color:rgba(59,130,246,0.4);color:var(--blue);background:var(--blue-bg);box-shadow:0 0 16px rgba(59,130,246,0.1);}
+.mc-box.mc-green.mc-active{border-color:rgba(16,185,129,0.4);color:var(--green);background:var(--green-bg);box-shadow:0 0 16px rgba(16,185,129,0.1);}
+.mc-box.mc-red.mc-active{border-color:rgba(239,68,68,0.4);color:var(--red);background:rgba(239,68,68,0.1);box-shadow:0 0 16px rgba(239,68,68,0.1);}
+.mc-arrow{color:var(--muted);font-size:10px;padding:0 4px;}
+
+/* ── QPSK constellation ── */
+.constellation{
+  width:220px;height:220px;margin:16px auto;position:relative;
+  border:1px solid var(--bdr);border-radius:50%;
+  background:radial-gradient(circle,var(--bg3) 0%,var(--bg) 100%);
+}
+.const-axis-h,.const-axis-v{position:absolute;background:var(--bdr);}
+.const-axis-h{width:100%;height:1px;top:50%;left:0;}
+.const-axis-v{width:1px;height:100%;left:50%;top:0;}
+.const-pt{
+  position:absolute;width:16px;height:16px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 12px rgba(16,185,129,0.4);
+  transform:translate(-50%,-50%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:7px;color:#000;font-weight:800;
+  opacity:0;animation:ptPop .4s ease both;
+}
+@keyframes ptPop{to{opacity:1;}}
+.const-pt:nth-child(3){top:25%;left:25%;animation-delay:.2s;}
+.const-pt:nth-child(4){top:25%;left:75%;animation-delay:.4s;}
+.const-pt:nth-child(5){top:75%;left:25%;animation-delay:.6s;}
+.const-pt:nth-child(6){top:75%;left:75%;animation-delay:.8s;}
+.const-label{
+  position:absolute;font-family:'Fira Code',monospace;font-size:9px;color:var(--dim);
+}
+.const-label.cl-i{bottom:4px;left:50%;transform:translateX(-50%);}
+.const-label.cl-q{top:50%;right:4px;transform:translateY(-50%);}
+
+/* ═══ SCRAMBLE ANIMATION ═══ */
+.scramble-demo{display:flex;flex-direction:column;align-items:center;gap:8px;margin:12px 0;}
+.scr-row{display:flex;gap:3px;align-items:center;}
+.scr-row .sr-label{
+  width:60px;text-align:right;font-family:'Fira Code',monospace;font-size:10px;color:var(--muted);
+  padding-right:8px;
+}
+.scr-bit{
+  width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:11px;font-weight:700;
+  opacity:0;animation:bitPop .25s ease both;
+}
+.scr-bit.sb-data{background:rgba(6,182,212,0.15);color:var(--cyan);border:1px solid rgba(6,182,212,0.25);}
+.scr-bit.sb-pn{background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.25);}
+.scr-bit.sb-out{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.scr-xor{font-family:'Fira Code',monospace;font-size:12px;color:var(--orange);font-weight:700;margin:4px 0;}
+
+/* ══════ FOOTER ══════ */
+.footer{
+  text-align:center;padding:32px 20px;font-size:11px;color:var(--muted);
+  border-top:1px solid var(--bdr);
+}
+.footer strong{color:var(--orange);}
+
+/* ══════ RESPONSIVE ══════ */
+@media(max-width:700px){
+  .card-head{padding:20px 18px 16px;gap:12px;}
+  .card-body{padding:20px 18px 24px;}
+  .card-nav{padding:16px 18px 20px;}
+  .card-step-num{width:42px;height:42px;font-size:16px;border-radius:12px;}
+  .step-dot{width:36px;height:36px;font-size:11px;border-radius:10px;}
+  .constellation{width:180px;height:180px;}
+  .mini-chain{gap:0;}
+  .mc-box{padding:5px 8px;font-size:9px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ HERO ══════ -->
+<header class="hero">
+  <div class="hero-badge"><span class="dot"></span>5G NR · 3GPP TS 38.211 / 38.212</div>
+  <h1>Physical Layer Processing for the <span class="grad">PDCCH</span></h1>
+  <p class="sub">Interactive step-by-step animated explainer — from DCI bits to Resource Elements</p>
+  <p class="sub2">CafeTele Telecom Training · www.cafetele.com</p>
+</header>
+
+<!-- ══════ STEPPER NAV ══════ -->
+<div class="stepper-nav" id="stepperNav"></div>
+
+<!-- ══════ MAIN ══════ -->
+<div class="main">
+
+  <!-- ═══ MINI CHAIN (always visible) ═══ -->
+  <div class="mini-chain" id="miniChain">
+    <div class="mc-box mc-orange" data-mc="0">DCI</div>
+    <span class="mc-arrow">→</span>
+    <div class="mc-box mc-orange" data-mc="1">CRC</div>
+    <span class="mc-arrow">→</span>
+    <div class="mc-box mc-purple" data-mc="2">Polar</div>
+    <span class="mc-arrow">→</span>
+    <div class="mc-box mc-cyan" data-mc="3">Rate Match</div>
+    <span class="mc-arrow">→</span>
+    <div class="mc-box mc-blue" data-mc="4">Scramble</div>
+    <span class="mc-arrow">→</span>
+    <div class="mc-box mc-green" data-mc="5">QPSK</div>
+    <span class="mc-arrow">→</span>
+    <div class="mc-box mc-red" data-mc="6">RE Map</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 0: DCI FORMAT -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card active" data-step="0">
+    <div class="card-inner t-orange">
+      <div class="card-head">
+        <div class="card-step-num n-orange">1</div>
+        <div class="card-head-text">
+          <h2>DCI Format — Defines the PDCCH Payload</h2>
+          <div class="spec">3GPP TS 38.212 §7.3.1</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          Everything starts here. The <strong>Downlink Control Information (DCI)</strong> is the actual message the gNB needs to send to the UE via the PDCCH. The <span class="hl-orange">DCI Format</span> determines both the <strong>content</strong> (what fields are included) and the <strong>payload size</strong> (how many information bits).
+        </p>
+        <p class="explain">
+          Different DCI formats serve different purposes: <code>Format 1_0 / 1_1</code> carry <strong>downlink scheduling assignments</strong> (which RBs, which MCS, HARQ process, NDI, etc.), while <code>Format 0_0 / 0_1</code> carry <strong>uplink grants</strong>. The payload size is not fixed — it depends on the bandwidth part configuration, the number of HARQ processes, antenna ports, and other RRC-configured parameters. Typical payload sizes range from ~12 bits up to ~140+ bits.
+        </p>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ Example: DCI Format 1_1 Payload Fields</div>
+          <div class="bit-stream" id="dciFields"></div>
+          <div class="bit-label">
+            <span class="bl-dot" style="background:var(--blue);"></span> Each block = a DCI field
+            <span style="margin-left:12px;" class="bl-dot" style="background:var(--blue);"></span> Total = PDCCH payload (e.g. ~46 bits)
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">💡</div>
+          <div class="kp-text">
+            <strong>Why it matters:</strong> The DCI payload size feeds directly into the Polar encoder and rate matching stages. A larger payload with fewer CCEs means higher code rate (less protection). A smaller payload with more CCEs means lower code rate (more robust). This is the fundamental tradeoff in PDCCH design.
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" disabled>← Previous</button>
+        <span class="step-count">Step 1 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 1: CRC -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card" data-step="1">
+    <div class="card-inner t-orange">
+      <div class="card-head">
+        <div class="card-step-num n-orange">2</div>
+        <div class="card-head-text">
+          <h2>CRC Attachment — 24 Bits (CRC-24C)</h2>
+          <div class="spec">3GPP TS 38.212 §7.3.2</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          <span class="hl-orange">24 CRC parity bits</span> are appended to the DCI payload using the <strong>CRC-24C polynomial</strong>. But here's the critical part — these 24 CRC bits are then <strong>XOR-scrambled with the target UE's RNTI</strong> (Radio Network Temporary Identifier), such as C-RNTI, RA-RNTI, SI-RNTI, or P-RNTI.
+        </p>
+        <p class="explain">
+          This is how <strong>blind decoding</strong> works at the UE side. The UE doesn't know which PDCCH candidates are meant for it. So it tries to decode every candidate in its configured Search Spaces, de-masks the CRC with its own RNTI, and checks if the CRC passes. If it does — the message was meant for this UE. If not — discard and try the next candidate.
+        </p>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ Bit-Level: Payload + CRC Attachment</div>
+          <div class="bit-stream" id="crcBits"></div>
+          <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+            <div class="bit-label"><span class="bl-dot" style="background:var(--blue);"></span> DCI Payload bits</div>
+            <div class="bit-label"><span class="bl-dot" style="background:var(--orange);"></span> 24 CRC bits (XOR with RNTI)</div>
+          </div>
+        </div>
+
+        <div class="formula-box">
+          <div class="f-label">Total bits entering Polar Encoder</div>
+          K = A + 24<br>
+          where A = DCI payload size<br>
+          Example: A=39 → K = 39 + 24 = <strong style="color:var(--txt);">63 bits</strong>
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">🔒</div>
+          <div class="kp-text">
+            <strong>Dual purpose of CRC:</strong> (1) Error detection — verifies correct decoding. (2) UE identification — the RNTI masking ensures only the intended UE accepts the message. This is elegant because it combines two functions into one 24-bit field.
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" onclick="goStep(0)">← Previous</button>
+        <span class="step-count">Step 2 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(2)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 2: POLAR CODING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card" data-step="2">
+    <div class="card-inner t-purple">
+      <div class="card-head">
+        <div class="card-step-num n-purple">3</div>
+        <div class="card-head-text">
+          <h2>Polar Coding — Channel Encoding (N = 2ⁿ)</h2>
+          <div class="spec">3GPP TS 38.212 §7.3.3 — Polar Code</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          5G NR uses <span class="hl-purple">Polar Codes</span> for PDCCH — this is a major change from LTE which used <strong>tail-biting convolutional coding</strong>. Polar codes achieve capacity on binary-input channels and offer excellent performance at short block lengths, which is perfect for control channels.
+        </p>
+        <p class="explain">
+          The encoder takes the K input bits (DCI + CRC) and produces a codeword of length <code>N = 2ⁿ</code> (must be a power of 2). The mother code length N is selected based on the available output size E. Internally, the encoder classifies each of the N bit-channels as either <strong>"reliable"</strong> (carries information bits) or <strong>"frozen"</strong> (set to 0). The encoding then applies the Kronecker-product polar transform matrix <code>G_N = F⊗n</code>.
+        </p>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ Polar Encoding: K info bits → N coded bits</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin:12px 0;">
+            <div style="text-align:center;">
+              <div class="bit-stream" id="polarIn" style="max-width:200px;"></div>
+              <div class="bit-label" style="margin-top:6px;"><span class="bl-dot" style="background:var(--blue);"></span> K input bits</div>
+            </div>
+            <div style="font-size:28px;color:var(--purple);font-weight:800;animation:fadeUp .5s ease .8s both;">⟹</div>
+            <div style="text-align:center;">
+              <div class="bit-stream" id="polarOut" style="max-width:300px;"></div>
+              <div class="bit-label" style="margin-top:6px;"><span class="bl-dot" style="background:var(--purple);"></span> N coded bits (N=2ⁿ)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="formula-box">
+          <div class="f-label">Polar Code Parameters</div>
+          N = 2ⁿ (mother code length, e.g. 128, 256, 512)<br>
+          K = DCI payload + 24 CRC bits<br>
+          Code Rate R = K / E (effective rate after rate matching)<br>
+          Frozen bits = N − K (set to 0, known to both Tx and Rx)
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">🧬</div>
+          <div class="kp-text">
+            <strong>Why Polar over Convolutional?</strong> Polar codes can achieve channel capacity with successive cancellation decoding. For PDCCH's short block lengths (typically K < 140), they outperform TBCC used in LTE. The 3GPP adopted CRC-aided successive cancellation list (CA-SCL) decoding for excellent error correction performance.
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" onclick="goStep(1)">← Previous</button>
+        <span class="step-count">Step 3 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(3)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 3: RATE MATCHING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card" data-step="3">
+    <div class="card-inner t-cyan">
+      <div class="card-head">
+        <div class="card-step-num n-cyan">4</div>
+        <div class="card-head-text">
+          <h2>Rate Matching — E = AL × 108 Coded Bits</h2>
+          <div class="spec">3GPP TS 38.212 §7.3.4</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          The Polar encoder outputs N bits, but we need exactly <span class="hl-cyan">E bits</span> to fill the allocated resource elements. Rate matching bridges this gap by adapting the codeword to the exact available capacity.
+        </p>
+        <p class="explain">
+          The magic number <code>108</code> comes from the CCE structure: each CCE has 6 REGs × 12 subcarriers = 72 REs total. But 3 subcarriers per REG carry DMRS (at positions k=1, 5, 9), so only <strong>9 data subcarriers × 6 REGs = 54 data REs per CCE</strong>. With QPSK (2 bits/symbol): <code>54 × 2 = 108 coded bits per CCE</code>.
+        </p>
+
+        <div class="formula-box">
+          <div class="f-label">Rate Matching Output Size</div>
+          E = Aggregation Level × 108 bits<br><br>
+          Derivation:<br>
+          • 1 CCE = 6 REGs<br>
+          • 1 REG = 12 subcarriers (1 PRB × 1 OFDM symbol)<br>
+          • DMRS uses 3 REs per REG → 9 data REs per REG<br>
+          • Data REs per CCE = 9 × 6 = 54<br>
+          • QPSK → 2 bits/RE<br>
+          • <strong style="color:var(--txt);">Coded bits per CCE = 54 × 2 = 108</strong>
+        </div>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ Rate Matching per Aggregation Level</div>
+          <div class="agg-table-wrap">
+            <table class="agg-table">
+              <thead><tr><th>AL</th><th>CCEs</th><th>REGs</th><th>Data REs</th><th>E (bits)</th><th>Scale</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>1</td><td>6</td><td>54</td><td>108</td><td><div class="al-bar b1"></div></td></tr>
+                <tr><td>2</td><td>2</td><td>12</td><td>108</td><td>216</td><td><div class="al-bar b2"></div></td></tr>
+                <tr><td>4</td><td>4</td><td>24</td><td>216</td><td>432</td><td><div class="al-bar b4"></div></td></tr>
+                <tr><td>8</td><td>8</td><td>48</td><td>432</td><td>864</td><td><div class="al-bar b8"></div></td></tr>
+                <tr><td>16</td><td>16</td><td>96</td><td>864</td><td>1728</td><td><div class="al-bar b16"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">📐</div>
+          <div class="kp-text">
+            <strong>Puncturing vs. Repetition:</strong> If the mother code N > E, rate matching <strong>punctures</strong> (removes) bits to fit. If N < E, it <strong>repeats</strong> bits to fill the space. This directly controls the effective code rate: lower AL = higher code rate (less protection, good for cell center UEs), higher AL = lower code rate (more protection, needed for cell edge).
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" onclick="goStep(2)">← Previous</button>
+        <span class="step-count">Step 4 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(4)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 4: SCRAMBLING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card" data-step="4">
+    <div class="card-inner t-blue">
+      <div class="card-head">
+        <div class="card-step-num n-blue">5</div>
+        <div class="card-head-text">
+          <h2>Scrambling — Pseudo-Random Sequence XOR</h2>
+          <div class="spec">3GPP TS 38.211 §7.3.2.3</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          The E rate-matched bits are <span class="hl-blue">scrambled</span> by XOR-ing them with a <strong>pseudo-random binary sequence (PRBS)</strong> — a Gold sequence. The initialization seed <code>c_init</code> depends on the RNTI and the search space configuration.
+        </p>
+        <p class="explain">
+          For a <strong>UE-specific search space</strong>: <code>c_init = (n_RNTI × 2¹⁶ + n_ID) mod 2³¹</code>, where <code>n_ID</code> is configured by higher layers or defaults to the physical cell ID (N_ID_cell). For <strong>common search spaces</strong>, different initialization rules apply to ensure all UEs in the cell can decode system messages.
+        </p>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ XOR Scrambling Operation</div>
+          <div class="scramble-demo" id="scrambleDemo"></div>
+        </div>
+
+        <div class="formula-box">
+          <div class="f-label">Scrambling Initialization</div>
+          c_init = (n_RNTI × 2¹⁶ + n_ID) mod 2³¹<br><br>
+          • n_RNTI = UE's Radio Network Temp. Identifier<br>
+          • n_ID = pdcch-DMRS-ScramblingID (RRC) or N_ID_cell<br>
+          • Output: b̃(i) = b(i) ⊕ c(i) for i = 0, 1, ..., E−1
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">🔀</div>
+          <div class="kp-text">
+            <strong>Purpose of scrambling:</strong> (1) <strong>Inter-cell interference randomization</strong> — different cells have different scrambling sequences (different N_ID_cell), so interference from neighboring cells appears noise-like rather than structured. (2) <strong>UE-specific separation</strong> — different RNTIs produce different sequences, adding another layer of identification beyond CRC masking.
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" onclick="goStep(3)">← Previous</button>
+        <span class="step-count">Step 5 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(5)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 5: QPSK MODULATION -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card" data-step="5">
+    <div class="card-inner t-green">
+      <div class="card-head">
+        <div class="card-step-num n-green">6</div>
+        <div class="card-head-text">
+          <h2>QPSK Modulation — 2 Bits → 1 Symbol</h2>
+          <div class="spec">3GPP TS 38.211 §7.3.2.4</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          The scrambled bits are modulated using <span class="hl-green">QPSK only</span> — no higher-order modulation (16QAM, 64QAM, 256QAM) is ever used for PDCCH. Every <strong>2 consecutive bits</strong> are mapped to one complex-valued QPSK symbol from the constellation points <code>(±1 ± j) / √2</code>.
+        </p>
+        <p class="explain">
+          For E scrambled bits, this produces <code>E/2</code> complex symbols. For one CCE: 108 bits / 2 = <strong>54 QPSK symbols</strong>, which maps perfectly onto the 54 data REs available per CCE. QPSK is chosen deliberately — control information is too critical to risk with higher-order modulation. Robustness is prioritized over spectral efficiency.
+        </p>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ QPSK Constellation Diagram</div>
+          <div class="constellation">
+            <div class="const-axis-h"></div>
+            <div class="const-axis-v"></div>
+            <div class="const-pt" style="top:27%;left:27%;">00</div>
+            <div class="const-pt" style="top:27%;left:73%;">01</div>
+            <div class="const-pt" style="top:73%;left:27%;">10</div>
+            <div class="const-pt" style="top:73%;left:73%;">11</div>
+            <div class="const-label" style="left:50%;bottom:2px;transform:translateX(-50%);"> I-axis</div>
+            <div class="const-label" style="top:2px;left:50%;transform:translateX(-50%);"> Q-axis</div>
+          </div>
+          <div style="text-align:center;margin-top:8px;">
+            <div class="bit-label"><span class="bl-dot" style="background:var(--green);"></span> 4 constellation points — 2 bits per symbol</div>
+          </div>
+        </div>
+
+        <div class="formula-box">
+          <div class="f-label">QPSK Symbol Mapping</div>
+          d(i) = (1/√2) × [(1 − 2·b(2i)) + j·(1 − 2·b(2i+1))]<br><br>
+          Symbols per CCE = 108 bits / 2 = 54 symbols<br>
+          Total symbols = AL × 54
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">📡</div>
+          <div class="kp-text">
+            <strong>Why always QPSK?</strong> The PDCCH carries scheduling grants and essential control information. If a UE fails to decode PDCCH, it cannot receive any data at all in that slot. Therefore, maximum reliability is essential. QPSK provides the <strong>widest decision boundaries</strong> and best noise tolerance compared to higher-order modulation schemes. Coverage is gained through aggregation levels (more CCEs), not through modulation.
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" onclick="goStep(4)">← Previous</button>
+        <span class="step-count">Step 6 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(6)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STEP 6: RE MAPPING + CCE GRID -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-card" data-step="6">
+    <div class="card-inner t-red">
+      <div class="card-head">
+        <div class="card-step-num n-red">7</div>
+        <div class="card-head-text">
+          <h2>Resource Element Mapping — CCE → REG → RE</h2>
+          <div class="spec">3GPP TS 38.211 §7.3.2.5 / 7.4.1.3</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="explain">
+          The QPSK symbols are finally mapped onto <strong>physical Resource Elements</strong> within the <span class="hl-red">CORESET</span> (Control Resource Set). The mapping follows a strict hierarchy: <strong>CCE → REG Bundle → REG → RE</strong>.
+        </p>
+        <p class="explain">
+          Each <strong>CCE = 6 REGs</strong>. Each <strong>REG = 1 PRB × 1 OFDM symbol = 12 subcarriers</strong>. Within each REG, subcarrier positions <code>k = {1, 5, 9}</code> carry <strong>PDCCH DMRS</strong> (Demodulation Reference Signal) and the remaining <strong>9 subcarriers carry data</strong>. So per CCE: 6 REGs × 3 DMRS = <span class="hl-orange">18 DMRS REs</span> and 6 REGs × 9 data = <span class="hl-blue">54 data REs</span>, totaling <strong>72 REs per CCE</strong>.
+        </p>
+
+        <div class="anim-box">
+          <div class="anim-title">▸ 1 CCE = 6 REGs × 12 Subcarriers = 72 Resource Elements</div>
+          <div class="cce-axis" id="cceAxis"></div>
+          <div class="cce-grid-demo" id="cceGridDemo"></div>
+          <div class="cce-reg-label" id="cceRegLabel"></div>
+          <div style="display:flex;gap:20px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+            <div class="bit-label"><span class="bl-dot" style="background:var(--orange);"></span> DMRS (18 REs) — k={1,5,9}</div>
+            <div class="bit-label"><span class="bl-dot" style="background:var(--blue);"></span> Data (54 REs) — carries QPSK symbols</div>
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">🗺️</div>
+          <div class="kp-text">
+            <strong>REG Bundling & Interleaving:</strong> REGs within a CCE can be <strong>contiguous</strong> (non-interleaved) or <strong>distributed</strong> (interleaved) across the CORESET frequency domain. Interleaved mapping provides frequency diversity (better for cell-edge UEs), while non-interleaved mapping provides localized allocation (useful for beamforming). The REG bundle size (2, 3, or 6) is configured by RRC.
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="kp-icon">📊</div>
+          <div class="kp-text">
+            <strong>Aggregation Level Selection in Real Networks:</strong> The gNB selects the Aggregation Level based on the UE's estimated channel quality (typically from CSI reports or RSRP). Cell-center UEs with high SINR use AL=1 or AL=2. As the UE moves toward the cell edge and SINR degrades, the gNB escalates to AL=4, AL=8, or AL=16 for maximum coding gain and robustness.
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" onclick="goStep(5)">← Previous</button>
+        <span class="step-count">Step 7 of 7</span>
+        <button class="nav-btn primary" onclick="goStep(0)">↻ Restart</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<footer class="footer">
+  <p>PDCCH Physical Layer Processing — <strong>3GPP TS 38.211 / 38.212</strong></p>
+  <p style="margin-top:4px;">Animated for <strong>CafeTele Telecom Training</strong> — www.cafetele.com</p>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentStep = 0;
+const totalSteps = 7;
+const visited = new Set([0]);
+
+// ═══════════════════════════════════════════════
+// STEPPER NAV
+// ═══════════════════════════════════════════════
+function buildStepper() {
+  const nav = document.getElementById('stepperNav');
+  nav.innerHTML = '';
+  const labels = ['DCI','CRC','Polar','Rate\nMatch','Scramble','QPSK','RE Map'];
+  for (let i = 0; i < totalSteps; i++) {
+    if (i > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'step-connector' + (visited.has(i) && visited.has(i-1) ? ' done' : '');
+      nav.appendChild(conn);
+    }
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    if (i === currentStep) dot.classList.add('active');
+    else if (visited.has(i)) dot.classList.add('visited');
+    dot.textContent = i + 1;
+    dot.title = labels[i];
+    dot.onclick = () => goStep(i);
+    nav.appendChild(dot);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MINI CHAIN HIGHLIGHT
+// ═══════════════════════════════════════════════
+function updateMiniChain() {
+  document.querySelectorAll('.mc-box').forEach(b => {
+    b.classList.toggle('mc-active', parseInt(b.dataset.mc) === currentStep);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goStep(n) {
+  if (n < 0 || n >= totalSteps) return;
+  currentStep = n;
+  visited.add(n);
+  // Show/hide cards
+  document.querySelectorAll('.step-card').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.step) === n);
+  });
+  buildStepper();
+  updateMiniChain();
+  // Trigger step-specific animations
+  setTimeout(() => runStepAnim(n), 150);
+  // Scroll to top of card
+  window.scrollTo({ top: document.querySelector('.mini-chain').offsetTop - 10, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════════
+// STEP-SPECIFIC ANIMATIONS
+// ═══════════════════════════════════════════════
+function runStepAnim(step) {
+  switch(step) {
+    case 0: animDCIFields(); break;
+    case 1: animCRCBits(); break;
+    case 2: animPolar(); break;
+    case 4: animScramble(); break;
+    case 6: animCCEGrid(); break;
+  }
+}
+
+// ── Step 0: DCI Fields ──
+function animDCIFields() {
+  const el = document.getElementById('dciFields');
+  if (!el) return;
+  el.innerHTML = '';
+  const fields = [
+    {label:'DCI\nFmt',w:2},{label:'Freq\nDomain',w:5},{label:'Time\nDomain',w:2},
+    {label:'MCS',w:2},{label:'NDI',w:1},{label:'RV',w:1},{label:'HARQ',w:2},
+    {label:'DAI',w:1},{label:'TPC',w:1},{label:'SRS',w:1},{label:'Ant\nPort',w:2}
+  ];
+  let delay = 0;
+  fields.forEach(f => {
+    for (let i = 0; i < f.w; i++) {
+      const bit = document.createElement('div');
+      bit.className = 'bit payload';
+      bit.style.animationDelay = (delay * 40) + 'ms';
+      bit.textContent = i === 0 ? f.label.split('\n')[0].charAt(0) : '';
+      bit.title = f.label.replace('\n',' ');
+      el.appendChild(bit);
+      delay++;
+    }
+  });
+}
+
+// ── Step 1: CRC Bits ──
+function animCRCBits() {
+  const el = document.getElementById('crcBits');
+  if (!el) return;
+  el.innerHTML = '';
+  // 20 payload bits (simplified)
+  for (let i = 0; i < 20; i++) {
+    const bit = document.createElement('div');
+    bit.className = 'bit payload';
+    bit.style.animationDelay = (i * 35) + 'ms';
+    bit.textContent = Math.round(Math.random());
+    el.appendChild(bit);
+  }
+  // ... label
+  const dots = document.createElement('div');
+  dots.className = 'bit payload';
+  dots.style.animationDelay = (20 * 35) + 'ms';
+  dots.textContent = '···';
+  dots.style.width = '36px';
+  dots.style.fontSize = '14px';
+  el.appendChild(dots);
+  // 24 CRC bits
+  for (let i = 0; i < 24; i++) {
+    const bit = document.createElement('div');
+    bit.className = 'bit crc';
+    bit.style.animationDelay = (700 + i * 40) + 'ms';
+    bit.textContent = Math.round(Math.random());
+    el.appendChild(bit);
+  }
+}
+
+// ── Step 2: Polar ──
+function animPolar() {
+  const inEl = document.getElementById('polarIn');
+  const outEl = document.getElementById('polarOut');
+  if (!inEl || !outEl) return;
+  inEl.innerHTML = '';
+  outEl.innerHTML = '';
+  // K=8 input bits (simplified)
+  for (let i = 0; i < 8; i++) {
+    const bit = document.createElement('div');
+    bit.className = 'bit payload';
+    bit.style.animationDelay = (i * 60) + 'ms';
+    bit.textContent = Math.round(Math.random());
+    inEl.appendChild(bit);
+  }
+  // N=16 coded bits (simplified)
+  for (let i = 0; i < 16; i++) {
+    const bit = document.createElement('div');
+    bit.className = 'bit coded';
+    bit.style.animationDelay = (600 + i * 40) + 'ms';
+    bit.textContent = Math.round(Math.random());
+    outEl.appendChild(bit);
+  }
+}
+
+// ── Step 4: Scramble ──
+function animScramble() {
+  const el = document.getElementById('scrambleDemo');
+  if (!el) return;
+  el.innerHTML = '';
+  const n = 12;
+  const dataBits = Array.from({length:n}, () => Math.round(Math.random()));
+  const pnBits = Array.from({length:n}, () => Math.round(Math.random()));
+  const outBits = dataBits.map((d,i) => d ^ pnBits[i]);
+  
+  // Data row
+  const r1 = document.createElement('div');
+  r1.className = 'scr-row';
+  const l1 = document.createElement('span');
+  l1.className = 'sr-label';
+  l1.textContent = 'Data:';
+  r1.appendChild(l1);
+  dataBits.forEach((b,i) => {
+    const bit = document.createElement('div');
+    bit.className = 'scr-bit sb-data';
+    bit.style.animationDelay = (i * 50) + 'ms';
+    bit.textContent = b;
+    r1.appendChild(bit);
+  });
+  el.appendChild(r1);
+
+  // XOR symbol
+  const xr = document.createElement('div');
+  xr.className = 'scr-xor';
+  xr.textContent = '⊕  XOR';
+  xr.style.opacity = '0';
+  xr.style.animation = 'fadeUp .3s ease .7s both';
+  el.appendChild(xr);
+
+  // PN row
+  const r2 = document.createElement('div');
+  r2.className = 'scr-row';
+  const l2 = document.createElement('span');
+  l2.className = 'sr-label';
+  l2.textContent = 'PN Seq:';
+  r2.appendChild(l2);
+  pnBits.forEach((b,i) => {
+    const bit = document.createElement('div');
+    bit.className = 'scr-bit sb-pn';
+    bit.style.animationDelay = (800 + i * 50) + 'ms';
+    bit.textContent = b;
+    r2.appendChild(bit);
+  });
+  el.appendChild(r2);
+
+  // Separator
+  const sep = document.createElement('div');
+  sep.style.cssText = 'width:60%;height:1px;background:var(--bdr);margin:8px auto;opacity:0;animation:fadeUp .3s ease 1.5s both;';
+  el.appendChild(sep);
+
+  // Output row
+  const r3 = document.createElement('div');
+  r3.className = 'scr-row';
+  const l3 = document.createElement('span');
+  l3.className = 'sr-label';
+  l3.textContent = 'Output:';
+  r3.appendChild(l3);
+  outBits.forEach((b,i) => {
+    const bit = document.createElement('div');
+    bit.className = 'scr-bit sb-out';
+    bit.style.animationDelay = (1600 + i * 50) + 'ms';
+    bit.textContent = b;
+    r3.appendChild(bit);
+  });
+  el.appendChild(r3);
+}
+
+// ── Step 6: CCE Grid ──
+function animCCEGrid() {
+  const grid = document.getElementById('cceGridDemo');
+  const axis = document.getElementById('cceAxis');
+  const regLabel = document.getElementById('cceRegLabel');
+  if (!grid) return;
+  grid.innerHTML = '';
+  axis.innerHTML = '';
+  regLabel.innerHTML = '';
+  
+  // Axis labels
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('span');
+    s.textContent = i;
+    axis.appendChild(s);
+  }
+  // REG labels
+  for (let r = 0; r < 6; r++) {
+    const s = document.createElement('span');
+    s.textContent = 'REG ' + r;
+    regLabel.appendChild(s);
+  }
+  
+  const dmrs = [1, 5, 9];
+  for (let reg = 0; reg < 6; reg++) {
+    for (let sc = 0; sc < 12; sc++) {
+      const cell = document.createElement('div');
+      cell.className = 'cce-c ' + (dmrs.includes(sc) ? 'd-dmrs' : 'd-data');
+      grid.appendChild(cell);
+      const delay = 200 + reg * 100 + sc * 30;
+      setTimeout(() => cell.classList.add('on'), delay);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+buildStepper();
+updateMiniChain();
+runStepAnim(0);
+</script>
+</body>
+</html>

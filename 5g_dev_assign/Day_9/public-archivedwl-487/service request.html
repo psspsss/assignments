@@ -1,0 +1,3803 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
+<head>
+<title>L3 Call Trace</title>
+<script language='JavaScript1.1'>
+<!--
+function func_0() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=310');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCSetupRequest</h2> <br>\
+UL-CCCH-Message : {<br>\
+ message c1 : rrcSetupRequest : {<br>\
+    rrcSetupRequest {<br>\
+     ue-Identity ng-5G-S-TMSI-Part1 : \'10000011 10000000 11000000 00000000 0011100\'B,<br>\
+     establishmentCause mo-Data,<br>\
+     spare \'0\'B<br>\
+    }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_1() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=810');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCSetup</h2> <br>\
+DL-CCCH-Message : {<br>\
+ message c1 : rrcSetup : {<br>\
+    rrc-TransactionIdentifier 0,<br>\
+    criticalExtensions rrcSetup : {<br>\
+      radioBearerConfig {<br>\
+       srb-ToAddModList {<br>\
+        {<br>\
+         srb-Identity 1<br>\
+        }<br>\
+       }<br>\
+      },<br>\
+      masterCellGroup {<br>\
+       cellGroupId 0,<br>\
+       rlc-BearerToAddModList {<br>\
+        {<br>\
+         logicalChannelIdentity 1,<br>\
+         servedRadioBearer srb-Identity : 1,<br>\
+         rlc-Config am : {<br>\
+           ul-AM-RLC {<br>\
+            sn-FieldLength size12,<br>\
+            t-PollRetransmit ms45,<br>\
+            pollPDU infinity,<br>\
+            pollByte infinity,<br>\
+            maxRetxThreshold t8<br>\
+           },<br>\
+           dl-AM-RLC {<br>\
+            sn-FieldLength size12,<br>\
+            t-Reassembly ms35,<br>\
+            t-StatusProhibit ms0<br>\
+           }<br>\
+          },<br>\
+         mac-LogicalChannelConfig {<br>\
+          ul-SpecificParameters {<br>\
+           priority 1,<br>\
+           prioritisedBitRate infinity,<br>\
+           bucketSizeDuration ms50,<br>\
+           logicalChannelGroup 0,<br>\
+           schedulingRequestID 0,<br>\
+           logicalChannelSR-Mask FALSE,<br>\
+           logicalChannelSR-DelayTimerApplied FALSE<br>\
+          }<br>\
+         }<br>\
+        }<br>\
+       },<br>\
+       mac-CellGroupConfig {<br>\
+        schedulingRequestConfig {<br>\
+         schedulingRequestToAddModList {<br>\
+          {<br>\
+           schedulingRequestId 0,<br>\
+           sr-TransMax n64<br>\
+          }<br>\
+         }<br>\
+        },<br>\
+        bsr-Config {<br>\
+         periodicBSR-Timer sf10,<br>\
+         retxBSR-Timer sf80<br>\
+        },<br>\
+        tag-Config {<br>\
+         tag-ToAddModList {<br>\
+          {<br>\
+           tag-Id 0,<br>\
+           timeAlignmentTimer infinity<br>\
+          }<br>\
+         }<br>\
+        },<br>\
+        phr-Config setup : {<br>\
+          phr-PeriodicTimer sf20,<br>\
+          phr-ProhibitTimer sf0,<br>\
+          phr-Tx-PowerFactorChange dB3,<br>\
+          multiplePHR FALSE,<br>\
+          dummy FALSE,<br>\
+          phr-Type2OtherCell FALSE,<br>\
+          phr-ModeOtherCG real<br>\
+         },<br>\
+        skipUplinkTxDynamic FALSE<br>\
+       },<br>\
+       physicalCellGroupConfig {<br>\
+        pdsch-HARQ-ACK-Codebook dynamic<br>\
+       },<br>\
+       spCellConfig {<br>\
+        spCellConfigDedicated {<br>\
+         downlinkBWP-ToAddModList {<br>\
+          {<br>\
+           bwp-Id 1,<br>\
+           bwp-Common {<br>\
+            genericParameters {<br>\
+             locationAndBandwidth 1099,<br>\
+             subcarrierSpacing kHz30<br>\
+            },<br>\
+            pdcch-ConfigCommon setup : {<br>\
+              commonSearchSpaceList {<br>\
+               {<br>\
+                searchSpaceId 4,<br>\
+                controlResourceSetId 0,<br>\
+                monitoringSlotPeriodicityAndOffset sl5 : 0,<br>\
+                duration 2,<br>\
+                monitoringSymbolsWithinSlot \'10000000 000000\'B,<br>\
+                nrofCandidates {<br>\
+                 aggregationLevel1 n0,<br>\
+                 aggregationLevel2 n0,<br>\
+                 aggregationLevel4 n2,<br>\
+                 aggregationLevel8 n0,<br>\
+                 aggregationLevel16 n0<br>\
+                },<br>\
+                searchSpaceType common : {<br>\
+                  dci-Format0-0-AndFormat1-0 {<br>\
+                  }<br>\
+                 }<br>\
+               },<br>\
+               {<br>\
+                searchSpaceId 5,<br>\
+                controlResourceSetId 0,<br>\
+                monitoringSlotPeriodicityAndOffset sl1 : NULL,<br>\
+                monitoringSymbolsWithinSlot \'11000000 000000\'B,<br>\
+                nrofCandidates {<br>\
+                 aggregationLevel1 n0,<br>\
+                 aggregationLevel2 n0,<br>\
+                 aggregationLevel4 n2,<br>\
+                 aggregationLevel8 n0,<br>\
+                 aggregationLevel16 n0<br>\
+                },<br>\
+                searchSpaceType common : {<br>\
+                  dci-Format0-0-AndFormat1-0 {<br>\
+                  }<br>\
+                 }<br>\
+               },<br>\
+               {<br>\
+                searchSpaceId 6,<br>\
+                controlResourceSetId 0,<br>\
+                monitoringSlotPeriodicityAndOffset sl5 : 0,<br>\
+                duration 2,<br>\
+                monitoringSymbolsWithinSlot \'10000000 000000\'B,<br>\
+                nrofCandidates {<br>\
+                 aggregationLevel1 n0,<br>\
+                 aggregationLevel2 n0,<br>\
+                 aggregationLevel4 n2,<br>\
+                 aggregationLevel8 n0,<br>\
+                 aggregationLevel16 n0<br>\
+                },<br>\
+                searchSpaceType common : {<br>\
+                  dci-Format0-0-AndFormat1-0 {<br>\
+                  }<br>\
+                 }<br>\
+               }<br>\
+              },<br>\
+              searchSpaceSIB1 0,<br>\
+              searchSpaceOtherSystemInformation 4,<br>\
+              pagingSearchSpace 6,<br>\
+              ra-SearchSpace 5,<br>\
+              firstPDCCH-MonitoringOccasionOfPO sCS120KHZoneT-SCS60KHZhalfT-SCS30KHZquarterT-SCS15KHZoneEighthT : {<br>\
+                2<br>\
+               }<br>\
+             },<br>\
+            pdsch-ConfigCommon setup : {<br>\
+              pdsch-TimeDomainAllocationList {<br>\
+               {<br>\
+                k0 0,<br>\
+                mappingType typeA,<br>\
+                startSymbolAndLength 40<br>\
+               },<br>\
+               {<br>\
+                k0 0,<br>\
+                mappingType typeA,<br>\
+                startSymbolAndLength 54<br>\
+               },<br>\
+               {<br>\
+                k0 0,<br>\
+                mappingType typeA,<br>\
+                startSymbolAndLength 53<br>\
+               },<br>\
+               {<br>\
+                k0 0,<br>\
+                mappingType typeA,<br>\
+                startSymbolAndLength 67<br>\
+               },<br>\
+               {<br>\
+                k0 0,<br>\
+                mappingType typeA,<br>\
+                startSymbolAndLength 66<br>\
+               },<br>\
+               {<br>\
+                k0 0,<br>\
+                mappingType typeA,<br>\
+                startSymbolAndLength 80<br>\
+               }<br>\
+              }<br>\
+             }<br>\
+           },<br>\
+           bwp-Dedicated {<br>\
+            pdcch-Config setup : {<br>\
+              controlResourceSetToAddModList {<br>\
+               {<br>\
+                controlResourceSetId 1,<br>\
+                frequencyDomainResources \'11111111 11111111 11110000 00000000 00000000 00000\'B,<br>\
+                duration 1,<br>\
+                cce-REG-MappingType nonInterleaved : NULL,<br>\
+                precoderGranularity sameAsREG-bundle,<br>\
+                tci-StatesPDCCH-ToAddList {<br>\
+                 0,<br>\
+                 1,<br>\
+                 2,<br>\
+                 3,<br>\
+                 4,<br>\
+                 5<br>\
+                },<br>\
+                pdcch-DMRS-ScramblingID 9202<br>\
+               }<br>\
+              },<br>\
+              searchSpacesToAddModList {<br>\
+               {<br>\
+                searchSpaceId 7,<br>\
+                controlResourceSetId 0,<br>\
+                monitoringSlotPeriodicityAndOffset sl1 : NULL,<br>\
+                monitoringSymbolsWithinSlot \'11000000 000000\'B,<br>\
+                nrofCandidates {<br>\
+                 aggregationLevel1 n0,<br>\
+                 aggregationLevel2 n0,<br>\
+                 aggregationLevel4 n2,<br>\
+                 aggregationLevel8 n0,<br>\
+                 aggregationLevel16 n0<br>\
+                },<br>\
+                searchSpaceType common : {<br>\
+                  dci-Format0-0-AndFormat1-0 {<br>\
+                  }<br>\
+                 }<br>\
+               },<br>\
+               {<br>\
+                searchSpaceId 8,<br>\
+                controlResourceSetId 1,<br>\
+                monitoringSlotPeriodicityAndOffset sl1 : NULL,<br>\
+                monitoringSymbolsWithinSlot \'11000000 000000\'B,<br>\
+                nrofCandidates {<br>\
+                 aggregationLevel1 n0,<br>\
+                 aggregationLevel2 n0,<br>\
+                 aggregationLevel4 n5,<br>\
+                 aggregationLevel8 n0,<br>\
+                 aggregationLevel16 n0<br>\
+                },<br>\
+                searchSpaceType ue-Specific : {<br>\
+                  dci-Formats formats0-1-And-1-1<br>\
+                 }<br>\
+               }<br>\
+              }<br>\
+             },<br>\
+            pdsch-Config setup : {<br>\
+              dmrs-DownlinkForPDSCH-MappingTypeA setup : {<br>\
+                dmrs-AdditionalPosition pos1,<br>\
+                scramblingID0 12768<br>\
+               },<br>\
+              tci-StatesToAddModList {<br>\
+               {<br>\
+                tci-StateId 0,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal csi-rs : 2,<br>\
+                 qcl-Type typeA<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 1,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal csi-rs : 6,<br>\
+                 qcl-Type typeA<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 2,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal csi-rs : 10,<br>\
+                 qcl-Type typeA<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 3,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal csi-rs : 14,<br>\
+                 qcl-Type typeA<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 4,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal csi-rs : 18,<br>\
+                 qcl-Type typeA<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 5,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal csi-rs : 22,<br>\
+                 qcl-Type typeA<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 6,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal ssb : 0,<br>\
+                 qcl-Type typeC<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 7,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal ssb : 1,<br>\
+                 qcl-Type typeC<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 8,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal ssb : 2,<br>\
+                 qcl-Type typeC<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 9,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal ssb : 3,<br>\
+                 qcl-Type typeC<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 10,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal ssb : 4,<br>\
+                 qcl-Type typeC<br>\
+                }<br>\
+               },<br>\
+               {<br>\
+                tci-StateId 11,<br>\
+                qcl-Type1 {<br>\
+                 bwp-Id 1,<br>\
+                 referenceSignal ssb : 5,<br>\
+                 qcl-Type typeC<br>\
+                }<br>\
+               }<br>\
+              },<br>\
+              resourceAllocation resourceAllocationType0,<br>\
+              pdsch-TimeDomainAllocationList setup : {<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 40<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 54<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 53<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 67<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 66<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 80<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 96<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 100<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 87<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 99<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 86<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 73<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 95<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 94<br>\
+                },<br>\
+                {<br>\
+                 mappingType typeA,<br>\
+                 startSymbolAndLength 101<br>\
+                }<br>\
+               },<br>\
+              rbg-Size config1,<br>\
+              maxNrofCodeWordsScheduledByDCI n1,<br>\
+              prb-BundlingType staticBundling : {<br>\
+                bundleSize wideband<br>\
+               }<br>\
+             },<br>\
+            radioLinkMonitoringConfig setup : {<br>\
+              beamFailureInstanceMaxCount n3,<br>\
+              beamFailureDetectionTimer pbfd2<br>\
+             }<br>\
+           }<br>\
+          }<br>\
+         },<br>\
+         firstActiveDownlinkBWP-Id 1,<br>\
+         uplinkConfig {<br>\
+          uplinkBWP-ToAddModList {<br>\
+           {<br>\
+            bwp-Id 1,<br>\
+            bwp-Common {<br>\
+             genericParameters {<br>\
+              locationAndBandwidth 1099,<br>\
+              subcarrierSpacing kHz30<br>\
+             },<br>\
+             rach-ConfigCommon setup : {<br>\
+               rach-ConfigGeneric {<br>\
+                prach-ConfigurationIndex 98,<br>\
+                msg1-FDM one,<br>\
+                msg1-FrequencyStart 110,<br>\
+                zeroCorrelationZoneConfig 13,<br>\
+                preambleReceivedTargetPower -90,<br>\
+                preambleTransMax n10,<br>\
+                powerRampingStep dB2,<br>\
+                ra-ResponseWindow sl80<br>\
+               },<br>\
+               ssb-perRACH-OccasionAndCB-PreamblesPerSSB one : n64,<br>\
+               ra-ContentionResolutionTimer sf64,<br>\
+               rsrp-ThresholdSSB 11,<br>\
+               prach-RootSequenceIndex l139 : 0,<br>\
+               msg1-SubcarrierSpacing kHz30,<br>\
+               restrictedSetConfig unrestrictedSet<br>\
+              },<br>\
+             pusch-ConfigCommon setup : {<br>\
+               pusch-TimeDomainAllocationList {<br>\
+                {<br>\
+                 k2 2,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 2,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 69<br>\
+                },<br>\
+                {<br>\
+                 k2 3,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 4,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 5,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 6,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 9,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 10,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                },<br>\
+                {<br>\
+                 k2 11,<br>\
+                 mappingType typeB,<br>\
+                 startSymbolAndLength 55<br>\
+                }<br>\
+               },<br>\
+               msg3-DeltaPreamble 1,<br>\
+               p0-NominalWithGrant -90<br>\
+              },<br>\
+             pucch-ConfigCommon setup : {<br>\
+               pucch-GroupHopping neither,<br>\
+               hoppingId 245,<br>\
+               p0-nominal -90<br>\
+              }<br>\
+            },<br>\
+            bwp-Dedicated {<br>\
+             pucch-Config setup : {<br>\
+               resourceSetToAddModList {<br>\
+                {<br>\
+                 pucch-ResourceSetId 0,<br>\
+                 resourceList {<br>\
+                  0,<br>\
+                  1,<br>\
+                  2,<br>\
+                  3,<br>\
+                  4,<br>\
+                  5,<br>\
+                  6,<br>\
+                  7<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceSetId 1,<br>\
+                 resourceList {<br>\
+                  23,<br>\
+                  24,<br>\
+                  25,<br>\
+                  26,<br>\
+                  27,<br>\
+                  28,<br>\
+                  29,<br>\
+                  30<br>\
+                 }<br>\
+                }<br>\
+               },<br>\
+               resourceToAddModList {<br>\
+                {<br>\
+                 pucch-ResourceId 0,<br>\
+                 startingPRB 0,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 1,<br>\
+                 startingPRB 16,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 2,<br>\
+                 startingPRB 32,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 3,<br>\
+                 startingPRB 48,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 4,<br>\
+                 startingPRB 0,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 5,<br>\
+                 startingPRB 16,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 6,<br>\
+                 startingPRB 32,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 7,<br>\
+                 startingPRB 48,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 8,<br>\
+                 startingPRB 244,<br>\
+                 format format0 : {<br>\
+                   initialCyclicShift 0,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 21,<br>\
+                 startingPRB 245,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 8,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 22,<br>\
+                 startingPRB 245,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 23,<br>\
+                 startingPRB 0,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 24,<br>\
+                 startingPRB 16,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 25,<br>\
+                 startingPRB 32,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 26,<br>\
+                 startingPRB 48,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 12<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 27,<br>\
+                 startingPRB 0,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 28,<br>\
+                 startingPRB 16,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 29,<br>\
+                 startingPRB 32,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                },<br>\
+                {<br>\
+                 pucch-ResourceId 30,<br>\
+                 startingPRB 48,<br>\
+                 format format2 : {<br>\
+                   nrofPRBs 16,<br>\
+                   nrofSymbols 1,<br>\
+                   startingSymbolIndex 13<br>\
+                  }<br>\
+                }<br>\
+               },<br>\
+               format2 setup : {<br>\
+                 maxCodeRate zeroDot15<br>\
+                },<br>\
+               schedulingRequestResourceToAddModList {<br>\
+                {<br>\
+                 schedulingRequestResourceId 1,<br>\
+                 schedulingRequestID 0,<br>\
+                 periodicityAndOffset sl80 : 77,<br>\
+                 resource 8<br>\
+                }<br>\
+               },<br>\
+               dl-DataToUL-ACK {<br>\
+                3,<br>\
+                4,<br>\
+                5,<br>\
+                6,<br>\
+                7,<br>\
+                0,<br>\
+                0,<br>\
+                0<br>\
+               },<br>\
+               pucch-PowerControl {<br>\
+                deltaF-PUCCH-f0 0,<br>\
+                deltaF-PUCCH-f2 0,<br>\
+                p0-Set {<br>\
+                 {<br>\
+                  p0-PUCCH-Id 1,<br>\
+                  p0-PUCCH-Value 0<br>\
+                 }<br>\
+                }<br>\
+               }<br>\
+              },<br>\
+             pusch-Config setup : {<br>\
+               txConfig codebook,<br>\
+               dmrs-UplinkForPUSCH-MappingTypeB setup : {<br>\
+                 dmrs-AdditionalPosition pos1,<br>\
+                 transformPrecodingDisabled {<br>\
+                 }<br>\
+                },<br>\
+               pusch-PowerControl {<br>\
+                p0-AlphaSets {<br>\
+                 {<br>\
+                  p0-PUSCH-AlphaSetId 0,<br>\
+                  p0 0,<br>\
+                  alpha alpha1<br>\
+                 }<br>\
+                }<br>\
+               },<br>\
+               resourceAllocation resourceAllocationType1,<br>\
+               pusch-TimeDomainAllocationList setup : {<br>\
+                 {<br>\
+                  k2 2,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 2,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 69<br>\
+                 },<br>\
+                 {<br>\
+                  k2 3,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 4,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 5,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 6,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 9,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 10,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 },<br>\
+                 {<br>\
+                  k2 11,<br>\
+                  mappingType typeB,<br>\
+                  startSymbolAndLength 55<br>\
+                 }<br>\
+                },<br>\
+               transformPrecoder disabled,<br>\
+               codebookSubset nonCoherent,<br>\
+               maxRank 1<br>\
+              },<br>\
+             srs-Config setup : {<br>\
+               srs-ResourceSetToAddModList {<br>\
+                {<br>\
+                 srs-ResourceSetId 0,<br>\
+                 srs-ResourceIdList {<br>\
+                  0<br>\
+                 },<br>\
+                 resourceType aperiodic : {<br>\
+                   aperiodicSRS-ResourceTrigger 1,<br>\
+                   slotOffset 2<br>\
+                  },<br>\
+                 usage codebook,<br>\
+                 alpha alpha1,<br>\
+                 p0 -90<br>\
+                }<br>\
+               },<br>\
+               srs-ResourceToAddModList {<br>\
+                {<br>\
+                 srs-ResourceId 0,<br>\
+                 nrofSRS-Ports port1,<br>\
+                 transmissionComb n2 : {<br>\
+                   combOffset-n2 0,<br>\
+                   cyclicShift-n2 0<br>\
+                  },<br>\
+                 resourceMapping {<br>\
+                  startPosition 2,<br>\
+                  nrofSymbols n1,<br>\
+                  repetitionFactor n1<br>\
+                 },<br>\
+                 freqDomainPosition 0,<br>\
+                 freqDomainShift 0,<br>\
+                 freqHopping {<br>\
+                  c-SRS 61,<br>\
+                  b-SRS 0,<br>\
+                  b-hop 0<br>\
+                 },<br>\
+                 groupOrSequenceHopping neither,<br>\
+                 resourceType aperiodic : {<br>\
+                  },<br>\
+                 sequenceId 245<br>\
+                }<br>\
+               }<br>\
+              }<br>\
+            }<br>\
+           }<br>\
+          },<br>\
+          firstActiveUplinkBWP-Id 1<br>\
+         },<br>\
+         pdsch-ServingCellConfig setup : {<br>\
+           nrofHARQ-ProcessesForPDSCH n16,<br>\
+           maxMIMO-Layers 1<br>\
+          },<br>\
+         csi-MeasConfig setup : {<br>\
+           nzp-CSI-RS-ResourceToAddModList {<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 0,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row4 : \'001\'B,<br>\
+              nrofPorts p4,<br>\
+              firstOFDMSymbolInTimeDomain 7,<br>\
+              cdm-Type fd-CDM2,<br>\
+              density one : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots80 : 0<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 2,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 4,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 6<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 3,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 8,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 6<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 4,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 4,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 6<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 5,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 8,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 6<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 6,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 4,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 7<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 7,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 8,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 7<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 8,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 4,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 7<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 9,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 8,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 7<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 10,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0010\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 5,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 8<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 11,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0010\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 9,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 8<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 12,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0010\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 5,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 8<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 13,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0010\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 9,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 8<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 14,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'1000\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 5,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 9<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 15,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'1000\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 9,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 9<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 16,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'1000\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 5,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 9<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 17,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'1000\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 9,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 9<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 18,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 6,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 10<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 19,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 10,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 10<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 20,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 6,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 10<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 21,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0001\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 10,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 245,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 10<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 22,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 6,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 11<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 23,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 10,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 21,<br>\
+             qcl-InfoPeriodicCSI-RS 11<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 24,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 6,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 11<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-RS-ResourceId 25,<br>\
+             resourceMapping {<br>\
+              frequencyDomainAllocation row1 : \'0100\'B,<br>\
+              nrofPorts p1,<br>\
+              firstOFDMSymbolInTimeDomain 10,<br>\
+              cdm-Type noCDM,<br>\
+              density three : NULL,<br>\
+              freqBand {<br>\
+               startingRB 0,<br>\
+               nrofRBs 276<br>\
+              }<br>\
+             },<br>\
+             powerControlOffset -2,<br>\
+             powerControlOffsetSS db-3,<br>\
+             scramblingID 578,<br>\
+             periodicityAndOffset slots160 : 22,<br>\
+             qcl-InfoPeriodicCSI-RS 11<br>\
+            }<br>\
+           },<br>\
+           nzp-CSI-RS-ResourceSetToAddModList {<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 0,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              0<br>\
+             }<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 3,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              2,<br>\
+              3,<br>\
+              4,<br>\
+              5<br>\
+             },<br>\
+             repetition off,<br>\
+             trs-Info true<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 4,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              6,<br>\
+              7,<br>\
+              8,<br>\
+              9<br>\
+             },<br>\
+             repetition off,<br>\
+             trs-Info true<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 5,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              10,<br>\
+              11,<br>\
+              12,<br>\
+              13<br>\
+             },<br>\
+             repetition off,<br>\
+             trs-Info true<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 6,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              14,<br>\
+              15,<br>\
+              16,<br>\
+              17<br>\
+             },<br>\
+             repetition off,<br>\
+             trs-Info true<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 7,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              18,<br>\
+              19,<br>\
+              20,<br>\
+              21<br>\
+             },<br>\
+             repetition off,<br>\
+             trs-Info true<br>\
+            },<br>\
+            {<br>\
+             nzp-CSI-ResourceSetId 8,<br>\
+             nzp-CSI-RS-Resources {<br>\
+              22,<br>\
+              23,<br>\
+              24,<br>\
+              25<br>\
+             },<br>\
+             repetition off,<br>\
+             trs-Info true<br>\
+            }<br>\
+           },<br>\
+           csi-IM-ResourceToAddModList {<br>\
+            {<br>\
+             csi-IM-ResourceId 0,<br>\
+             csi-IM-ResourceElementPattern pattern1 : {<br>\
+               subcarrierLocation-p1 s4,<br>\
+               symbolLocation-p1 7<br>\
+              },<br>\
+             freqBand {<br>\
+              startingRB 0,<br>\
+              nrofRBs 276<br>\
+             },<br>\
+             periodicityAndOffset slots80 : 0<br>\
+            }<br>\
+           },<br>\
+           csi-IM-ResourceSetToAddModList {<br>\
+            {<br>\
+             csi-IM-ResourceSetId 0,<br>\
+             csi-IM-Resources {<br>\
+              0<br>\
+             }<br>\
+            }<br>\
+           },<br>\
+           csi-SSB-ResourceSetToAddModList {<br>\
+            {<br>\
+             csi-SSB-ResourceSetId 0,<br>\
+             csi-SSB-ResourceList {<br>\
+              0,<br>\
+              1,<br>\
+              2,<br>\
+              3,<br>\
+              4,<br>\
+              5<br>\
+             }<br>\
+            }<br>\
+           },<br>\
+           csi-ResourceConfigToAddModList {<br>\
+            {<br>\
+             csi-ResourceConfigId 0,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                0<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 11,<br>\
+             csi-RS-ResourceSetList csi-IM-ResourceSetList : {<br>\
+               0<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 10,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               csi-SSB-ResourceSetList {<br>\
+                0<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 2,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                3<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 3,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                4<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 4,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                5<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 5,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                6<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 6,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                7<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            },<br>\
+            {<br>\
+             csi-ResourceConfigId 7,<br>\
+             csi-RS-ResourceSetList nzp-CSI-RS-SSB : {<br>\
+               nzp-CSI-RS-ResourceSetList {<br>\
+                8<br>\
+               }<br>\
+              },<br>\
+             bwp-Id 1,<br>\
+             resourceType periodic<br>\
+            }<br>\
+           },<br>\
+           csi-ReportConfigToAddModList {<br>\
+            {<br>\
+             reportConfigId 0,<br>\
+             resourcesForChannelMeasurement 0,<br>\
+             csi-IM-ResourcesForInterference 11,<br>\
+             reportConfigType periodic : {<br>\
+               reportSlotConfig slots80 : 77,<br>\
+               pucch-CSI-ResourceList {<br>\
+                {<br>\
+                 uplinkBandwidthPartId 1,<br>\
+                 pucch-Resource 21<br>\
+                }<br>\
+               }<br>\
+              },<br>\
+             reportQuantity cri-RI-PMI-CQI : NULL,<br>\
+             reportFreqConfiguration {<br>\
+              cqi-FormatIndicator widebandCQI,<br>\
+              pmi-FormatIndicator widebandPMI,<br>\
+              csi-ReportingBand subbands18 : \'11111111 11111111 11\'B<br>\
+             },<br>\
+             timeRestrictionForChannelMeasurements configured,<br>\
+             timeRestrictionForInterferenceMeasurements configured,<br>\
+             codebookConfig {<br>\
+              codebookType type1 : {<br>\
+                subType typeI-SinglePanel : {<br>\
+                  nrOfAntennaPorts moreThanTwo : {<br>\
+                    n1-n2 two-one-TypeI-SinglePanel-Restriction : \'11111111\'B<br>\
+                   },<br>\
+                  typeI-SinglePanel-ri-Restriction \'00000001\'B<br>\
+                 },<br>\
+                codebookMode 1<br>\
+               }<br>\
+             },<br>\
+             groupBasedBeamReporting disabled : {<br>\
+              },<br>\
+             cqi-Table table1,<br>\
+             subbandSize value1<br>\
+            },<br>\
+            {<br>\
+             reportConfigId 2,<br>\
+             resourcesForChannelMeasurement 10,<br>\
+             reportConfigType periodic : {<br>\
+               reportSlotConfig slots80 : 4,<br>\
+               pucch-CSI-ResourceList {<br>\
+                {<br>\
+                 uplinkBandwidthPartId 1,<br>\
+                 pucch-Resource 22<br>\
+                }<br>\
+               }<br>\
+              },<br>\
+             reportQuantity ssb-Index-RSRP : NULL,<br>\
+             timeRestrictionForChannelMeasurements notConfigured,<br>\
+             timeRestrictionForInterferenceMeasurements notConfigured,<br>\
+             groupBasedBeamReporting disabled : {<br>\
+               nrofReportedRS n1<br>\
+              },<br>\
+             cqi-Table table1,<br>\
+             subbandSize value1<br>\
+            }<br>\
+           }<br>\
+          },<br>\
+         tag-Id 0<br>\
+        }<br>\
+       }<br>\
+      }<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_2() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=490');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCSetupComplete</h2> <br>\
+UL-DCCH-Message : {<br>\
+ message c1 : rrcSetupComplete : {<br>\
+    rrc-TransactionIdentifier 0,<br>\
+    criticalExtensions rrcSetupComplete : {<br>\
+      selectedPLMN-Identity 1,<br>\
+      dedicatedNAS-Message \'7E 01 6A 7B E2 BB CB 7E 00 4C 14 00 07 F4 00 41 C0 60 00 1C 71 00 15 75 BF 99 AA 4F 3A 1E 9A B2 38 84 38 65 10 8D 6C EB 9F 23 8B 63\'H,<br>\
+      ng-5G-S-TMSI-Value ng-5G-S-TMSI-Part2 : \'00000000 0\'B<br>\
+     }<br>\
+   }<br>\
+}<br>\
+<br>\
+Decoded NAS message: Unknown NAS<br>\
+5GS mobility management<br>\
+01111110	126	EPD	<br>\
+0000----	0	Spare <br>\
+----0001	1	SECURITY HEADER TYPE --\> Security protected 5GS NAS message: Integrity protected<br>\
+01101010	106	MESSAGE AUTHENTICATION CODE<br>\
+01111011	123	MESSAGE AUTHENTICATION CODE<br>\
+11100010	226	MESSAGE AUTHENTICATION CODE<br>\
+10111011	187	MESSAGE AUTHENTICATION CODE<br>\
+11001011	203	SEQUENCE NUMBER<br>\
+Ciphered NAS 5GS Message<br>\
+[7E][00][4C][14][00][07][F4][00][41][C0][60][00][1C][71][00][15][75][BF]<br>\
+[99][AA][4F][3A][1E][9A][B2][38][84][38][65][10][8D][6C][EB][9F][23][8B]<br>\
+[63]');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_3() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=810');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> InitialUEMessage</h2> <br>\
+NGAP-PDU : initiatingMessage : {<br>\
+  procedureCode 15,<br>\
+  criticality ignore,<br>\
+  value InitialUEMessage : {<br>\
+    protocolIEs {<br>\
+     {<br>\
+      id 85,<br>\
+      criticality reject,<br>\
+      value RAN-UE-NGAP-ID : 4507<br>\
+     },<br>\
+     {<br>\
+      id 38,<br>\
+      criticality reject,<br>\
+      value NAS-PDU : \'7E 01 6A 7B E2 BB CB 7E 00 4C 14 00 07 F4 00 41 C0 60 00 1C 71 00 15 75 BF 99 AA 4F 3A 1E 9A B2 38 84 38 65 10 8D 6C EB 9F 23 8B 63\'H<br>\
+     },<br>\
+     {<br>\
+      id 121,<br>\
+      criticality reject,<br>\
+      value UserLocationInformation : userLocationInformationNR : {<br>\
+         nR-CGI {<br>\
+          pLMNIdentity \'64 F0 01\'H,<br>\
+          nRCellIdentity \'00000000 00000011 11010100 00000000 0001\'B (4014081)<br>\
+         },<br>\
+         tAI {<br>\
+          pLMNIdentity \'64 F0 01\'H,<br>\
+          tAC \'00 00 01\'H<br>\
+         }<br>\
+        }<br>\
+     },<br>\
+     {<br>\
+      id 90,<br>\
+      criticality ignore,<br>\
+      value RRCEstablishmentCause : mo-Data<br>\
+     },<br>\
+     {<br>\
+      id 26,<br>\
+      criticality reject,<br>\
+      value FiveG-S-TMSI : {<br>\
+        aMFSetID \'00000000 01\'B,<br>\
+        aMFPointer \'000001\'B,<br>\
+        fiveG-TMSI \'C0 60 00 1C\'H<br>\
+       }<br>\
+     }<br>\
+    }<br>\
+   }<br>\
+ }<br>\
+<br>\
+Decoded NAS message: Unknown NAS<br>\
+5GS mobility management<br>\
+01111110	126	EPD	<br>\
+0000----	0	Spare <br>\
+----0001	1	SECURITY HEADER TYPE --\> Security protected 5GS NAS message: Integrity protected<br>\
+01101010	106	MESSAGE AUTHENTICATION CODE<br>\
+01111011	123	MESSAGE AUTHENTICATION CODE<br>\
+11100010	226	MESSAGE AUTHENTICATION CODE<br>\
+10111011	187	MESSAGE AUTHENTICATION CODE<br>\
+11001011	203	SEQUENCE NUMBER<br>\
+Ciphered NAS 5GS Message<br>\
+[7E][00][4C][14][00][07][F4][00][41][C0][60][00][1C][71][00][15][75][BF]<br>\
+[99][AA][4F][3A][1E][9A][B2][38][84][38][65][10][8D][6C][EB][9F][23][8B]<br>\
+[63]');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_4() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=810');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> InitialContextSetupRequest</h2> <br>\
+NGAP-PDU : initiatingMessage : {<br>\
+  procedureCode 14,<br>\
+  criticality reject,<br>\
+  value InitialContextSetupRequest : {<br>\
+    protocolIEs {<br>\
+     {<br>\
+      id 10,<br>\
+      criticality reject,<br>\
+      value AMF-UE-NGAP-ID : 4295003118<br>\
+     },<br>\
+     {<br>\
+      id 85,<br>\
+      criticality reject,<br>\
+      value RAN-UE-NGAP-ID : 4507<br>\
+     },<br>\
+     {<br>\
+      id 110,<br>\
+      criticality reject,<br>\
+      value UEAggregateMaximumBitRate : {<br>\
+        uEAggregateMaximumBitRateDL 10000000000,<br>\
+        uEAggregateMaximumBitRateUL 10000000000<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 28,<br>\
+      criticality reject,<br>\
+      value GUAMI : {<br>\
+        pLMNIdentity \'64 F0 01\'H,<br>\
+        aMFRegionID \'00000001\'B,<br>\
+        aMFSetID \'00000000 01\'B,<br>\
+        aMFPointer \'000001\'B<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 71,<br>\
+      criticality reject,<br>\
+      value PDUSessionResourceSetupListCxtReq : {<br>\
+        {<br>\
+         pDUSessionID 5,<br>\
+         s-NSSAI {<br>\
+          sST \'01\'H,<br>\
+          sD \'D1 43 A5\'H<br>\
+         },<br>\
+         pDUSessionResourceSetupRequestTransfer {<br>\
+          protocolIEs {<br>\
+           {<br>\
+            id 130,<br>\
+            criticality reject,<br>\
+            value PDUSessionAggregateMaximumBitRate : {<br>\
+              pDUSessionAggregateMaximumBitRateDL 5000000000,<br>\
+              pDUSessionAggregateMaximumBitRateUL 5000000000<br>\
+             }<br>\
+           },<br>\
+           {<br>\
+            id 139,<br>\
+            criticality reject,<br>\
+            value UPTransportLayerInformation : gTPTunnel : {<br>\
+               transportLayerAddress \'00001010 01000100 11110010 00110000\'B (10.68.242.48),<br>\
+               gTP-TEID \'40 53 01 35\'H<br>\
+              }<br>\
+           },<br>\
+           {<br>\
+            id 134,<br>\
+            criticality reject,<br>\
+            value PDUSessionType : ipv4<br>\
+           },<br>\
+           {<br>\
+            id 136,<br>\
+            criticality reject,<br>\
+            value QosFlowSetupRequestList : {<br>\
+              {<br>\
+               qosFlowIdentifier 5,<br>\
+               qosFlowLevelQosParameters {<br>\
+                qosCharacteristics nonDynamic5QI : {<br>\
+                  fiveQI 9<br>\
+                 },<br>\
+                allocationAndRetentionPriority {<br>\
+                 priorityLevelARP 9,<br>\
+                 pre-emptionCapability may-trigger-pre-emption,<br>\
+                 pre-emptionVulnerability not-pre-emptable<br>\
+                }<br>\
+               }<br>\
+              }<br>\
+             }<br>\
+           }<br>\
+          }<br>\
+         }<br>\
+        }<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 0,<br>\
+      criticality reject,<br>\
+      value AllowedNSSAI : {<br>\
+        {<br>\
+         s-NSSAI {<br>\
+          sST \'01\'H,<br>\
+          sD \'D1 43 A5\'H<br>\
+         }<br>\
+        }<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 119,<br>\
+      criticality reject,<br>\
+      value UESecurityCapabilities : {<br>\
+        nRencryptionAlgorithms \'11100000 00000000\'B,<br>\
+        nRintegrityProtectionAlgorithms \'11100000 00000000\'B,<br>\
+        eUTRAencryptionAlgorithms \'00000000 00000000\'B,<br>\
+        eUTRAintegrityProtectionAlgorithms \'00000000 00000000\'B<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 94,<br>\
+      criticality reject,<br>\
+      value SecurityKey : \'01001101 10101101 01110010 01011110 01100110 10110101 00101001 11000111 10010100 00111011 01111101 00100100 10001110 10110000 01101000 01111110 01001001 01011110 00001101 00100011 01011000 10100101 11111111 01110111 00110001 01010001 00001110 00100010 01000010 01100000 10000001 00110111\'B<br>\
+     },<br>\
+     {<br>\
+      id 36,<br>\
+      criticality ignore,<br>\
+      value MobilityRestrictionList : {<br>\
+        servingPLMN \'64 F0 01\'H<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 117,<br>\
+      criticality ignore,<br>\
+      value UERadioCapability : \'04 0A 80 88 14 DE 1A 00 00 00 74 E5 A0 31 E0 00 38 0A 03 C1 26 0C 80 00 87 80 81 88 06 80 4C 02 03 01 C0 62 A2 60 06 B0 40 40 D0 12 CB 28 02 1E B6 08 08 08 38 77 8E 1C 83 0E 00 08 19 3C 7D 30 00 00 30 00 00 2A 26 01 6B 04 04 0D 01 2C B2 80 21 EB 60 80 80 83 87 78 E1 C8 30 E0 00 81 93 C7 D7 F0 00 00 01 FC 00 00 00 2A 26 0D EB 04 04 0D 01 2C B2 80 21 EB 60 80 80 83 87 78 E1 C8 30 E0 00 81 93 C7 D2 00 08 00 2A 36 14 6B 04 05 0D 01 2C B2 89 80 87 AD 82 02 02 0E 1D E3 87 20 C3 80 02 06 4F 1F 57 00 04 F0 01 C0 01 3C 00 2A 36 26 6B 04 05 0D 01 2C B2 89 80 87 AD 82 02 02 0E 1D E3 87 20 C3 80 02 06 4F 1F 57 00 04 F0 01 C0 01 3C 00 2A 36 26 EB 04 05 0D 01 2C B2 89 80 87 AD 82 02 02 0E 1D E3 87 20 C3 80 02 06 4F 1F 57 00 04 F0 01 C0 01 3C 00 2A 36 27 6B 04 05 0D 01 2C B2 89 80 87 AD 82 02 02 0E 1D E3 87 20 C3 80 02 06 4F 1F 55 00 00 05 00 00 00 10 83 89 A0 00 00 00 04 04 D0 10 38 04 04 4E 7C 04 06 03 00 38 0C 00 0D 07 C0 00 00 00 00 00 01 CA 9A 00 02 00 00 12 CB 2A 00 69 55 50 10 38 00 58 00 00 00 20 04 00 84 00\'H<br>\
+                 UERadioAccessCapabilityInformation : {<br>\
+                  criticalExtensions c1 : ueRadioAccessCapabilityInformation : {<br>\
+                     ue-RadioAccessCapabilityInfo {<br>\
+                      {<br>\
+                       rat-Type nr,<br>\
+                       ue-CapabilityRAT-Container \'E1 A0 00 00 07 4E 5A 03 1E 00 03 80 A0 3C 12 60 C8 00 08 78 08 18 80 68 04 C0 20 30 1C 06 2A 26 00 6B 04 04 0D 01 2C B2 80 21 EB 60 80 80 83 87 78 E1 C8 30 E0 00 81 93 C7 D3 00 00 03 00 00 02 A2 60 16 B0 40 40 D0 12 CB 28 02 1E B6 08 08 08 38 77 8E 1C 83 0E 00 08 19 3C 7D 7F 00 00 00 1F C0 00 00 02 A2 60 DE B0 40 40 D0 12 CB 28 02 1E B6 08 08 08 38 77 8E 1C 83 0E 00 08 19 3C 7D 20 00 80 02 A3 61 46 B0 40 50 D0 12 CB 28 98 08 7A D8 20 20 20 E1 DE 38 72 0C 38 00 20 64 F1 F5 70 00 4F 00 1C 00 13 C0 02 A3 62 66 B0 40 50 D0 12 CB 28 98 08 7A D8 20 20 20 E1 DE 38 72 0C 38 00 20 64 F1 F5 70 00 4F 00 1C 00 13 C0 02 A3 62 6E B0 40 50 D0 12 CB 28 98 08 7A D8 20 20 20 E1 DE 38 72 0C 38 00 20 64 F1 F5 70 00 4F 00 1C 00 13 C0 02 A3 62 76 B0 40 50 D0 12 CB 28 98 08 7A D8 20 20 20 E1 DE 38 72 0C 38 00 20 64 F1 F5 50 00 00 50 00 00 01 08 38 9A 00 00 00 00 40 4D 01 03 80 40 44 E7 C0 40 60 30 03 80 C0 00 D0 7C 00 00 00 00 00 00 1C A9 A0 00 20 00 01 2C B2 A0 06 95 55 01 03 80 05 80 00 00 02 00 40 08 40\'H<br>\
+                            UE-NR-Capability : {<br>\
+                             accessStratumRelease rel15,<br>\
+                             pdcp-Parameters {<br>\
+                              supportedROHC-Profiles {<br>\
+                               profile0x0000 FALSE,<br>\
+                               profile0x0001 FALSE,<br>\
+                               profile0x0002 FALSE,<br>\
+                               profile0x0003 FALSE,<br>\
+                               profile0x0004 FALSE,<br>\
+                               profile0x0006 FALSE,<br>\
+                               profile0x0101 FALSE,<br>\
+                               profile0x0102 FALSE,<br>\
+                               profile0x0103 FALSE,<br>\
+                               profile0x0104 FALSE<br>\
+                              },<br>\
+                              maxNumberROHC-ContextSessions cs2<br>\
+                             },<br>\
+                             rlc-Parameters {<br>\
+                              am-WithShortSN supported,<br>\
+                              um-WithShortSN supported,<br>\
+                              um-WithLongSN supported<br>\
+                             },<br>\
+                             mac-Parameters {<br>\
+                              mac-ParametersXDD-Diff {<br>\
+                               logicalChannelSR-DelayTimer supported,<br>\
+                               longDRX-Cycle supported,<br>\
+                               shortDRX-Cycle supported<br>\
+                              }<br>\
+                             },<br>\
+                             phy-Parameters {<br>\
+                              phy-ParametersCommon {<br>\
+                               dynamicHARQ-ACK-Codebook supported,<br>\
+                               semiStaticHARQ-ACK-Codebook supported,<br>\
+                               ra-Type0-PUSCH supported,<br>\
+                               dynamicSwitchRA-Type0-1-PDSCH supported,<br>\
+                               dynamicSwitchRA-Type0-1-PUSCH supported,<br>\
+                               pdsch-MappingTypeA supported,<br>\
+                               rateMatchingResrcSetSemi-Static supported,<br>\
+                               rateMatchingResrcSetDynamic supported,<br>\
+                               bwp-SwitchingDelay type1,<br>\
+                               maxNumberSearchSpaces n10,<br>\
+                               rateMatchingCtrlResrcSetDynamic supported,<br>\
+                               maxLayersMIMO-Indication supported<br>\
+                              },<br>\
+                              phy-ParametersFRX-Diff {<br>\
+                               twoFL-DMRS \'11\'B,<br>\
+                               supportedDMRS-TypeDL type1And2,<br>\
+                               supportedDMRS-TypeUL type1And2,<br>\
+                               pucch-F2-WithFH supported,<br>\
+                               pucch-F3-WithFH supported,<br>\
+                               pucch-F1-3-4WithoutFH notSupported,<br>\
+                               almostContiguousCP-OFDM-UL supported,<br>\
+                               mux-SR-HARQ-ACK-CSI-PUCCH-OncePerSlot {<br>\
+                                sameSymbol supported<br>\
+                               },<br>\
+                               oneFL-DMRS-TwoAdditionalDMRS-UL supported,<br>\
+                               twoFL-DMRS-TwoAdditionalDMRS-UL supported<br>\
+                              },<br>\
+                              phy-ParametersFR1 {<br>\
+                               pdsch-256QAM-FR1 supported,<br>\
+                               pdsch-RE-MappingFR1-PerSymbol n10,<br>\
+                               pdsch-RE-MappingFR1-PerSlot n16<br>\
+                              }<br>\
+                             },<br>\
+                             rf-Parameters {<br>\
+                              supportedBandListNR {<br>\
+                               {<br>\
+                                bandNR 1,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-30kHz \'00000000 00\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-30kHz \'00000000 00\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               },<br>\
+                               {<br>\
+                                bandNR 3,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-15kHz \'11110000 00\'B,<br>\
+                                  scs-30kHz \'00000000 00\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-15kHz \'11110000 00\'B,<br>\
+                                  scs-30kHz \'00000000 00\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               },<br>\
+                               {<br>\
+                                bandNR 28,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-30kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-30kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               },<br>\
+                               {<br>\
+                                bandNR 41,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamReportTiming {<br>\
+                                  scs-30kHz sym28<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                ue-PowerClass pc2,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-30kHz \'00010011 11\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-30kHz \'00010011 11\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               },<br>\
+                               {<br>\
+                                bandNR 77,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamReportTiming {<br>\
+                                  scs-30kHz sym28<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                ue-PowerClass pc2,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-30kHz \'00010011 11\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-30kHz \'00010011 11\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               },<br>\
+                               {<br>\
+                                bandNR 78,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamReportTiming {<br>\
+                                  scs-30kHz sym28<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                ue-PowerClass pc2,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-30kHz \'00010011 11\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-30kHz \'00010011 11\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               },<br>\
+                               {<br>\
+                                bandNR 79,<br>\
+                                mimo-ParametersPerBand {<br>\
+                                 tci-StatePDSCH {<br>\
+                                  maxNumberConfiguredTCIstatesPerCC n16,<br>\
+                                  maxNumberActiveTCI-PerBWP n1<br>\
+                                 },<br>\
+                                 pusch-TransCoherence nonCoherent,<br>\
+                                 periodicBeamReport supported,<br>\
+                                 aperiodicBeamReport supported,<br>\
+                                 maxNumberNonGroupBeamReporting n1,<br>\
+                                 dummy5 {<br>\
+                                  maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                  maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                  maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                  maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                  maxNumberSRS-Ports-PerResource n1<br>\
+                                 },<br>\
+                                 beamReportTiming {<br>\
+                                  scs-30kHz sym28<br>\
+                                 },<br>\
+                                 beamManagementSSB-CSI-RS {<br>\
+                                  maxNumberSSB-CSI-RS-ResourceOneTx n8,<br>\
+                                  maxNumberCSI-RS-Resource n0,<br>\
+                                  maxNumberCSI-RS-ResourceTwoTx n0,<br>\
+                                  maxNumberAperiodicCSI-RS-Resource n4<br>\
+                                 },<br>\
+                                 codebookParameters {<br>\
+                                  type1 {<br>\
+                                   singlePanel {<br>\
+                                    supportedCSI-RS-ResourceList {<br>\
+                                     {<br>\
+                                      maxNumberTxPortsPerResource p16,<br>\
+                                      maxNumberResourcesPerBand 8,<br>\
+                                      totalNumberTxPortsPerBand 16<br>\
+                                     }<br>\
+                                    },<br>\
+                                    modes mode1andMode2,<br>\
+                                    maxNumberCSI-RS-PerResourceSet 8<br>\
+                                   }<br>\
+                                  }<br>\
+                                 },<br>\
+                                 csi-RS-IM-ReceptionForFeedback {<br>\
+                                  maxConfigNumberNZP-CSI-RS-PerCC 8,<br>\
+                                  maxConfigNumberPortsAcrossNZP-CSI-RS-PerCC 16,<br>\
+                                  maxConfigNumberCSI-IM-PerCC n4,<br>\
+                                  maxNumberSimultaneousNZP-CSI-RS-PerCC 4,<br>\
+                                  totalNumberPortsSimultaneousNZP-CSI-RS-PerCC 16<br>\
+                                 },<br>\
+                                 csi-ReportFramework {<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForCSI-Report 1,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForCSI-Report 0,<br>\
+                                  maxNumberPeriodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-PerBWP-ForBeamReport 1,<br>\
+                                  maxNumberAperiodicCSI-triggeringStatePerCC n15,<br>\
+                                  maxNumberSemiPersistentCSI-PerBWP-ForBeamReport 0,<br>\
+                                  simultaneousCSI-ReportsPerCC 2<br>\
+                                 },<br>\
+                                 csi-RS-ForTracking {<br>\
+                                  maxBurstLength 2,<br>\
+                                  maxSimultaneousResourceSetsPerCC 2,<br>\
+                                  maxConfiguredResourceSetsPerCC 16,<br>\
+                                  maxConfiguredResourceSetsAllCC 32<br>\
+                                 }<br>\
+                                },<br>\
+                                multipleTCI supported,<br>\
+                                bwp-SameNumerology upto4,<br>\
+                                pusch-256QAM supported,<br>\
+                                ue-PowerClass pc2,<br>\
+                                channelBWs-DL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 },<br>\
+                                channelBWs-UL fr1 : {<br>\
+                                  scs-15kHz \'00000000 00\'B,<br>\
+                                  scs-60kHz \'00000000 00\'B<br>\
+                                 }<br>\
+                               }<br>\
+                              },<br>\
+                              supportedBandCombinationList {<br>\
+                               {<br>\
+                                bandList {<br>\
+                                 nr : {<br>\
+                                   bandNR 78,<br>\
+                                   ca-BandwidthClassDL-NR a,<br>\
+                                   ca-BandwidthClassUL-NR a<br>\
+                                  }<br>\
+                                },<br>\
+                                featureSetCombination 0,<br>\
+                                powerClass-v1530 pc2<br>\
+                               }<br>\
+                              },<br>\
+                              appliedFreqBandListFilter {<br>\
+                               bandInformationNR : {<br>\
+                                 bandNR 78<br>\
+                                }<br>\
+                              },<br>\
+                              supportedBandCombinationList-v1540 {<br>\
+                               {<br>\
+                                bandList-v1540 {<br>\
+                                 {<br>\
+                                  srs-TxSwitch {<br>\
+                                   supportedSRS-TxPortSwitch t2r4<br>\
+                                  }<br>\
+                                 }<br>\
+                                }<br>\
+                               }<br>\
+                              }<br>\
+                             },<br>\
+                             measAndMobParameters {<br>\
+                              measAndMobParametersCommon {<br>\
+                               ssb-RLM supported,<br>\
+                               ssb-AndCSI-RS-RLM supported<br>\
+                              },<br>\
+                              measAndMobParametersXDD-Diff {<br>\
+                               intraAndInterF-MeasAndReport supported,<br>\
+                               eventA-MeasAndReport supported,<br>\
+                               handoverInterF supported<br>\
+                              },<br>\
+                              measAndMobParametersFRX-Diff {<br>\
+                               ss-SINR-Meas supported,<br>\
+                               handoverInterF supported,<br>\
+                               maxNumberResource-CSI-RS-RLM n4<br>\
+                              }<br>\
+                             },<br>\
+                             featureSets {<br>\
+                              featureSetsDownlink {<br>\
+                               {<br>\
+                                featureSetListPerDownlinkCC {<br>\
+                                 1<br>\
+                                }<br>\
+                               }<br>\
+                              },<br>\
+                              featureSetsDownlinkPerCC {<br>\
+                               {<br>\
+                                supportedSubcarrierSpacingDL kHz30,<br>\
+                                supportedBandwidthDL fr1 : mhz100,<br>\
+                                channelBW-90mhz supported,<br>\
+                                maxNumberMIMO-LayersPDSCH fourLayers,<br>\
+                                supportedModulationOrderDL qam256<br>\
+                               }<br>\
+                              },<br>\
+                              featureSetsUplink {<br>\
+                               {<br>\
+                                featureSetListPerUplinkCC {<br>\
+                                 1<br>\
+                                },<br>\
+                                supportedSRS-Resources {<br>\
+                                 maxNumberAperiodicSRS-PerBWP n16,<br>\
+                                 maxNumberAperiodicSRS-PerBWP-PerSlot 6,<br>\
+                                 maxNumberPeriodicSRS-PerBWP n16,<br>\
+                                 maxNumberPeriodicSRS-PerBWP-PerSlot 6,<br>\
+                                 maxNumberSemiPersistentSRS-PerBWP n16,<br>\
+                                 maxNumberSemiPersistentSRS-PerBWP-PerSlot 6,<br>\
+                                 maxNumberSRS-Ports-PerResource n2<br>\
+                                }<br>\
+                               }<br>\
+                              },<br>\
+                              featureSetsUplinkPerCC {<br>\
+                               {<br>\
+                                supportedSubcarrierSpacingUL kHz30,<br>\
+                                supportedBandwidthUL fr1 : mhz100,<br>\
+                                channelBW-90mhz supported,<br>\
+                                mimo-CB-PUSCH {<br>\
+                                 maxNumberMIMO-LayersCB-PUSCH twoLayers,<br>\
+                                 maxNumberSRS-ResourcePerSet 1<br>\
+                                },<br>\
+                                supportedModulationOrderUL qam256<br>\
+                               }<br>\
+                              },<br>\
+                              featureSetsDownlink-v1540 {<br>\
+                               {<br>\
+                                oneFL-DMRS-TwoAdditionalDMRS-DL supported,<br>\
+                                twoFL-DMRS-TwoAdditionalDMRS-DL supported,<br>\
+                                oneFL-DMRS-ThreeAdditionalDMRS-DL supported<br>\
+                               }<br>\
+                              }<br>\
+                             },<br>\
+                             featureSetCombinations {<br>\
+                              {<br>\
+                               {<br>\
+                                nr : {<br>\
+                                  downlinkSetNR 1,<br>\
+                                  uplinkSetNR 1<br>\
+                                 }<br>\
+                               }<br>\
+                              }<br>\
+                             },<br>\
+                             nonCriticalExtension {<br>\
+                              inactiveState supported<br>\
+                             }<br>\
+                            }<br>\
+                      }<br>\
+                     }<br>\
+                    }<br>\
+                 }<br>\
+     },<br>\
+     {<br>\
+      id 38,<br>\
+      criticality ignore,<br>\
+      value NAS-PDU : \'7E 02 E5 61 D1 EA CC ED 91 98 6C 33 1C 9A 8C 5F ED C9\'H<br>\
+     },<br>\
+     {<br>\
+      id 146,<br>\
+      criticality ignore,<br>\
+      value RedirectionVoiceFallback : not-possible<br>\
+     }<br>\
+    }<br>\
+   }<br>\
+ }<br>\
+<br>\
+Decoded NAS message: Unknown NAS<br>\
+5GS mobility management<br>\
+01111110	126	EPD	<br>\
+0000----	0	Spare <br>\
+----0010	2	SECURITY HEADER TYPE --\> Security protected 5G NAS message: Integrity protected and ciphered<br>\
+11100101	229	MESSAGE AUTHENTICATION CODE<br>\
+01100001	97	MESSAGE AUTHENTICATION CODE<br>\
+11010001	209	MESSAGE AUTHENTICATION CODE<br>\
+11101010	234	MESSAGE AUTHENTICATION CODE<br>\
+11001100	204	SEQUENCE NUMBER<br>\
+Ciphered NAS 5GS Message<br>\
+[ED][91][98][6C][33][1C][9A][8C][5F][ED][C9]');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_5() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=310');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> SecurityModeCommand</h2> <br>\
+DL-DCCH-Message : {<br>\
+ message c1 : securityModeCommand : {<br>\
+    rrc-TransactionIdentifier 1,<br>\
+    criticalExtensions securityModeCommand : {<br>\
+      securityConfigSMC {<br>\
+       securityAlgorithmConfig {<br>\
+        cipheringAlgorithm nea2,<br>\
+        integrityProtAlgorithm nia2<br>\
+       }<br>\
+      }<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_6() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=810');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCReconfiguration</h2> <br>\
+DL-DCCH-Message : {<br>\
+ message c1 : rrcReconfiguration : {<br>\
+    rrc-TransactionIdentifier 2,<br>\
+    criticalExtensions rrcReconfiguration : {<br>\
+      radioBearerConfig {<br>\
+       srb-ToAddModList {<br>\
+        {<br>\
+         srb-Identity 2<br>\
+        }<br>\
+       },<br>\
+       drb-ToAddModList {<br>\
+        {<br>\
+         cnAssociation sdap-Config : {<br>\
+           pdu-Session 5,<br>\
+           sdap-HeaderDL absent,<br>\
+           sdap-HeaderUL present,<br>\
+           defaultDRB TRUE,<br>\
+           mappedQoS-FlowsToAdd {<br>\
+            5<br>\
+           }<br>\
+          },<br>\
+         drb-Identity 4,<br>\
+         pdcp-Config {<br>\
+          drb {<br>\
+           discardTimer infinity,<br>\
+           pdcp-SN-SizeUL len18bits,<br>\
+           pdcp-SN-SizeDL len18bits,<br>\
+           headerCompression notUsed : NULL<br>\
+          },<br>\
+          t-Reordering ms100<br>\
+         }<br>\
+        }<br>\
+       }<br>\
+      },<br>\
+      measConfig {<br>\
+       measObjectToAddModList {<br>\
+        {<br>\
+         measObjectId 1,<br>\
+         measObject measObjectNR : {<br>\
+           ssbFrequency 630048,<br>\
+           ssbSubcarrierSpacing kHz30,<br>\
+           smtc1 {<br>\
+            periodicityAndOffset sf20 : 0,<br>\
+            duration sf5<br>\
+           },<br>\
+           referenceSignalConfig {<br>\
+            ssb-ConfigMobility {<br>\
+             deriveSSB-IndexFromCell TRUE<br>\
+            }<br>\
+           },<br>\
+           absThreshSS-BlocksConsolidation {<br>\
+            thresholdRSRP 0<br>\
+           },<br>\
+           quantityConfigIndex 1,<br>\
+           offsetMO {<br>\
+            rsrpOffsetSSB dB0,<br>\
+            rsrqOffsetSSB dB0,<br>\
+            sinrOffsetSSB dB0,<br>\
+            rsrpOffsetCSI-RS dB0,<br>\
+            rsrqOffsetCSI-RS dB0,<br>\
+            sinrOffsetCSI-RS dB0<br>\
+           },<br>\
+           freqBandIndicatorNR 78<br>\
+          }<br>\
+        }<br>\
+       },<br>\
+       reportConfigToAddModList {<br>\
+        {<br>\
+         reportConfigId 1,<br>\
+         reportConfig reportConfigNR : {<br>\
+           reportType eventTriggered : {<br>\
+             eventId eventA3 : {<br>\
+               a3-Offset rsrp : 3,<br>\
+               reportOnLeave FALSE,<br>\
+               hysteresis 3,<br>\
+               timeToTrigger ms100,<br>\
+               useAllowedCellList FALSE<br>\
+              },<br>\
+             rsType ssb,<br>\
+             reportInterval ms120,<br>\
+             reportAmount r4,<br>\
+             reportQuantityCell {<br>\
+              rsrp TRUE,<br>\
+              rsrq TRUE,<br>\
+              sinr TRUE<br>\
+             },<br>\
+             maxReportCells 8,<br>\
+             reportQuantityRS-Indexes {<br>\
+              rsrp TRUE,<br>\
+              rsrq TRUE,<br>\
+              sinr TRUE<br>\
+             },<br>\
+             maxNrofRS-IndexesToReport 8,<br>\
+             includeBeamMeasurements TRUE<br>\
+            }<br>\
+          }<br>\
+        },<br>\
+        {<br>\
+         reportConfigId 2,<br>\
+         reportConfig reportConfigNR : {<br>\
+           reportType eventTriggered : {<br>\
+             eventId eventA5 : {<br>\
+               a5-Threshold1 rsrp : 40,<br>\
+               a5-Threshold2 rsrp : 50,<br>\
+               reportOnLeave FALSE,<br>\
+               hysteresis 5,<br>\
+               timeToTrigger ms100,<br>\
+               useAllowedCellList FALSE<br>\
+              },<br>\
+             rsType ssb,<br>\
+             reportInterval ms120,<br>\
+             reportAmount r4,<br>\
+             reportQuantityCell {<br>\
+              rsrp TRUE,<br>\
+              rsrq TRUE,<br>\
+              sinr TRUE<br>\
+             },<br>\
+             maxReportCells 8,<br>\
+             reportQuantityRS-Indexes {<br>\
+              rsrp TRUE,<br>\
+              rsrq TRUE,<br>\
+              sinr TRUE<br>\
+             },<br>\
+             maxNrofRS-IndexesToReport 8,<br>\
+             includeBeamMeasurements TRUE<br>\
+            }<br>\
+          }<br>\
+        }<br>\
+       },<br>\
+       measIdToAddModList {<br>\
+        {<br>\
+         measId 1,<br>\
+         measObjectId 1,<br>\
+         reportConfigId 1<br>\
+        },<br>\
+        {<br>\
+         measId 2,<br>\
+         measObjectId 1,<br>\
+         reportConfigId 2<br>\
+        }<br>\
+       },<br>\
+       s-MeasureConfig ssb-RSRP : 90,<br>\
+       quantityConfig {<br>\
+        quantityConfigNR-List {<br>\
+         {<br>\
+          quantityConfigCell {<br>\
+           ssb-FilterConfig {<br>\
+            filterCoefficientRSRP fc4,<br>\
+            filterCoefficientRSRQ fc4,<br>\
+            filterCoefficientRS-SINR fc4<br>\
+           },<br>\
+           csi-RS-FilterConfig {<br>\
+            filterCoefficientRSRP fc4,<br>\
+            filterCoefficientRSRQ fc4,<br>\
+            filterCoefficientRS-SINR fc4<br>\
+           }<br>\
+          },<br>\
+          quantityConfigRS-Index {<br>\
+           ssb-FilterConfig {<br>\
+            filterCoefficientRSRP fc4,<br>\
+            filterCoefficientRSRQ fc4,<br>\
+            filterCoefficientRS-SINR fc4<br>\
+           },<br>\
+           csi-RS-FilterConfig {<br>\
+            filterCoefficientRSRP fc4,<br>\
+            filterCoefficientRSRQ fc4,<br>\
+            filterCoefficientRS-SINR fc4<br>\
+           }<br>\
+          }<br>\
+         }<br>\
+        }<br>\
+       }<br>\
+      },<br>\
+      nonCriticalExtension {<br>\
+       masterCellGroup {<br>\
+        cellGroupId 0,<br>\
+        rlc-BearerToAddModList {<br>\
+         {<br>\
+          logicalChannelIdentity 4,<br>\
+          servedRadioBearer drb-Identity : 4,<br>\
+          rlc-Config am : {<br>\
+            ul-AM-RLC {<br>\
+             sn-FieldLength size18,<br>\
+             t-PollRetransmit ms45,<br>\
+             pollPDU p64,<br>\
+             pollByte kB500,<br>\
+             maxRetxThreshold t32<br>\
+            },<br>\
+            dl-AM-RLC {<br>\
+             sn-FieldLength size18,<br>\
+             t-Reassembly ms15,<br>\
+             t-StatusProhibit ms15<br>\
+            }<br>\
+           },<br>\
+          mac-LogicalChannelConfig {<br>\
+           ul-SpecificParameters {<br>\
+            priority 12,<br>\
+            prioritisedBitRate kBps16,<br>\
+            bucketSizeDuration ms50,<br>\
+            logicalChannelGroup 1,<br>\
+            schedulingRequestID 0,<br>\
+            logicalChannelSR-Mask FALSE,<br>\
+            logicalChannelSR-DelayTimerApplied FALSE<br>\
+           }<br>\
+          }<br>\
+         },<br>\
+         {<br>\
+          logicalChannelIdentity 2,<br>\
+          servedRadioBearer srb-Identity : 2,<br>\
+          rlc-Config am : {<br>\
+            ul-AM-RLC {<br>\
+             sn-FieldLength size12,<br>\
+             t-PollRetransmit ms45,<br>\
+             pollPDU infinity,<br>\
+             pollByte infinity,<br>\
+             maxRetxThreshold t8<br>\
+            },<br>\
+            dl-AM-RLC {<br>\
+             sn-FieldLength size12,<br>\
+             t-Reassembly ms35,<br>\
+             t-StatusProhibit ms0<br>\
+            }<br>\
+           },<br>\
+          mac-LogicalChannelConfig {<br>\
+           ul-SpecificParameters {<br>\
+            priority 3,<br>\
+            prioritisedBitRate infinity,<br>\
+            bucketSizeDuration ms50,<br>\
+            logicalChannelGroup 0,<br>\
+            schedulingRequestID 0,<br>\
+            logicalChannelSR-Mask FALSE,<br>\
+            logicalChannelSR-DelayTimerApplied FALSE<br>\
+           }<br>\
+          }<br>\
+         }<br>\
+        },<br>\
+        spCellConfig {<br>\
+         servCellIndex 0,<br>\
+         spCellConfigDedicated {<br>\
+          downlinkBWP-ToAddModList {<br>\
+           {<br>\
+            bwp-Id 1,<br>\
+            bwp-Dedicated {<br>\
+             pdsch-Config setup : {<br>\
+               dmrs-DownlinkForPDSCH-MappingTypeA setup : {<br>\
+                 dmrs-AdditionalPosition pos1,<br>\
+                 scramblingID0 12768<br>\
+                },<br>\
+               tci-StatesToAddModList {<br>\
+                {<br>\
+                 tci-StateId 0,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal csi-rs : 2,<br>\
+                  qcl-Type typeA<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 1,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal csi-rs : 6,<br>\
+                  qcl-Type typeA<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 2,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal csi-rs : 10,<br>\
+                  qcl-Type typeA<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 3,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal csi-rs : 14,<br>\
+                  qcl-Type typeA<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 4,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal csi-rs : 18,<br>\
+                  qcl-Type typeA<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 5,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal csi-rs : 22,<br>\
+                  qcl-Type typeA<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 6,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal ssb : 0,<br>\
+                  qcl-Type typeC<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 7,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal ssb : 1,<br>\
+                  qcl-Type typeC<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 8,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal ssb : 2,<br>\
+                  qcl-Type typeC<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 9,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal ssb : 3,<br>\
+                  qcl-Type typeC<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 10,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal ssb : 4,<br>\
+                  qcl-Type typeC<br>\
+                 }<br>\
+                },<br>\
+                {<br>\
+                 tci-StateId 11,<br>\
+                 qcl-Type1 {<br>\
+                  bwp-Id 1,<br>\
+                  referenceSignal ssb : 5,<br>\
+                  qcl-Type typeC<br>\
+                 }<br>\
+                }<br>\
+               },<br>\
+               resourceAllocation resourceAllocationType0,<br>\
+               rbg-Size config1,<br>\
+               mcs-Table qam256,<br>\
+               prb-BundlingType staticBundling : {<br>\
+                 bundleSize wideband<br>\
+                }<br>\
+              }<br>\
+            }<br>\
+           }<br>\
+          },<br>\
+          uplinkConfig {<br>\
+           uplinkBWP-ToAddModList {<br>\
+            {<br>\
+             bwp-Id 1,<br>\
+             bwp-Dedicated {<br>\
+              pucch-Config setup : {<br>\
+                resourceSetToAddModList {<br>\
+                 {<br>\
+                  pucch-ResourceSetId 0,<br>\
+                  resourceList {<br>\
+                   0,<br>\
+                   1,<br>\
+                   2,<br>\
+                   3,<br>\
+                   4,<br>\
+                   5,<br>\
+                   6,<br>\
+                   7<br>\
+                  }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceSetId 1,<br>\
+                  resourceList {<br>\
+                   23,<br>\
+                   24,<br>\
+                   25,<br>\
+                   26,<br>\
+                   27,<br>\
+                   28,<br>\
+                   29,<br>\
+                   30<br>\
+                  }<br>\
+                 }<br>\
+                },<br>\
+                resourceToAddModList {<br>\
+                 {<br>\
+                  pucch-ResourceId 0,<br>\
+                  startingPRB 0,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 1,<br>\
+                  startingPRB 16,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 2,<br>\
+                  startingPRB 32,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 3,<br>\
+                  startingPRB 48,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 4,<br>\
+                  startingPRB 0,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 5,<br>\
+                  startingPRB 16,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 6,<br>\
+                  startingPRB 32,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 7,<br>\
+                  startingPRB 48,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 8,<br>\
+                  startingPRB 244,<br>\
+                  format format0 : {<br>\
+                    initialCyclicShift 0,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 21,<br>\
+                  startingPRB 245,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 8,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 22,<br>\
+                  startingPRB 245,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 23,<br>\
+                  startingPRB 0,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 24,<br>\
+                  startingPRB 16,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 25,<br>\
+                  startingPRB 32,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 26,<br>\
+                  startingPRB 48,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 12<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 27,<br>\
+                  startingPRB 0,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 28,<br>\
+                  startingPRB 16,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 29,<br>\
+                  startingPRB 32,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 },<br>\
+                 {<br>\
+                  pucch-ResourceId 30,<br>\
+                  startingPRB 48,<br>\
+                  format format2 : {<br>\
+                    nrofPRBs 16,<br>\
+                    nrofSymbols 1,<br>\
+                    startingSymbolIndex 13<br>\
+                   }<br>\
+                 }<br>\
+                },<br>\
+                format2 setup : {<br>\
+                  maxCodeRate zeroDot15,<br>\
+                  simultaneousHARQ-ACK-CSI true<br>\
+                 },<br>\
+                schedulingRequestResourceToAddModList {<br>\
+                 {<br>\
+                  schedulingRequestResourceId 1,<br>\
+                  schedulingRequestID 0,<br>\
+                  periodicityAndOffset sl80 : 77,<br>\
+                  resource 8<br>\
+                 }<br>\
+                },<br>\
+                dl-DataToUL-ACK {<br>\
+                 3,<br>\
+                 4,<br>\
+                 5,<br>\
+                 6,<br>\
+                 7,<br>\
+                 0,<br>\
+                 0,<br>\
+                 0<br>\
+                },<br>\
+                pucch-PowerControl {<br>\
+                 deltaF-PUCCH-f0 0,<br>\
+                 deltaF-PUCCH-f2 0,<br>\
+                 p0-Set {<br>\
+                  {<br>\
+                   p0-PUCCH-Id 1,<br>\
+                   p0-PUCCH-Value 0<br>\
+                  }<br>\
+                 }<br>\
+                }<br>\
+               },<br>\
+              pusch-Config setup : {<br>\
+                txConfig codebook,<br>\
+                dmrs-UplinkForPUSCH-MappingTypeB setup : {<br>\
+                  dmrs-AdditionalPosition pos1<br>\
+                 },<br>\
+                resourceAllocation resourceAllocationType1,<br>\
+                pusch-TimeDomainAllocationList setup : {<br>\
+                  {<br>\
+                   k2 2,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 2,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 69<br>\
+                  },<br>\
+                  {<br>\
+                   k2 3,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 4,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 5,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 6,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 9,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 10,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  },<br>\
+                  {<br>\
+                   k2 11,<br>\
+                   mappingType typeB,<br>\
+                   startSymbolAndLength 55<br>\
+                  }<br>\
+                 },<br>\
+                codebookSubset nonCoherent,<br>\
+                maxRank 2<br>\
+               },<br>\
+              srs-Config setup : {<br>\
+                srs-ResourceToAddModList {<br>\
+                 {<br>\
+                  srs-ResourceId 0,<br>\
+                  nrofSRS-Ports ports2,<br>\
+                  transmissionComb n2 : {<br>\
+                    combOffset-n2 0,<br>\
+                    cyclicShift-n2 0<br>\
+                   },<br>\
+                  resourceMapping {<br>\
+                   startPosition 2,<br>\
+                   nrofSymbols n1,<br>\
+                   repetitionFactor n1<br>\
+                  },<br>\
+                  freqDomainPosition 0,<br>\
+                  freqDomainShift 0,<br>\
+                  freqHopping {<br>\
+                   c-SRS 61,<br>\
+                   b-SRS 0,<br>\
+                   b-hop 0<br>\
+                  },<br>\
+                  groupOrSequenceHopping neither,<br>\
+                  resourceType aperiodic : {<br>\
+                   },<br>\
+                  sequenceId 245,<br>\
+                  spatialRelationInfo {<br>\
+                   referenceSignal csi-RS-Index : 0<br>\
+                  }<br>\
+                 }<br>\
+                }<br>\
+               }<br>\
+             }<br>\
+            }<br>\
+           },<br>\
+           pusch-ServingCellConfig setup : {<br>\
+             maxMIMO-Layers 2<br>\
+            }<br>\
+          },<br>\
+          pdsch-ServingCellConfig setup : {<br>\
+            nrofHARQ-ProcessesForPDSCH n16,<br>\
+            maxMIMO-Layers 4<br>\
+           },<br>\
+          csi-MeasConfig setup : {<br>\
+            csi-ReportConfigToAddModList {<br>\
+             {<br>\
+              reportConfigId 0,<br>\
+              resourcesForChannelMeasurement 0,<br>\
+              csi-IM-ResourcesForInterference 11,<br>\
+              reportConfigType periodic : {<br>\
+                reportSlotConfig slots80 : 77,<br>\
+                pucch-CSI-ResourceList {<br>\
+                 {<br>\
+                  uplinkBandwidthPartId 1,<br>\
+                  pucch-Resource 21<br>\
+                 }<br>\
+                }<br>\
+               },<br>\
+              reportQuantity cri-RI-PMI-CQI : NULL,<br>\
+              reportFreqConfiguration {<br>\
+               cqi-FormatIndicator widebandCQI,<br>\
+               pmi-FormatIndicator widebandPMI,<br>\
+               csi-ReportingBand subbands18 : \'11111111 11111111 11\'B<br>\
+              },<br>\
+              timeRestrictionForChannelMeasurements configured,<br>\
+              timeRestrictionForInterferenceMeasurements configured,<br>\
+              codebookConfig {<br>\
+               codebookType type1 : {<br>\
+                 subType typeI-SinglePanel : {<br>\
+                   nrOfAntennaPorts moreThanTwo : {<br>\
+                     n1-n2 two-one-TypeI-SinglePanel-Restriction : \'11111111\'B<br>\
+                    },<br>\
+                   typeI-SinglePanel-ri-Restriction \'00001111\'B<br>\
+                  },<br>\
+                 codebookMode 1<br>\
+                }<br>\
+              },<br>\
+              groupBasedBeamReporting disabled : {<br>\
+               },<br>\
+              cqi-Table table2,<br>\
+              subbandSize value1<br>\
+             },<br>\
+             {<br>\
+              reportConfigId 2,<br>\
+              resourcesForChannelMeasurement 10,<br>\
+              reportConfigType periodic : {<br>\
+                reportSlotConfig slots80 : 4,<br>\
+                pucch-CSI-ResourceList {<br>\
+                 {<br>\
+                  uplinkBandwidthPartId 1,<br>\
+                  pucch-Resource 22<br>\
+                 }<br>\
+                }<br>\
+               },<br>\
+              reportQuantity ssb-Index-RSRP : NULL,<br>\
+              timeRestrictionForChannelMeasurements notConfigured,<br>\
+              timeRestrictionForInterferenceMeasurements notConfigured,<br>\
+              groupBasedBeamReporting disabled : {<br>\
+                nrofReportedRS n1<br>\
+               },<br>\
+              cqi-Table table2,<br>\
+              subbandSize value1<br>\
+             }<br>\
+            }<br>\
+           },<br>\
+          tag-Id 0,<br>\
+          servingCellMO 1<br>\
+         }<br>\
+        }<br>\
+       },<br>\
+       dedicatedNAS-MessageList {<br>\
+        \'7E 02 E5 61 D1 EA CC ED 91 98 6C 33 1C 9A 8C 5F ED C9\'H<br>\
+       }<br>\
+      }<br>\
+     }<br>\
+   }<br>\
+}<br>\
+<br>\
+Decoded NAS message: Unknown NAS<br>\
+5GS mobility management<br>\
+01111110	126	EPD	<br>\
+0000----	0	Spare <br>\
+----0010	2	SECURITY HEADER TYPE --\> Security protected 5G NAS message: Integrity protected and ciphered<br>\
+11100101	229	MESSAGE AUTHENTICATION CODE<br>\
+01100001	97	MESSAGE AUTHENTICATION CODE<br>\
+11010001	209	MESSAGE AUTHENTICATION CODE<br>\
+11101010	234	MESSAGE AUTHENTICATION CODE<br>\
+11001100	204	SEQUENCE NUMBER<br>\
+Ciphered NAS 5GS Message<br>\
+[ED][91][98][6C][33][1C][9A][8C][5F][ED][C9]');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_7() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=310');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> SecurityModeComplete</h2> <br>\
+UL-DCCH-Message : {<br>\
+ message c1 : securityModeComplete : {<br>\
+    rrc-TransactionIdentifier 1,<br>\
+    criticalExtensions securityModeComplete : {<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_8() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=310');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCReconfigurationComplete</h2> <br>\
+UL-DCCH-Message : {<br>\
+ message c1 : rrcReconfigurationComplete : {<br>\
+    rrc-TransactionIdentifier 2,<br>\
+    criticalExtensions rrcReconfigurationComplete : {<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_9() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=790');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> InitialContextSetupResponse</h2> <br>\
+NGAP-PDU : successfulOutcome : {<br>\
+  procedureCode 14,<br>\
+  criticality reject,<br>\
+  value InitialContextSetupResponse : {<br>\
+    protocolIEs {<br>\
+     {<br>\
+      id 10,<br>\
+      criticality ignore,<br>\
+      value AMF-UE-NGAP-ID : 4295003118<br>\
+     },<br>\
+     {<br>\
+      id 85,<br>\
+      criticality ignore,<br>\
+      value RAN-UE-NGAP-ID : 4507<br>\
+     },<br>\
+     {<br>\
+      id 72,<br>\
+      criticality ignore,<br>\
+      value PDUSessionResourceSetupListCxtRes : {<br>\
+        {<br>\
+         pDUSessionID 5,<br>\
+         pDUSessionResourceSetupResponseTransfer {<br>\
+          dLQosFlowPerTNLInformation {<br>\
+           uPTransportLayerInformation gTPTunnel : {<br>\
+             transportLayerAddress \'11000000 10101000 11011000 11110101\'B (192.168.216.245),<br>\
+             gTP-TEID \'D1 76 01 20\'H<br>\
+            },<br>\
+           associatedQosFlowList {<br>\
+            {<br>\
+             qosFlowIdentifier 5<br>\
+            }<br>\
+           }<br>\
+          }<br>\
+         }<br>\
+        }<br>\
+       }<br>\
+     }<br>\
+    }<br>\
+   }<br>\
+ }');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_10() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=490');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCReconfiguration</h2> <br>\
+DL-DCCH-Message : {<br>\
+ message c1 : rrcReconfiguration : {<br>\
+    rrc-TransactionIdentifier 3,<br>\
+    criticalExtensions rrcReconfiguration : {<br>\
+      nonCriticalExtension {<br>\
+       masterCellGroup {<br>\
+        cellGroupId 0,<br>\
+        mac-CellGroupConfig {<br>\
+         drx-Config setup : {<br>\
+           drx-onDurationTimer milliSeconds : ms10,<br>\
+           drx-InactivityTimer ms20,<br>\
+           drx-HARQ-RTT-TimerDL 0,<br>\
+           drx-HARQ-RTT-TimerUL 0,<br>\
+           drx-RetransmissionTimerDL sl16,<br>\
+           drx-RetransmissionTimerUL sl16,<br>\
+           drx-LongCycleStartOffset ms40 : 38,<br>\
+           drx-SlotOffset 16<br>\
+          },<br>\
+         skipUplinkTxDynamic FALSE<br>\
+        }<br>\
+       }<br>\
+      }<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_11() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=310');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCReconfigurationComplete</h2> <br>\
+UL-DCCH-Message : {<br>\
+ message c1 : rrcReconfigurationComplete : {<br>\
+    rrc-TransactionIdentifier 3,<br>\
+    criticalExtensions rrcReconfigurationComplete : {<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_12() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=630');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> UEContextReleaseRequest</h2> <br>\
+NGAP-PDU : initiatingMessage : {<br>\
+  procedureCode 42,<br>\
+  criticality ignore,<br>\
+  value UEContextReleaseRequest : {<br>\
+    protocolIEs {<br>\
+     {<br>\
+      id 10,<br>\
+      criticality reject,<br>\
+      value AMF-UE-NGAP-ID : 4295003118<br>\
+     },<br>\
+     {<br>\
+      id 85,<br>\
+      criticality reject,<br>\
+      value RAN-UE-NGAP-ID : 4507<br>\
+     },<br>\
+     {<br>\
+      id 133,<br>\
+      criticality reject,<br>\
+      value PDUSessionResourceListCxtRelReq : {<br>\
+        {<br>\
+         pDUSessionID 5<br>\
+        }<br>\
+       }<br>\
+     },<br>\
+     {<br>\
+      id 15,<br>\
+      criticality ignore,<br>\
+      value Cause : radioNetwork : user-inactivity<br>\
+     }<br>\
+    }<br>\
+   }<br>\
+ }');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_13() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=410');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> UEContextReleaseCommand</h2> <br>\
+NGAP-PDU : initiatingMessage : {<br>\
+  procedureCode 41,<br>\
+  criticality reject,<br>\
+  value UEContextReleaseCommand : {<br>\
+    protocolIEs {<br>\
+     {<br>\
+      id 114,<br>\
+      criticality reject,<br>\
+      value UE-NGAP-IDs : uE-NGAP-ID-pair : {<br>\
+         aMF-UE-NGAP-ID 4295003118,<br>\
+         rAN-UE-NGAP-ID 4507<br>\
+        }<br>\
+     },<br>\
+     {<br>\
+      id 15,<br>\
+      criticality ignore,<br>\
+      value Cause : radioNetwork : user-inactivity<br>\
+     }<br>\
+    }<br>\
+   }<br>\
+ }');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_14() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=310');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> RRCRelease</h2> <br>\
+DL-DCCH-Message : {<br>\
+ message c1 : rrcRelease : {<br>\
+    rrc-TransactionIdentifier 0,<br>\
+    criticalExtensions rrcRelease : {<br>\
+     }<br>\
+   }<br>\
+}');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+function func_15() {
+var asnWin;
+asnWin=window.open('','2','scrollbars=1,resizable=1,menubar=1,width=800,height=530');
+asnWin.focus();
+asnWin.document.write('<TT>');
+asnWin.document.write('<PRE>');
+asnWin.document.write('<h2> UEContextReleaseComplete</h2> <br>\
+NGAP-PDU : successfulOutcome : {<br>\
+  procedureCode 41,<br>\
+  criticality reject,<br>\
+  value UEContextReleaseComplete : {<br>\
+    protocolIEs {<br>\
+     {<br>\
+      id 10,<br>\
+      criticality ignore,<br>\
+      value AMF-UE-NGAP-ID : 4295003118<br>\
+     },<br>\
+     {<br>\
+      id 85,<br>\
+      criticality ignore,<br>\
+      value RAN-UE-NGAP-ID : 4507<br>\
+     },<br>\
+     {<br>\
+      id 60,<br>\
+      criticality reject,<br>\
+      value PDUSessionResourceListCxtRelCpl : {<br>\
+        {<br>\
+         pDUSessionID 5<br>\
+        }<br>\
+       }<br>\
+     }<br>\
+    }<br>\
+   }<br>\
+ }');
+asnWin.document.write('</PRE>');
+asnWin.document.write('</TT>');
+asnWin.document.close();
+}
+
+// -->
+</script>
+</head>
+<body>
+<pre>
+
+
+<H2>  </H2>
+<HR>
+<TT>Order          Time           DU/UP                                    gNB/CU                                 gNB/eNB/AMF </TT>
+<FONT COLOR="Black"><a name="0"></a><TT>  1 2022-09-12 00:05:46.194534 </FONT><FONT COLOR="DarkBlue"> |--- </FONT><a href="javascript:func_0()"><FONT COLOR="DarkBlue">NR-RRC:RRCSetupRequest</a><a> ------------->|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="1"></a><TT>  2 2022-09-12 00:05:46.195419 </FONT><FONT COLOR="DarkBlue"> |<-------------------- </FONT><a href="javascript:func_1()"><FONT COLOR="DarkBlue">NR-RRC:RRCSetup</a><a> ---|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="2"></a><TT>  3 2022-09-12 00:05:46.225874 </FONT><FONT COLOR="DarkBlue"> |--- </FONT><a href="javascript:func_2()"><FONT COLOR="DarkBlue">NR-RRC:RRCSetupComplete</a><a> ------------>|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="3"></a><TT>  4 2022-09-12 00:05:46.225983 </FONT><FONT COLOR="DarkOrange"> |                                         |--- </FONT><a href="javascript:func_3()"><FONT COLOR="DarkOrange">NgAP:InitialUEMessage</a><a> ------------->|  </a></FONT></TT>
+<FONT COLOR="Black"><a name="4"></a><TT>  5 2022-09-12 00:05:46.246937 </FONT><FONT COLOR="DarkOrange"> |                                         |<--- </FONT><a href="javascript:func_4()"><FONT COLOR="DarkOrange">NgAP:InitialContextSetupRequest</a><a> ---|  </a></FONT></TT>
+<FONT COLOR="Black"><a name="5"></a><TT>  6 2022-09-12 00:05:46.250993 </FONT><FONT COLOR="DarkBlue"> |<--------- </FONT><a href="javascript:func_5()"><FONT COLOR="DarkBlue">NR-RRC:SecurityModeCommand</a><a> ---|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="6"></a><TT>  7 2022-09-12 00:05:46.256612 </FONT><FONT COLOR="DarkBlue"> |<---------- </FONT><a href="javascript:func_6()"><FONT COLOR="DarkBlue">NR-RRC:RRCReconfiguration</a><a> ---|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="7"></a><TT>  8 2022-09-12 00:05:46.263806 </FONT><FONT COLOR="DarkBlue"> |--- </FONT><a href="javascript:func_7()"><FONT COLOR="DarkBlue">NR-RRC:SecurityModeComplete</a><a> -------->|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="8"></a><TT>  9 2022-09-12 00:05:46.273573 </FONT><FONT COLOR="DarkBlue"> |--- </FONT><a href="javascript:func_8()"><FONT COLOR="DarkBlue">NR-RRC:RRCReconfigurationComplete</a><a> -->|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="9"></a><TT> 10 2022-09-12 00:05:46.274576 </FONT><FONT COLOR="DarkOrange"> |                                         |--- </FONT><a href="javascript:func_9()"><FONT COLOR="DarkOrange">NgAP:InitialContextSetupResponse</a><a> -->|  </a></FONT></TT>
+<FONT COLOR="Black"><a name="10"></a><TT> 11 2022-09-12 00:05:46.277629 </FONT><FONT COLOR="DarkBlue"> |<---------- </FONT><a href="javascript:func_10()"><FONT COLOR="DarkBlue">NR-RRC:RRCReconfiguration</a><a> ---|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="11"></a><TT> 12 2022-09-12 00:05:46.290580 </FONT><FONT COLOR="DarkBlue"> |--- </FONT><a href="javascript:func_11()"><FONT COLOR="DarkBlue">NR-RRC:RRCReconfigurationComplete</a><a> -->|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="12"></a><TT> 13 2022-09-12 00:09:04.871867 </FONT><FONT COLOR="DarkOrange"> |                                         |--- </FONT><a href="javascript:func_12()"><FONT COLOR="DarkOrange">NgAP:UEContextReleaseRequest</a><a> ------>|  </a></FONT></TT>
+<FONT COLOR="Black"><a name="13"></a><TT> 14 2022-09-12 00:09:04.936435 </FONT><FONT COLOR="DarkOrange"> |                                         |<------ </FONT><a href="javascript:func_13()"><FONT COLOR="DarkOrange">NgAP:UEContextReleaseCommand</a><a> ---|  </a></FONT></TT>
+<FONT COLOR="Black"><a name="14"></a><TT> 15 2022-09-12 00:09:04.937053 </FONT><FONT COLOR="DarkBlue"> |<------------------ </FONT><a href="javascript:func_14()"><FONT COLOR="DarkBlue">NR-RRC:RRCRelease</a><a> ---|                                        |  </a></FONT></TT>
+<FONT COLOR="Black"><a name="15"></a><TT> 16 2022-09-12 00:09:04.991583 </FONT><FONT COLOR="DarkOrange"> |                                         |--- </FONT><a href="javascript:func_15()"><FONT COLOR="DarkOrange">NgAP:UEContextReleaseComplete</a><a> ----->|  </a></FONT></TT>
+</pre>
+</body>
+</html>

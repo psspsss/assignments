@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PDCCH — DCI Mapping Flow (Animated)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06080f;
+  --bg-panel: #0c1120;
+  --bg-panel-hover: #101830;
+  --border: #1a2444;
+  --border-glow: #2a3a6a;
+  --text: #e2e8f0;
+  --text-dim: #7a8baa;
+  --text-muted: #4a5a78;
+  --dci-color: #f97316;
+  --dci-glow: rgba(249,115,22,0.25);
+  --pdcch-color: #3b82f6;
+  --pdcch-glow: rgba(59,130,246,0.25);
+  --ss-color: #a855f7;
+  --ss-glow: rgba(168,85,247,0.25);
+  --coreset-color: #10b981;
+  --coreset-glow: rgba(16,185,129,0.25);
+  --particle: #60a5fa;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Grain overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  padding: 50px 24px 20px;
+  position: relative;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, rgba(59,130,246,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.spec-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--pdcch-color);
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  padding: 6px 18px;
+  border-radius: 24px;
+  margin-bottom: 18px;
+  animation: fadeIn 0.6s ease both;
+}
+.spec-tag::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--pdcch-color);
+  border-radius: 50%;
+  animation: blink 2s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+.header h1 {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  animation: fadeIn 0.6s ease 0.1s both;
+}
+.header h1 span {
+  background: linear-gradient(135deg, var(--dci-color), var(--pdcch-color), var(--ss-color), var(--coreset-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 300% 300%;
+  animation: gradientShift 6s ease infinite;
+}
+@keyframes gradientShift {
+  0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
+}
+.header .sub {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 400;
+  animation: fadeIn 0.6s ease 0.2s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Legend bar ── */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 16px 24px;
+  flex-wrap: wrap;
+  animation: fadeIn 0.6s ease 0.3s both;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+}
+
+/* ── Main Flow Container ── */
+.flow-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px 60px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+  align-items: start;
+  gap: 0;
+  position: relative;
+}
+
+/* ── Columns ── */
+.column {
+  opacity: 0;
+  animation: colReveal 0.7s ease both;
+}
+.column:nth-child(1) { animation-delay: 0.4s; }
+.column:nth-child(3) { animation-delay: 0.7s; }
+.column:nth-child(5) { animation-delay: 1.0s; }
+.column:nth-child(7) { animation-delay: 1.3s; }
+
+@keyframes colReveal {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.col-header {
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+.col-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+.col-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.col-underline {
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  margin: 8px auto 0;
+}
+
+/* ── Column-specific colors ── */
+.col-dci .col-label { color: var(--dci-color); }
+.col-dci .col-title { color: var(--dci-color); }
+.col-dci .col-underline { background: var(--dci-color); box-shadow: 0 0 12px var(--dci-glow); }
+
+.col-pdcch .col-label { color: var(--pdcch-color); }
+.col-pdcch .col-title { color: var(--pdcch-color); }
+.col-pdcch .col-underline { background: var(--pdcch-color); box-shadow: 0 0 12px var(--pdcch-glow); }
+
+.col-ss .col-label { color: var(--ss-color); }
+.col-ss .col-title { color: var(--ss-color); }
+.col-ss .col-underline { background: var(--ss-color); box-shadow: 0 0 12px var(--ss-glow); }
+
+.col-coreset .col-label { color: var(--coreset-color); }
+.col-coreset .col-title { color: var(--coreset-color); }
+.col-coreset .col-underline { background: var(--coreset-color); box-shadow: 0 0 12px var(--coreset-glow); }
+
+/* ── Cards ── */
+.card-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 3px 0 0 3px;
+  transition: width 0.3s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-glow);
+}
+.card:hover::before { width: 5px; }
+
+/* Card color variations */
+.card.dci::before { background: var(--dci-color); }
+.card.dci:hover { background: var(--bg-panel-hover); box-shadow: 0 4px 30px var(--dci-glow), inset 0 0 30px rgba(249,115,22,0.03); border-color: rgba(249,115,22,0.3); }
+.card.dci.active { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.4); box-shadow: 0 0 40px var(--dci-glow); }
+
+.card.pdcch::before { background: var(--pdcch-color); }
+.card.pdcch:hover { background: var(--bg-panel-hover); box-shadow: 0 4px 30px var(--pdcch-glow), inset 0 0 30px rgba(59,130,246,0.03); border-color: rgba(59,130,246,0.3); }
+.card.pdcch.active { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.4); box-shadow: 0 0 40px var(--pdcch-glow); }
+
+.card.ss::before { background: var(--ss-color); }
+.card.ss:hover { background: var(--bg-panel-hover); box-shadow: 0 4px 30px var(--ss-glow), inset 0 0 30px rgba(168,85,247,0.03); border-color: rgba(168,85,247,0.3); }
+.card.ss.active { background: rgba(168,85,247,0.08); border-color: rgba(168,85,247,0.4); box-shadow: 0 0 40px var(--ss-glow); }
+
+.card.coreset::before { background: var(--coreset-color); }
+.card.coreset:hover { background: var(--bg-panel-hover); box-shadow: 0 4px 30px var(--coreset-glow), inset 0 0 30px rgba(16,185,129,0.03); border-color: rgba(16,185,129,0.3); }
+.card.coreset.active { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 40px var(--coreset-glow); }
+
+.card-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .icon {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.card.dci .card-title { color: var(--dci-color); }
+.card.dci .icon { background: rgba(249,115,22,0.15); }
+.card.pdcch .card-title { color: var(--pdcch-color); }
+.card.pdcch .icon { background: rgba(59,130,246,0.15); }
+.card.ss .card-title { color: var(--ss-color); }
+.card.ss .icon { background: rgba(168,85,247,0.15); }
+.card.coreset .card-title { color: var(--coreset-color); }
+.card.coreset .icon { background: rgba(16,185,129,0.15); }
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin-top: 6px;
+}
+.card-tag {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+.card.dci .card-tag { background: rgba(249,115,22,0.1); color: var(--dci-color); }
+.card.pdcch .card-tag { background: rgba(59,130,246,0.1); color: var(--pdcch-color); }
+.card.ss .card-tag { background: rgba(168,85,247,0.1); color: var(--ss-color); }
+.card.coreset .card-tag { background: rgba(16,185,129,0.1); color: var(--coreset-color); }
+
+/* ── Group Labels ── */
+.group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.group-label.dci { background: rgba(249,115,22,0.08); color: var(--dci-color); border: 1px solid rgba(249,115,22,0.15); }
+.group-label.ss { background: rgba(168,85,247,0.08); color: var(--ss-color); border: 1px solid rgba(168,85,247,0.15); }
+
+/* ── Animated Arrows ── */
+.arrow-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  position: relative;
+  width: 70px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease both;
+}
+.arrow-col:nth-of-type(2) { animation-delay: 0.55s; }
+.arrow-col:nth-of-type(4) { animation-delay: 0.85s; }
+.arrow-col:nth-of-type(6) { animation-delay: 1.15s; }
+
+.arrow-track {
+  width: 2px;
+  height: 100%;
+  position: relative;
+  overflow: visible;
+}
+
+.arrow-line {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 80%;
+  border-radius: 1px;
+}
+.arrow-col:nth-of-type(2) .arrow-line { background: linear-gradient(180deg, transparent, var(--dci-color) 20%, var(--pdcch-color) 80%, transparent); }
+.arrow-col:nth-of-type(4) .arrow-line { background: linear-gradient(180deg, transparent, var(--pdcch-color) 20%, var(--ss-color) 80%, transparent); }
+.arrow-col:nth-of-type(6) .arrow-line { background: linear-gradient(180deg, transparent, var(--ss-color) 20%, var(--coreset-color) 80%, transparent); }
+
+/* Flowing particles on arrow */
+.particle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: flowRight 2.5s ease-in-out infinite;
+}
+.arrow-col:nth-of-type(2) .particle { background: var(--dci-color); box-shadow: 0 0 10px var(--dci-color), 0 0 20px var(--dci-glow); }
+.arrow-col:nth-of-type(4) .particle { background: var(--pdcch-color); box-shadow: 0 0 10px var(--pdcch-color), 0 0 20px var(--pdcch-glow); }
+.arrow-col:nth-of-type(6) .particle { background: var(--ss-color); box-shadow: 0 0 10px var(--ss-color), 0 0 20px var(--ss-glow); }
+
+.particle:nth-child(2) { animation-delay: 0.6s; width: 4px; height: 4px; }
+.particle:nth-child(3) { animation-delay: 1.2s; width: 5px; height: 5px; }
+.particle:nth-child(4) { animation-delay: 1.8s; width: 3px; height: 3px; }
+
+@keyframes flowRight {
+  0% { top: 8%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 88%; opacity: 0; }
+}
+
+/* Arrow chevron */
+.arrow-chevron {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  animation: pulse-chevron 1.5s ease infinite;
+}
+.arrow-col:nth-of-type(2) .arrow-chevron { color: var(--pdcch-color); }
+.arrow-col:nth-of-type(4) .arrow-chevron { color: var(--ss-color); }
+.arrow-col:nth-of-type(6) .arrow-chevron { color: var(--coreset-color); }
+
+@keyframes pulse-chevron {
+  0%,100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+  50% { opacity: 1; transform: translateX(-50%) translateY(3px); }
+}
+
+/* Horizontal flow label on arrow */
+.arrow-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  white-space: nowrap;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* ── Expanded detail panel ── */
+.detail-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, var(--bg-panel), #080d1a);
+  border-top: 1px solid var(--border);
+  padding: 20px 30px;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+.detail-panel.visible { transform: translateY(0); }
+.detail-panel .close-btn {
+  position: absolute;
+  top: 14px; right: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.detail-panel .close-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.detail-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.detail-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.detail-item {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.detail-item h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.detail-item p {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.detail-item code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  background: rgba(59,130,246,0.1);
+  color: var(--pdcch-color);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* ── Connection highlights ── */
+.card.highlight-path {
+  border-color: rgba(255,255,255,0.3) !important;
+  box-shadow: 0 0 20px rgba(255,255,255,0.08) !important;
+}
+
+/* ── Footer note ── */
+.footer-note {
+  text-align: center;
+  padding: 30px 24px 50px;
+  animation: fadeIn 0.6s ease 1.6s both;
+}
+.footer-note .note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+.footer-note .note .star { color: var(--pdcch-color); }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .flow-container {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .arrow-col {
+    min-height: 50px;
+    height: 60px;
+    width: 100%;
+  }
+  .arrow-track { width: 100%; height: 2px; }
+  .arrow-line {
+    top: 50%; left: 10%;
+    transform: translateY(-50%);
+    width: 80%; height: 2px;
+  }
+  .particle { animation-name: flowDown; }
+  @keyframes flowDown {
+    0% { left: 8%; opacity: 0; top: 50%; transform: translateY(-50%); }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: 88%; opacity: 0; top: 50%; transform: translateY(-50%); }
+  }
+  .arrow-chevron { bottom: auto; top: 50%; right: 8%; left: auto; transform: translateY(-50%) rotate(-90deg); }
+  .arrow-label { transform: translate(-50%, -50%) rotate(0deg); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="header">
+  <div class="spec-tag">3GPP TS 38.213 · Figure 145</div>
+  <h1>Mapping of <span>DCI Formats onto PDCCH</span></h1>
+  <p class="sub">Search Space Sets & Control Resource Sets — Interactive Animated Reference</p>
+</header>
+
+<!-- ── Legend ── -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--dci-color);"></div>DCI Formats</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pdcch-color);"></div>PDCCH (Agg. Level)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--ss-color);"></div>Search Space Sets</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--coreset-color);"></div>CORESET</div>
+  <div class="legend-item" style="opacity:0.5;font-style:italic;margin-left:12px;">Click any card for details</div>
+</div>
+
+<!-- ══════════════════ MAIN FLOW ══════════════════ -->
+<div class="flow-container">
+
+  <!-- ── COL 1: DCI Formats ── -->
+  <div class="column col-dci">
+    <div class="col-header">
+      <span class="col-label">Source</span>
+      <div class="col-title">DCI</div>
+      <div class="col-underline"></div>
+    </div>
+    <div class="card-group">
+
+      <div class="group-label dci">↑ Uplink Allocations</div>
+
+      <div class="card dci" data-detail="dci00" data-links="pdcch-al,ss-type3,ss-uss">
+        <div class="card-title"><span class="icon">📤</span>Format 0_0</div>
+        <div class="card-desc">Fallback UL grant — scheduling PUSCH with minimal fields. Works in CSS & USS.</div>
+        <div class="card-tag">UL · Fallback</div>
+      </div>
+
+      <div class="card dci" data-detail="dci01" data-links="pdcch-al,ss-uss">
+        <div class="card-title"><span class="icon">📤</span>Format 0_1</div>
+        <div class="card-desc">Full-feature UL grant — MIMO, BWP, SRS, CBG, antenna ports, and more.</div>
+        <div class="card-tag">UL · Full</div>
+      </div>
+
+      <div class="group-label dci" style="margin-top:12px;">↓ Downlink Allocations</div>
+
+      <div class="card dci" data-detail="dci10" data-links="pdcch-al,ss-type0,ss-type0a,ss-type1,ss-type2,ss-type3,ss-uss">
+        <div class="card-title"><span class="icon">📥</span>Format 1_0</div>
+        <div class="card-desc">Fallback DL grant — scheduling PDSCH. Used for SIB1, Paging, RAR, Msg4, and UE-specific fallback.</div>
+        <div class="card-tag">DL · Fallback</div>
+      </div>
+
+      <div class="card dci" data-detail="dci11" data-links="pdcch-al,ss-uss">
+        <div class="card-title"><span class="icon">📥</span>Format 1_1</div>
+        <div class="card-desc">Full-feature DL grant — TCI, CBGTI, Antenna ports, BWP switching, ZP-CSI-RS trigger.</div>
+        <div class="card-tag">DL · Full</div>
+      </div>
+
+      <div class="group-label dci" style="margin-top:12px;">⚡ Group Common Signalling</div>
+
+      <div class="card dci" data-detail="dci20" data-links="pdcch-al,ss-type3">
+        <div class="card-title"><span class="icon">📊</span>Format 2_0</div>
+        <div class="card-desc">Slot Format Indicator — dynamic TDD DL/UL/Flex per symbol.</div>
+        <div class="card-tag">SFI-RNTI</div>
+      </div>
+
+      <div class="card dci" data-detail="dci21" data-links="pdcch-al,ss-type3">
+        <div class="card-title"><span class="icon">⚠️</span>Format 2_1</div>
+        <div class="card-desc">Pre-emption Indication — alerts UEs their PDSCH was interrupted by URLLC.</div>
+        <div class="card-tag">INT-RNTI</div>
+      </div>
+
+      <div class="card dci" data-detail="dci22" data-links="pdcch-al,ss-type3">
+        <div class="card-title"><span class="icon">⚡</span>Format 2_2</div>
+        <div class="card-desc">Group TPC commands for PUCCH power control.</div>
+        <div class="card-tag">TPC-PUCCH-RNTI</div>
+      </div>
+
+      <div class="card dci" data-detail="dci23" data-links="pdcch-al,ss-type3">
+        <div class="card-title"><span class="icon">📡</span>Format 2_3</div>
+        <div class="card-desc">Group TPC commands for SRS transmit power control.</div>
+        <div class="card-tag">TPC-SRS-RNTI</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARROW 1 ── -->
+  <div class="arrow-col">
+    <div class="arrow-track">
+      <div class="arrow-line"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="arrow-chevron">▶</div>
+      <div class="arrow-label">Mapped to</div>
+    </div>
+  </div>
+
+  <!-- ── COL 2: PDCCH Aggregation Levels ── -->
+  <div class="column col-pdcch">
+    <div class="col-header">
+      <span class="col-label">Transport</span>
+      <div class="col-title">PDCCH</div>
+      <div class="col-underline"></div>
+    </div>
+    <div class="card-group">
+      <div class="card pdcch" id="pdcch-al" data-detail="al" data-links="">
+        <div class="card-title"><span class="icon">📦</span>Aggregation Levels</div>
+        <div class="card-desc" style="margin-top:10px;">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;">
+            <span style="color:var(--coreset-color);font-weight:700;">AL 1</span><span>= 1 CCE = 72 RE</span>
+            <span style="color:var(--pdcch-color);font-weight:700;">AL 2</span><span>= 2 CCE = 144 RE</span>
+            <span style="color:var(--ss-color);font-weight:700;">AL 4</span><span>= 4 CCE = 288 RE</span>
+            <span style="color:var(--dci-color);font-weight:700;">AL 8</span><span>= 8 CCE = 576 RE</span>
+            <span style="color:#ef4444;font-weight:700;">AL 16</span><span>= 16 CCE = 1152 RE</span>
+          </div>
+        </div>
+        <div class="card-tag" style="margin-top:14px;">CCE: Control Channel Element</div>
+        <div class="card-tag">RE: Resource Element</div>
+      </div>
+
+      <div class="card pdcch" data-detail="link-adapt">
+        <div class="card-title"><span class="icon">🎚️</span>Link Adaptation</div>
+        <div class="card-desc">gNB selects AL based on DCI payload size & UE coverage. Cell-edge UEs → high AL (more redundancy). Cell-center UEs → low AL (more capacity).</div>
+        <div class="card-tag">QPSK · Polar Code</div>
+      </div>
+
+      <div class="card pdcch" data-detail="capacity">
+        <div class="card-title"><span class="icon">📊</span>Capacity Impact</div>
+        <div class="card-desc">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:4px;">
+            <span style="color:var(--coreset-color);">AL 1</span><span>→ max UE scheduling capacity</span>
+            <span style="color:#ef4444;">AL 16</span><span>→ only 1 UE per 16 CCEs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARROW 2 ── -->
+  <div class="arrow-col">
+    <div class="arrow-track">
+      <div class="arrow-line"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="arrow-chevron">▶</div>
+      <div class="arrow-label">Monitored in</div>
+    </div>
+  </div>
+
+  <!-- ── COL 3: Search Space Sets ── -->
+  <div class="column col-ss">
+    <div class="col-header">
+      <span class="col-label">Location</span>
+      <div class="col-title">Search Space</div>
+      <div class="col-underline"></div>
+    </div>
+    <div class="card-group">
+
+      <div class="group-label ss">Common Search Space</div>
+
+      <div class="card ss" id="ss-type0" data-detail="ss0">
+        <div class="card-title"><span class="icon">📡</span>Type 0</div>
+        <div class="card-desc">SIB1 scheduling. DCI 1_0 with SI-RNTI on CORESET#0.</div>
+        <div class="card-tag">SI-RNTI · SIB1</div>
+      </div>
+
+      <div class="card ss" id="ss-type0a" data-detail="ss0a">
+        <div class="card-title"><span class="icon">📡</span>Type 0A</div>
+        <div class="card-desc">Other SIBs scheduling (SIB2–SIB9+). DCI 1_0 with SI-RNTI.</div>
+        <div class="card-tag">SI-RNTI · Other SIB</div>
+      </div>
+
+      <div class="card ss" id="ss-type1" data-detail="ss1">
+        <div class="card-title"><span class="icon">🔄</span>Type 1</div>
+        <div class="card-desc">Random Access: MSG2 (RAR) & MSG4. DCI 1_0 with RA-RNTI / TC-RNTI.</div>
+        <div class="card-tag">RA-RNTI · TC-RNTI</div>
+      </div>
+
+      <div class="card ss" id="ss-type2" data-detail="ss2">
+        <div class="card-title"><span class="icon">📟</span>Type 2</div>
+        <div class="card-desc">Paging channel scheduling. DCI 1_0 with P-RNTI.</div>
+        <div class="card-tag">P-RNTI · Paging</div>
+      </div>
+
+      <div class="card ss" id="ss-type3" data-detail="ss3">
+        <div class="card-title"><span class="icon">⚡</span>Type 3</div>
+        <div class="card-desc">UE Group Common signalling & UE Specific signalling — SFI, TPC, Pre-emption, plus C-RNTI based grants.</div>
+        <div class="card-tag">Multi-RNTI</div>
+      </div>
+
+      <div class="group-label ss" style="margin-top:12px;">UE-Specific Search Space</div>
+
+      <div class="card ss" id="ss-uss" data-detail="uss">
+        <div class="card-title"><span class="icon">👤</span>UE Specific</div>
+        <div class="card-desc">Dedicated scheduling per UE. DCI 0_0/0_1/1_0/1_1 with C-RNTI. Hashing formula randomizes CCE positions per UE.</div>
+        <div class="card-tag">C-RNTI · CS-RNTI</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARROW 3 ── -->
+  <div class="arrow-col">
+    <div class="arrow-track">
+      <div class="arrow-line"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="arrow-chevron">▶</div>
+      <div class="arrow-label">Placed in</div>
+    </div>
+  </div>
+
+  <!-- ── COL 4: CORESET ── -->
+  <div class="column col-coreset">
+    <div class="col-header">
+      <span class="col-label">Resources</span>
+      <div class="col-title">CORESET</div>
+      <div class="col-underline"></div>
+    </div>
+    <div class="card-group">
+
+      <div class="card coreset" data-detail="rb-sym">
+        <div class="card-title"><span class="icon">🔲</span>Resource Blocks & Symbols</div>
+        <div class="card-desc">Frequency: 6-RB granularity (45-bit bitmap). Time: 1, 2, or 3 OFDM symbols. Defines the time-frequency container for PDCCH.</div>
+        <div class="card-tag">45-bit bitmap · 1-3 symbols</div>
+      </div>
+
+      <div class="card coreset" data-detail="cce-reg">
+        <div class="card-title"><span class="icon">🔗</span>CCE-to-REG Mapping</div>
+        <div class="card-desc">
+          <strong style="color:var(--dci-color);">Interleaved:</strong> Frequency diversity, used for CSS & CORESET#0.<br>
+          <strong style="color:var(--pdcch-color);">Non-Interleaved:</strong> Localized, enables beamforming in USS & FR2.
+        </div>
+        <div class="card-tag">REG Bundle: 2, 3, or 6</div>
+      </div>
+
+      <div class="card coreset" data-detail="precoder">
+        <div class="card-title"><span class="icon">📐</span>Precoder Granularity</div>
+        <div class="card-desc">
+          <strong>sameAsREG-bundle:</strong> Precoder changes per REG bundle (more flexibility).<br>
+          <strong>allContiguousRBs:</strong> Same precoder for all contiguous RBs (wideband beam).
+        </div>
+        <div class="card-tag">Beamforming Control</div>
+      </div>
+
+      <div class="card coreset" data-detail="qcl">
+        <div class="card-title"><span class="icon">📡</span>Quasi Co-Location (QCL)</div>
+        <div class="card-desc">TCI states define QCL between PDCCH DMRS and SSB/CSI-RS. QCL-TypeD for spatial beam. Up to 64 TCI states per CORESET.</div>
+        <div class="card-tag">TCI · QCL-TypeA/D</div>
+      </div>
+
+      <div class="card coreset" data-detail="dmrs-scr">
+        <div class="card-title"><span class="icon">🔑</span>DMRS Scrambling ID</div>
+        <div class="card-desc">pdcch-DMRS-ScramblingID configures the scrambling sequence for PDCCH DMRS. Defaults to Physical Cell ID if not configured.</div>
+        <div class="card-tag">c_init = f(n_ID, slot, symbol)</div>
+      </div>
+
+      <div class="card coreset" data-detail="reg-info">
+        <div class="card-title"><span class="icon">📦</span>REG: Resource Element Group</div>
+        <div class="card-desc">1 REG = 12 subcarriers × 1 OFDM symbol = 12 REs (9 data + 3 DMRS). 1 CCE = 6 REGs = 72 REs.</div>
+        <div class="card-tag">6 REGs = 1 CCE</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Footer note ── -->
+<div class="footer-note">
+  <div class="note">
+    <span class="star">★</span>
+    The PDCCH is mapped onto a specific Search Space Set according to the content of the DCI. For example, DCI for MSG2 during RACH → Type 1 Common Search Space.
+  </div>
+</div>
+
+<!-- ── Detail Panel ── -->
+<div class="detail-panel" id="detailPanel">
+  <button class="close-btn" onclick="closeDetail()">✕</button>
+  <div id="detailContent"></div>
+</div>
+
+<script>
+// ── Detail Data ──
+const details = {
+  'dci00': {
+    title: '📤 DCI Format 0_0 — Fallback UL Grant',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Fallback scheduling of PUSCH with minimum set of fields. Used when full DCI 0_1 is not configured.' },
+      { h: 'Key Fields', p: 'Frequency domain RA, Time domain RA, MCS (5 bits), NDI, RV, HARQ Process ID, TPC for PUSCH, UL/SUL indicator.' },
+      { h: 'Search Space', p: 'Both <code>Common (Type 3)</code> and <code>UE-Specific</code>. Size aligned with DCI 1_0 via zero-padding.' },
+      { h: 'RNTI', p: '<code>C-RNTI</code>, <code>TC-RNTI</code>, <code>MCS-C-RNTI</code>, <code>TPC-PUSCH-RNTI</code>' }
+    ]
+  },
+  'dci01': {
+    title: '📤 DCI Format 0_1 — Full UL Grant',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Full-feature UL scheduling with all advanced options: MIMO layers, SRS resources, BWP switching, CBG retransmission.' },
+      { h: 'Additional Fields', p: 'Carrier indicator, BWP indicator, SRS resource indicator, Precoding info & number of layers, Antenna ports, PTRS-DMRS association, CBGTI, DMRS sequence init.' },
+      { h: 'Search Space', p: '<code>UE-Specific only</code>. Size aligned with DCI 1_1.' },
+      { h: 'Size', p: 'Variable — depends on configuration. Typically 40-70 bits before CRC.' }
+    ]
+  },
+  'dci10': {
+    title: '📥 DCI Format 1_0 — Fallback DL Grant',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Fallback PDSCH scheduling. The most versatile DCI — used for SIB1, Paging, RAR (MSG2), MSG4, and UE-specific fallback.' },
+      { h: 'Key Fields', p: 'Freq domain RA, Time domain RA, VRB-to-PRB mapping, MCS, NDI, RV, HARQ PID, DAI, TPC-PUCCH, PUCCH resource, PDSCH-to-HARQ timing.' },
+      { h: 'Search Space', p: 'CSS Types 0, 0A, 1, 2, 3 and UE-Specific. Changes content based on which RNTI masks the CRC.' },
+      { h: 'RNTI', p: '<code>SI-RNTI</code> (SIB1), <code>P-RNTI</code> (Paging), <code>RA-RNTI</code> (RAR), <code>TC-RNTI</code> (MSG4), <code>C-RNTI</code> (dedicated)' }
+    ]
+  },
+  'dci11': {
+    title: '📥 DCI Format 1_1 — Full DL Grant',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Most feature-rich DL scheduling DCI. Supports MIMO, multi-TRP, CBG, BWP switching, beam indication via TCI.' },
+      { h: 'Unique Fields', p: 'TCI (beam), Antenna ports (layers + DMRS), CBG Transmission Info, CBG Flushing Info, ZP-CSI-RS trigger, Rate matching indicator, PRB bundling, SRS request.' },
+      { h: 'Search Space', p: '<code>UE-Specific only</code>. Size aligned with DCI 0_1.' },
+      { h: 'Typical Size', p: '~45-75 bits depending on BW, MIMO config, and optional fields.' }
+    ]
+  },
+  'dci20': {
+    title: '📊 DCI Format 2_0 — Slot Format Indicator',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Dynamically indicates DL/UL/Flexible designation for each OFDM symbol in a slot. Essential for dynamic TDD.' },
+      { h: 'RNTI', p: '<code>SFI-RNTI</code> — group common, all UEs in cell decode this.' },
+      { h: 'Search Space', p: 'Common Search Space Type 3 only.' },
+      { h: 'Content', p: 'Index into SFI table (configured by RRC). Each index maps to a 14-symbol pattern like DDDDDDDFFFUUUU.' }
+    ]
+  },
+  'dci21': {
+    title: '⚠️ DCI Format 2_1 — Pre-emption Indication',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Tells eMBB UEs that part of their scheduled PDSCH was pre-empted (punctured) by URLLC traffic.' },
+      { h: 'RNTI', p: '<code>INT-RNTI</code> (Interruption RNTI).' },
+      { h: 'Action', p: 'UE should discard soft bits from the indicated PRBs/symbols before HARQ combining to avoid corrupted LLRs.' },
+      { h: 'Importance', p: 'Critical for eMBB/URLLC coexistence — prevents throughput degradation of eMBB users.' }
+    ]
+  },
+  'dci22': {
+    title: '⚡ DCI Format 2_2 — TPC for PUCCH',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Group TPC (Transmit Power Control) commands for PUCCH power adjustment.' },
+      { h: 'RNTI', p: '<code>TPC-PUCCH-RNTI</code> — group common.' },
+      { h: 'Commands', p: 'Each block carries TPC for one UE: {-1, 0, +1, +3} dB adjustment.' },
+      { h: 'Benefit', p: 'Efficient power control for many UEs in a single DCI instead of individual commands.' }
+    ]
+  },
+  'dci23': {
+    title: '📡 DCI Format 2_3 — TPC for SRS',
+    color: 'var(--dci-color)',
+    items: [
+      { h: 'Purpose', p: 'Group TPC commands for SRS (Sounding Reference Signal) power control.' },
+      { h: 'RNTI', p: '<code>TPC-SRS-RNTI</code>.' },
+      { h: 'Commands', p: 'TPC adjustments: {-1, 0, +1, +3} dB per UE block.' },
+      { h: 'Use Case', p: 'Ensures SRS is received at optimal power at gNB for accurate UL channel estimation and beam management.' }
+    ]
+  },
+  'al': {
+    title: '📦 PDCCH Aggregation Levels — Detailed',
+    color: 'var(--pdcch-color)',
+    items: [
+      { h: 'Concept', p: 'AL determines how many CCEs carry one DCI. Higher AL = lower code rate = better reliability at cost of capacity.' },
+      { h: 'RE Calculation', p: '1 CCE = 6 REGs × 12 REs = 72 REs. Data REs = 54 (after 18 DMRS). QPSK: <code>108 coded bits per CCE</code>.' },
+      { h: 'Code Rate', p: 'For ~40-bit DCI+CRC: AL1→~0.59, AL2→~0.30, AL4→~0.15, AL8→~0.07, AL16→~0.04.' },
+      { h: 'NR vs LTE', p: 'LTE max was AL8. NR adds <code>AL16</code> for extreme coverage — provides ~3dB gain over AL8.' }
+    ]
+  },
+  'link-adapt': {
+    title: '🎚️ PDCCH Link Adaptation',
+    color: 'var(--pdcch-color)',
+    items: [
+      { h: 'Algorithm', p: 'gNB link adaptation selects AL based on estimated DL SINR (from CSI reports, SRS, or BLER feedback).' },
+      { h: 'Small Payloads', p: 'Can use lower AL since fewer coded bits are needed. Saves CCE resources.' },
+      { h: 'Poor Coverage UEs', p: 'Assigned higher AL for more redundancy. Trades capacity for reliability.' },
+      { h: 'Modulation', p: 'Always QPSK — no AMC for PDCCH modulation. Only coding rate varies via AL.' }
+    ]
+  },
+  'capacity': {
+    title: '📊 PDCCH Capacity Impact',
+    color: 'var(--pdcch-color)',
+    items: [
+      { h: 'Example', p: 'CORESET with 48 RBs × 2 symbols = 96 REGs = 16 CCEs. At AL1: 16 UEs/slot. At AL8: only 2 UEs/slot.' },
+      { h: 'Blocking', p: 'If CCEs run out, scheduler cannot send grants → scheduling delay. Monitor CCE utilization KPI.' },
+      { h: 'Optimization', p: 'Power-boost CORESET to reduce average AL. Increase CORESET size if blocking > 2%.' },
+      { h: 'Max Blind Decodes', p: 'UE budget: 44 BD/slot (15 kHz), 36 (30 kHz), 22 (60 kHz), 20 (120 kHz).' }
+    ]
+  },
+  'ss0': {
+    title: '📡 Type 0 CSS — SIB1 Scheduling',
+    color: 'var(--ss-color)',
+    items: [
+      { h: 'Purpose', p: 'Carries DCI 1_0 with SI-RNTI to schedule SIB1 on PDSCH. SIB1 is the first system information block UE needs after MIB.' },
+      { h: 'CORESET', p: 'Always on <code>CORESET#0</code> (derived from MIB pdcch-ConfigSIB1 field).' },
+      { h: 'Monitoring', p: 'UE derives monitoring occasions from SIB1 scheduling info in MIB → multiplexing pattern + search space config.' },
+      { h: 'AL', p: 'Typically AL4 or AL8 for robust reception during initial access.' }
+    ]
+  },
+  'ss0a': {
+    title: '📡 Type 0A CSS — Other SIBs',
+    color: 'var(--ss-color)',
+    items: [
+      { h: 'Purpose', p: 'Schedules other SIBs (SIB2-SIB9 and beyond) via DCI 1_0 with SI-RNTI.' },
+      { h: 'Trigger', p: 'SIB1 contains schedulingInfoList indicating which SIBs are available and their scheduling windows.' },
+      { h: 'CORESET', p: 'Uses CORESET#0 or a dedicated common CORESET configured in SIB1.' },
+      { h: 'On-Demand SIBs', p: 'Some SIBs are broadcast periodically, others are on-demand (UE sends SI-request via RACH).' }
+    ]
+  },
+  'ss1': {
+    title: '🔄 Type 1 CSS — Random Access (MSG2/MSG4)',
+    color: 'var(--ss-color)',
+    items: [
+      { h: 'MSG2 (RAR)', p: 'DCI 1_0 with <code>RA-RNTI</code> schedules the Random Access Response on PDSCH. RA-RNTI = 1 + s_id + 14 × t_id + 14×80 × f_id + 14×80×8 × ul_carrier_id.' },
+      { h: 'MSG4', p: 'DCI 1_0 with <code>TC-RNTI</code> schedules contention resolution message.' },
+      { h: 'Window', p: 'UE monitors Type1-PDCCH CSS during the ra-ResponseWindow after MSG1 (PRACH).' },
+      { h: 'CORESET', p: 'Uses CORESET#0 or dedicated CORESET for RA configured in SIB1/dedicated RRC.' }
+    ]
+  },
+  'ss2': {
+    title: '📟 Type 2 CSS — Paging',
+    color: 'var(--ss-color)',
+    items: [
+      { h: 'Purpose', p: 'Carries DCI 1_0 with P-RNTI (0xFFFE) to schedule paging message on PDSCH.' },
+      { h: 'Monitoring', p: 'UE calculates Paging Frame (PF) and Paging Occasion (PO) from its UE ID, DRX cycle, and paging parameters in SIB1.' },
+      { h: 'Efficiency', p: 'UE only wakes up at its specific PO, enabling deep sleep between paging cycles.' },
+      { h: 'Content', p: 'Paging message may contain: paging records (incoming call/data), system info change indication, ETWS/CMAS alerts.' }
+    ]
+  },
+  'ss3': {
+    title: '⚡ Type 3 CSS — Group Common & UE Signalling',
+    color: 'var(--ss-color)',
+    items: [
+      { h: 'Purpose', p: 'Most versatile CSS — carries group common DCI (2_0/2_1/2_2/2_3) and UE-specific grants (0_0/1_0 with C-RNTI).' },
+      { h: 'Group Common', p: 'SFI-RNTI (slot format), INT-RNTI (pre-emption), TPC-PUCCH-RNTI, TPC-SRS-RNTI.' },
+      { h: 'UE Specific', p: 'C-RNTI based grants for UEs that need to monitor CSS (before USS is fully configured).' },
+      { h: 'CORESET', p: 'Can use any CORESET — not restricted to CORESET#0.' }
+    ]
+  },
+  'uss': {
+    title: '👤 UE-Specific Search Space',
+    color: 'var(--ss-color)',
+    items: [
+      { h: 'Purpose', p: 'Dedicated PDCCH monitoring per UE. Carries DCI 0_0/0_1 (UL grants) and DCI 1_0/1_1 (DL grants) with C-RNTI.' },
+      { h: 'Hashing', p: 'CCE start position uses hashing formula: <code>Y(A,RNTI)</code> ensures different UEs check different positions → avoids collisions.' },
+      { h: 'Candidates', p: 'Up to 8 candidates per AL. Max 10 search spaces per BWP. Each can be linked to a different CORESET.' },
+      { h: 'Beam', p: 'USS CORESET can use dedicated beam (TCI state) → UE-specific beamformed PDCCH in FR2.' }
+    ]
+  },
+  'rb-sym': {
+    title: '🔲 CORESET — Resource Blocks & Symbols',
+    color: 'var(--coreset-color)',
+    items: [
+      { h: 'Frequency', p: '45-bit bitmap: each bit represents 6 contiguous RBs. Total up to 270 RBs (45 × 6). Non-contiguous allocation supported.' },
+      { h: 'Time', p: 'Duration: 1, 2, or 3 consecutive OFDM symbols. CORESET#0 duration from MIB table.' },
+      { h: 'Total Size', p: 'N_CCE = (N_RB × duration) / 6. Example: 48 RBs × 2 sym = 96 REGs = 16 CCEs.' },
+      { h: 'CORESET#0', p: 'Special: config from MIB 4-bit index → TS 38.213 Tables 13-1 to 13-10. Always interleaved.' }
+    ]
+  },
+  'cce-reg': {
+    title: '🔗 CCE-to-REG Mapping',
+    color: 'var(--coreset-color)',
+    items: [
+      { h: 'Interleaved', p: 'REG bundles scattered via row-column interleaver. Parameters: reg-BundleSize (2/3/6), interleaverSize (2/3/6), shiftIndex (default=PCI). Provides frequency diversity.' },
+      { h: 'Non-Interleaved', p: 'REGs of a CCE are contiguous in frequency. Bundle size = 6 (entire CCE). Enables UE-specific beamforming.' },
+      { h: 'CORESET#0', p: 'Always uses <code>interleaved</code> mapping for robustness during initial access.' },
+      { h: 'Choice', p: 'CSS → interleaved (diversity). USS in FR2 → non-interleaved (beamforming). USS in FR1 → either.' }
+    ]
+  },
+  'precoder': {
+    title: '📐 Precoder Granularity',
+    color: 'var(--coreset-color)',
+    items: [
+      { h: 'sameAsREG-bundle', p: 'Precoder can change per REG bundle. Enables frequency-selective precoding. Used with interleaved mapping.' },
+      { h: 'allContiguousRBs', p: 'Same precoder applied across all contiguous RBs in the CORESET. Simpler implementation, wideband beam.' },
+      { h: 'Impact', p: 'Affects channel estimation assumption at UE. Larger precoding granularity → better estimation but less flexibility.' },
+      { h: 'Configuration', p: 'Set via <code>precoderGranularity</code> in ControlResourceSet IE.' }
+    ]
+  },
+  'qcl': {
+    title: '📡 Quasi Co-Location (QCL)',
+    color: 'var(--coreset-color)',
+    items: [
+      { h: 'QCL-TypeA', p: 'Doppler shift, Doppler spread, average delay, delay spread. Used for channel estimation properties.' },
+      { h: 'QCL-TypeD', p: 'Spatial Rx parameter — indicates beam direction. Critical for FR2 (mmWave) reception.' },
+      { h: 'TCI States', p: 'Up to 64 TCI states per CORESET. Activated via MAC-CE. Each TCI state links PDCCH DMRS to an SSB or CSI-RS.' },
+      { h: 'Beam Recovery', p: 'If QCL beam fails → Beam Failure Detection (BFD) → UE triggers recovery via PRACH or dedicated SR.' }
+    ]
+  },
+  'dmrs-scr': {
+    title: '🔑 DMRS Scrambling ID',
+    color: 'var(--coreset-color)',
+    items: [
+      { h: 'Default', p: 'n_ID = Physical Cell ID (N_cell_ID). DMRS sequence is cell-specific.' },
+      { h: 'Configured', p: '<code>pdcch-DMRS-ScramblingID</code> (0–65535) in ControlResourceSet IE. Enables non-cell-specific scrambling.' },
+      { h: 'Use Case', p: 'Multi-TRP, CoMP: different CORESETs can have different scrambling IDs for different TRPs.' },
+      { h: 'Init Formula', p: '<code>c_init = (2^17 × (14·n_sf + l + 1) × (2·n_ID + 1) + 2·n_ID) mod 2^31</code>' }
+    ]
+  },
+  'reg-info': {
+    title: '📦 REG — Resource Element Group',
+    color: 'var(--coreset-color)',
+    items: [
+      { h: 'Definition', p: '1 REG = 1 RB × 1 OFDM symbol = 12 subcarriers × 1 symbol = 12 Resource Elements.' },
+      { h: 'DMRS', p: '3 DMRS REs per REG at subcarrier positions k={1, 5, 9}. Remaining 9 REs carry PDCCH data.' },
+      { h: 'CCE', p: '1 CCE = 6 REGs = 72 REs total (54 data + 18 DMRS). QPSK → 108 coded bits per CCE.' },
+      { h: 'REG Bundle', p: 'Groups of REGs sharing same precoder: size 2, 3, or 6 depending on CORESET duration.' }
+    ]
+  }
+};
+
+// ── Interaction Logic ──
+const detailPanel = document.getElementById('detailPanel');
+const detailContent = document.getElementById('detailContent');
+let activeCard = null;
+
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', () => {
+    const key = card.dataset.detail;
+    if (!key || !details[key]) return;
+
+    // Remove previous active
+    document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    activeCard = card;
+
+    const d = details[key];
+    let html = `<div class="detail-title" style="color:${d.color}">${d.title}</div>`;
+    html += '<div class="detail-body">';
+    d.items.forEach(item => {
+      html += `<div class="detail-item"><h4 style="color:${d.color}">${item.h}</h4><p>${item.p}</p></div>`;
+    });
+    html += '</div>';
+    detailContent.innerHTML = html;
+    detailPanel.classList.add('visible');
+  });
+
+  // Hover highlight connected cards
+  card.addEventListener('mouseenter', () => {
+    const links = card.dataset.links;
+    if (!links) return;
+    links.split(',').forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('highlight-path');
+    });
+  });
+  card.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.highlight-path').forEach(el => el.classList.remove('highlight-path'));
+  });
+});
+
+function closeDetail() {
+  detailPanel.classList.remove('visible');
+  if (activeCard) activeCard.classList.remove('active');
+  activeCard = null;
+}
+
+// Close on Escape
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
+</script>
+
+</body>
+</html>

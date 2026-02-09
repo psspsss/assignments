@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G NR PBCH Physical Layer Processing — 3GPP TS 38.211/38.212</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0e1a;
+  --bg-card: #111827;
+  --bg-step: #1a2332;
+  --accent-cyan: #00e5ff;
+  --accent-green: #00e676;
+  --accent-amber: #ffab00;
+  --accent-pink: #ff4081;
+  --accent-purple: #b388ff;
+  --accent-blue: #448aff;
+  --text-primary: #e8eaf6;
+  --text-secondary: #90a4ae;
+  --text-dim: #546e7a;
+  --border: #1e3a5f;
+  --glow-cyan: 0 0 20px rgba(0,229,255,0.3);
+  --glow-green: 0 0 20px rgba(0,230,118,0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+.grain-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* HEADER */
+.hero {
+  position: relative;
+  padding: 40px 20px 30px;
+  text-align: center;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,229,255,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 30% 100%, rgba(179,136,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(20px, 3.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.hero .subtitle {
+  font-size: clamp(12px, 1.8vw, 15px);
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+.hero .spec-ref {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--accent-cyan);
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(0,229,255,0.05);
+}
+
+/* ANALOGY SECTION */
+.analogy-bar {
+  max-width: 900px;
+  margin: 0 auto 30px;
+  padding: 0 20px;
+}
+.analogy-card {
+  background: linear-gradient(135deg, #1a2a1a, #1a2332);
+  border: 1px solid #2a4a2a;
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.whatsapp-icon {
+  width: 44px; height: 44px;
+  background: #25d366;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.analogy-text h3 {
+  font-size: 14px;
+  color: #25d366;
+  margin-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.analogy-text p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.analogy-text .msg-bubble {
+  display: inline-block;
+  background: #005c4b;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #e8eaf6;
+  margin: 4px 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* CONTROLS */
+.controls {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  padding: 0 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ctrl-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.ctrl-btn:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}
+.ctrl-btn.active {
+  background: rgba(0,229,255,0.1);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+.ctrl-btn.play-btn {
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(179,136,255,0.15));
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* PROGRESS BAR */
+.progress-container {
+  max-width: 900px;
+  margin: 0 auto 30px;
+  padding: 0 20px;
+}
+.progress-track {
+  height: 4px;
+  background: var(--bg-step);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  border-radius: 2px;
+  transition: width 0.6s ease;
+  width: 0%;
+}
+.step-indicators {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+.step-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: all 0.4s;
+  cursor: pointer;
+}
+.step-dot.active {
+  background: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+  transform: scale(1.4);
+}
+.step-dot.completed {
+  background: var(--accent-green);
+}
+
+/* PIPELINE CONTAINER */
+.pipeline {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+/* STEP CARD */
+.step-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  opacity: 0.4;
+  transform: translateY(10px);
+  transition: all 0.6s ease;
+}
+.step-card.active {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 30px rgba(0,229,255,0.08);
+}
+.step-card.completed {
+  opacity: 0.8;
+  transform: translateY(0);
+  border-color: var(--accent-green);
+}
+
+.step-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.step-number {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.4s;
+}
+.step-card:nth-child(1) .step-number { background: rgba(0,229,255,0.15); color: var(--accent-cyan); }
+.step-card:nth-child(2) .step-number { background: rgba(255,171,0,0.15); color: var(--accent-amber); }
+.step-card:nth-child(3) .step-number { background: rgba(179,136,255,0.15); color: var(--accent-purple); }
+.step-card:nth-child(4) .step-number { background: rgba(0,230,118,0.15); color: var(--accent-green); }
+.step-card:nth-child(5) .step-number { background: rgba(255,64,129,0.15); color: var(--accent-pink); }
+.step-card:nth-child(6) .step-number { background: rgba(68,138,255,0.15); color: var(--accent-blue); }
+.step-card:nth-child(7) .step-number { background: rgba(255,171,0,0.15); color: var(--accent-amber); }
+.step-card:nth-child(8) .step-number { background: rgba(0,229,255,0.15); color: var(--accent-cyan); }
+.step-card:nth-child(9) .step-number { background: rgba(179,136,255,0.15); color: var(--accent-purple); }
+.step-card:nth-child(10) .step-number { background: rgba(0,230,118,0.15); color: var(--accent-green); }
+
+.step-title-group { flex: 1; }
+.step-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.step-spec {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.step-bits {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(0,229,255,0.08);
+  color: var(--accent-cyan);
+  white-space: nowrap;
+}
+
+/* STEP BODY */
+.step-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+.step-card.active .step-body,
+.step-card.expanded .step-body {
+  max-height: 2000px;
+}
+.step-content {
+  padding: 0 20px 20px;
+}
+
+/* BIT VISUALIZATION */
+.bit-viz {
+  background: var(--bg-deep);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+.bit-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.bit-row {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  min-height: 28px;
+  align-items: center;
+}
+.bit {
+  width: 22px; height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  border-radius: 3px;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.bit.data { background: rgba(0,229,255,0.2); color: var(--accent-cyan); }
+.bit.timing { background: rgba(255,171,0,0.2); color: var(--accent-amber); }
+.bit.crc { background: rgba(255,64,129,0.2); color: var(--accent-pink); }
+.bit.scrambled { background: rgba(179,136,255,0.2); color: var(--accent-purple); }
+.bit.coded { background: rgba(0,230,118,0.15); color: var(--accent-green); }
+.bit.matched { background: rgba(68,138,255,0.15); color: var(--accent-blue); }
+.bit.symbol { background: rgba(255,171,0,0.15); color: var(--accent-amber); }
+.bit.highlight {
+  transform: scale(1.15);
+  box-shadow: 0 0 8px currentColor;
+}
+
+.bit-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  color: var(--text-dim);
+  font-size: 16px;
+}
+
+/* EXPLANATION */
+.explanation {
+  background: rgba(0,229,255,0.04);
+  border-left: 3px solid var(--accent-cyan);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+.explanation h4 {
+  font-size: 12px;
+  color: var(--accent-cyan);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.explanation p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.explanation .formula {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent-purple);
+  background: rgba(179,136,255,0.08);
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  display: inline-block;
+  word-break: break-all;
+}
+
+/* WHATSAPP ANALOGY IN STEP */
+.wa-analogy {
+  background: rgba(37,211,102,0.06);
+  border-left: 3px solid #25d366;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+}
+.wa-analogy h4 {
+  font-size: 12px;
+  color: #25d366;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 6px;
+}
+.wa-analogy p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ANIMATED BITS FLOWING */
+@keyframes bitPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes flowDown {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animating .bit {
+  animation: slideIn 0.1s ease forwards;
+  opacity: 0;
+}
+.animating .bit:nth-child(1) { animation-delay: 0.02s; }
+.animating .bit:nth-child(2) { animation-delay: 0.04s; }
+.animating .bit:nth-child(3) { animation-delay: 0.06s; }
+.animating .bit:nth-child(4) { animation-delay: 0.08s; }
+.animating .bit:nth-child(5) { animation-delay: 0.10s; }
+.animating .bit:nth-child(6) { animation-delay: 0.12s; }
+.animating .bit:nth-child(7) { animation-delay: 0.14s; }
+.animating .bit:nth-child(8) { animation-delay: 0.16s; }
+.animating .bit:nth-child(9) { animation-delay: 0.18s; }
+.animating .bit:nth-child(10) { animation-delay: 0.20s; }
+.animating .bit:nth-child(11) { animation-delay: 0.22s; }
+.animating .bit:nth-child(12) { animation-delay: 0.24s; }
+.animating .bit:nth-child(n+13) { animation-delay: 0.26s; }
+
+/* CONNECTOR LINE BETWEEN STEPS */
+.connector {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+.connector-line {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--accent-cyan), transparent);
+  opacity: 0.3;
+  transition: opacity 0.4s;
+}
+.connector-line.active {
+  opacity: 1;
+  background: linear-gradient(to bottom, var(--accent-green), var(--accent-cyan));
+}
+
+/* SSB GRID */
+.ssb-grid-container {
+  background: var(--bg-deep);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 10px;
+}
+.ssb-grid {
+  display: grid;
+  grid-template-columns: 30px repeat(24, 1fr);
+  gap: 1px;
+  max-width: 100%;
+}
+.ssb-cell {
+  height: 18px;
+  border-radius: 2px;
+  font-size: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+.ssb-label {
+  color: var(--text-dim);
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+}
+.ssb-pss { background: rgba(0,229,255,0.3); color: var(--accent-cyan); }
+.ssb-sss { background: rgba(179,136,255,0.3); color: var(--accent-purple); }
+.ssb-pbch { background: rgba(0,230,118,0.2); color: var(--accent-green); }
+.ssb-dmrs { background: rgba(255,171,0,0.25); color: var(--accent-amber); }
+.ssb-empty { background: rgba(255,255,255,0.03); }
+
+/* TX SUMMARY */
+.tx-summary {
+  background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(179,136,255,0.06));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+}
+.tx-summary h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--accent-green);
+  margin-bottom: 12px;
+}
+.tx-summary .chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.chain-item {
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.chain-arrow { color: var(--text-dim); font-size: 14px; }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  border-top: 1px solid var(--border);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .analogy-card { flex-direction: column; text-align: center; }
+  .bit { width: 18px; height: 18px; font-size: 7px; }
+  .step-header { padding: 12px 14px; }
+  .step-content { padding: 0 14px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain-overlay"></div>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>5G NR PBCH Processing Pipeline</h1>
+  <div class="subtitle">Physical Layer Processing — Transport Block to SS/PBCH Block</div>
+  <div class="spec-ref">3GPP TS 38.211 §7.3.3 &nbsp;|&nbsp; TS 38.212 §7.1</div>
+</div>
+
+<!-- ANALOGY -->
+<div class="analogy-bar">
+  <div class="analogy-card">
+    <div class="whatsapp-icon">💬</div>
+    <div class="analogy-text">
+      <h3>Think of it like sending a WhatsApp message</h3>
+      <p>Imagine sending <span class="msg-bubble">Hi, How Are You</span> — your phone doesn't blast raw text into the air. It encodes, encrypts, adds checksums, and modulates before transmitting. The gNB does the <b>exact same thing</b> with MIB data on PBCH. Follow each step below to see how.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button class="ctrl-btn play-btn" onclick="autoPlay()" id="playBtn">▶ Auto-Play All Steps</button>
+  <button class="ctrl-btn" onclick="resetAll()">↺ Reset</button>
+  <button class="ctrl-btn" onclick="expandAll()">⊞ Expand All</button>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-container">
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="step-indicators" id="stepDots"></div>
+</div>
+
+<!-- PIPELINE -->
+<div class="pipeline" id="pipeline">
+
+  <!-- STEP 0: MIB GENERATION -->
+  <div class="step-card" data-step="0">
+    <div class="step-header" onclick="toggleStep(0)">
+      <div class="step-number">0</div>
+      <div class="step-title-group">
+        <div class="step-title">MIB Generation (Transport Block)</div>
+        <div class="step-spec">TS 38.331 §6.2.2 — RRC Layer</div>
+      </div>
+      <div class="step-bits">24 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>The Master Information Block (MIB) is the <b>very first</b> system information a UE reads after cell search. It carries essential parameters needed to read SIB1. The MIB payload is <b>24 bits</b>, broadcast once every <b>80 ms</b> TTI period.</p>
+          <div class="formula">MIB = {systemFrameNumber(6), subCarrierSpacingCommon(1), ssb-SubcarrierOffset(4), dmrs-TypeA-Position(1), pdcch-ConfigSIB1(8), cellBarred(1), intraFreqReselection(1), spare(1), controlResourceSetZero(4) → total BCCH-BCH = 24 bits}</div>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">MIB Payload — 24 bits (ã₀ to ã₂₃)</div>
+          <div class="bit-row animating" id="mibBits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>This is like <b>typing your message</b> "Hi, How Are You" in the text box. The raw content is ready — but it hasn't been processed for transmission yet. In 5G, the RRC layer creates the MIB content that the physical layer will process.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn0"></div></div>
+
+  <!-- STEP 1: ADDITIONAL TIMING PAYLOAD -->
+  <div class="step-card" data-step="1">
+    <div class="step-header" onclick="toggleStep(1)">
+      <div class="step-number">1</div>
+      <div class="step-title-group">
+        <div class="step-title">PBCH Payload Generation + Timing Info</div>
+        <div class="step-spec">TS 38.212 §7.1.1 — Payload = 32 bits</div>
+      </div>
+      <div class="step-bits">24→32 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>8 additional bits are appended to the 24-bit MIB to form a <b>32-bit PBCH payload</b>. These include SFN LSBs (4 bits), half-frame indicator (1 bit), and SS/PBCH block index or k_SSB bits (3 bits). These <b>change per SSB transmission</b> within the 80ms period — which is why the diagram shows them being added fresh for each transmission 'n' and 'n+1'.</p>
+          <div class="formula">a̅₀..a̅₂₃ = MIB | a̅₂₄..a̅₂₇ = SFN LSBs | a̅₂₈ = Half-frame | a̅₂₉..a̅₃₁ = SSB index or k_SSB</div>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">PBCH Payload — 32 bits</div>
+          <div class="bit-row animating" id="payloadBits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>Like WhatsApp adding a <b>timestamp and delivery metadata</b> to your message. The actual text is 24 bits (MIB), but the system wraps it with 8 extra bits of timing/index information so the receiver knows <em>when</em> and <em>which beam</em> this was sent from.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn1"></div></div>
+
+  <!-- STEP 2: 1st INTERLEAVING -->
+  <div class="step-card" data-step="2">
+    <div class="step-header" onclick="toggleStep(2)">
+      <div class="step-number">2</div>
+      <div class="step-title-group">
+        <div class="step-title">1st Interleaving (PBCH Payload Interleaving)</div>
+        <div class="step-spec">TS 38.212 §7.1.1 — Table 7.1.1-1</div>
+      </div>
+      <div class="step-bits">32 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>The 32-bit payload is <b>interleaved</b> (reordered) using a fixed permutation pattern from TS 38.212 Table 7.1.1-1. This places <b>known/reserved bits into higher-reliability polar code positions</b>, which improves the polar decoder's early termination performance at the UE.</p>
+          <div class="formula">a_k = ã_{I_BIL(k)} for k = 0, 1, ..., A-1 where I_BIL is the interleaving pattern from Table 7.1.1-1</div>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">Before: a̅₀ a̅₁ a̅₂ ... a̅₃₁ (ordered)</div>
+          <div class="bit-row animating" id="preInterleave"></div>
+          <div class="bit-flow-arrow">↓ Permutation via I_BIL table ↓</div>
+          <div class="bit-label">After: a₀ a₁ a₂ ... a₃₁ (interleaved)</div>
+          <div class="bit-row animating" id="postInterleave"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>Imagine <b>rearranging the letters</b> of your message in a specific scramble pattern that both sender and receiver know. "Hi How" might become "oHiH w". This shuffle ensures important bits land in protected positions during encoding — like putting VIP passengers in first class seats.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn2"></div></div>
+
+  <!-- STEP 3: 1st SCRAMBLING -->
+  <div class="step-card" data-step="3">
+    <div class="step-header" onclick="toggleStep(3)">
+      <div class="step-number">3</div>
+      <div class="step-title-group">
+        <div class="step-title">1st Scrambling</div>
+        <div class="step-spec">TS 38.212 §7.1.2 — Cell ID + SFN based</div>
+      </div>
+      <div class="step-bits">32 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>Each interleaved bit is XORed with a <b>pseudo-random sequence</b> generated from the Physical Cell ID (N_ID_cell) and SFN. This scrambling is <b>cell-specific</b> — different cells produce different scrambled outputs, enabling cell identification at the UE. The sequence is initialized every 8 radio frames (80ms).</p>
+          <div class="formula">c_init = N_ID_cell &nbsp; | &nbsp; s_i = c(j + v·M) &nbsp; | &nbsp; a'_i = (a_i + s_i) mod 2</div>
+          <p>Where <b>v</b> depends on SFN bits and <b>M = A-3</b> for L_max=4/8 or <b>M = A-6</b> for L_max=64.</p>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">Data bits (a) XOR Scramble sequence (s) → Scrambled bits (a')</div>
+          <div class="bit-row animating" id="scramble1Bits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>This is like WhatsApp's <b>end-to-end encryption</b>. Your message gets XORed with a secret key unique to your conversation. In 5G, the "secret" is the Cell ID — so only UEs that know this cell's identity can properly descramble the PBCH content.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn3"></div></div>
+
+  <!-- STEP 4: CRC ATTACHMENT -->
+  <div class="step-card" data-step="4">
+    <div class="step-header" onclick="toggleStep(4)">
+      <div class="step-number">4</div>
+      <div class="step-title-group">
+        <div class="step-title">CRC-24C Attachment</div>
+        <div class="step-spec">TS 38.212 §7.1.3 — 24-bit CRC</div>
+      </div>
+      <div class="step-bits">32→56 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>A <b>24-bit CRC</b> (using polynomial g_CRC24C) is appended to the 32 scrambled bits, producing <b>56 bits total</b>. The UE uses this CRC to verify that the received PBCH payload is error-free. If CRC fails → retransmission/re-decode needed.</p>
+          <div class="formula">g_CRC24C(D) = D²⁴+D²³+D²¹+D²⁰+D¹⁷+D¹⁵+D¹³+D¹²+D⁸+D⁴+D²+D+1</div>
+          <p>Output: <b>b₀, b₁, ... b₅₅</b> where b₀..b₃₁ = scrambled data, b₃₂..b₅₅ = CRC parity bits.</p>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">32 data bits + 24 CRC bits = 56 bits total</div>
+          <div class="bit-row animating" id="crcBits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>Like a <b>read receipt checksum</b>. WhatsApp adds a hash to your message so the receiver can verify it arrived intact — no bits flipped. If the check fails, you'd see ❌ instead of ✓✓. The 24-bit CRC serves exactly this purpose for PBCH.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn4"></div></div>
+
+  <!-- STEP 5: 2nd INTERLEAVING -->
+  <div class="step-card" data-step="5">
+    <div class="step-header" onclick="toggleStep(5)">
+      <div class="step-number">5</div>
+      <div class="step-title-group">
+        <div class="step-title">2nd Interleaving (Input Bit Interleaving)</div>
+        <div class="step-spec">TS 38.212 §5.3.1.1 — I_IL = 1 for PBCH</div>
+      </div>
+      <div class="step-bits">56 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>Before polar encoding, the 56 bits (K=A'+L=32+24) undergo a <b>second interleaving</b> that distributes the CRC bits among the data bits. This "distributed CRC" allows the polar decoder to perform <b>early termination</b> — checking partial CRC during decoding rather than waiting until all bits are decoded.</p>
+          <div class="formula">I_IL = 1 (enabled for PBCH) → CRC bits distributed via interleaver pattern from TS 38.212 Table 5.3.1.1-1</div>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">56 bits — CRC bits distributed among data bits</div>
+          <div class="bit-row animating" id="interleave2Bits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>Instead of putting all checksum digits at the end, imagine <b>sprinkling verification codes throughout your message</b>. The receiver can start checking validity <em>while still reading</em> — like a QR code that's readable even when partially scanned. This saves precious UE battery during cell search.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn5"></div></div>
+
+  <!-- STEP 6: POLAR CODING -->
+  <div class="step-card" data-step="6">
+    <div class="step-header" onclick="toggleStep(6)">
+      <div class="step-number">6</div>
+      <div class="step-title-group">
+        <div class="step-title">Channel Coding (Polar Encoding)</div>
+        <div class="step-spec">TS 38.212 §5.3.1 — N=512, K=56, n_max=9</div>
+      </div>
+      <div class="step-bits">56→512 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>The 56 information+CRC bits are encoded using a <b>(512, 56) Polar Code</b>. Polar codes exploit channel polarization — some bit-channels become very reliable while others become very noisy. The 56 info bits are placed on the most reliable channels; the remaining 456 channels carry <b>frozen bits</b> (set to 0). The mother code length N = 2^n_max = 512.</p>
+          <div class="formula">n_max = 9 → N = 512 | K = 56 info bits | 456 frozen bits | I_IL = 1, n_PC = 0, n_wm_PC = 0</div>
+          <p>The encoder multiplies the input vector <b>u</b> (with frozen + info bits) by the polar transform matrix <b>G_N = F⊗n</b> where F = [[1,0],[1,1]].</p>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">512 encoded bits (56 info + 456 frozen → polar transform)</div>
+          <div class="bit-row animating" id="polarBits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>This is the <b>heavy-duty error protection</b>. Like adding redundant copies and error-correction data to your message so that even if parts get corrupted over the air, the receiver can still reconstruct "Hi, How Are You" perfectly. The code rate is 56/512 ≈ 0.109 — meaning ~91% redundancy! That's how robust PBCH needs to be for cell-edge UEs.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn6"></div></div>
+
+  <!-- STEP 7: RATE MATCHING -->
+  <div class="step-card" data-step="7">
+    <div class="step-header" onclick="toggleStep(7)">
+      <div class="step-number">7</div>
+      <div class="step-title-group">
+        <div class="step-title">Rate Matching</div>
+        <div class="step-spec">TS 38.212 §5.4.1 — Sub-block IL + Bit Selection</div>
+      </div>
+      <div class="step-bits">512→864 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>Rate matching adjusts the 512 polar-coded bits to exactly <b>E = 864 bits</b> to fill the PBCH resource allocation. It involves: (1) <b>Sub-block interleaving</b> — reordering the 512 coded bits, (2) <b>Bit selection</b> — since E=864 > N=512, bits are <b>repeated</b> (some transmitted twice) to fill all available REs. This repetition provides additional coding gain.</p>
+          <div class="formula">E = 864 | N = 512 | Repetition ratio = 864/512 ≈ 1.69× | Sub-block interleaver + circular buffer bit selection</div>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">864 rate-matched bits (512 coded bits + repetition)</div>
+          <div class="bit-row animating" id="rmBits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>Like <b>saying your message twice to make sure they heard you</b>. "Hi How Are You... <i>Hi How Are You</i>." Since PBCH has more resource slots (864) than coded bits (512), bits are repeated to fill the space — providing extra redundancy. Think of it as WhatsApp sending your message 1.69x times for reliability.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn7"></div></div>
+
+  <!-- STEP 8: 2nd SCRAMBLING -->
+  <div class="step-card" data-step="8">
+    <div class="step-header" onclick="toggleStep(8)">
+      <div class="step-number">8</div>
+      <div class="step-title-group">
+        <div class="step-title">2nd Scrambling</div>
+        <div class="step-spec">TS 38.211 §7.3.3.1 — SSB index based</div>
+      </div>
+      <div class="step-bits">864 bits</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p>A <b>second scrambling</b> layer is applied, this time using the <b>Cell ID and SSB block index</b>. This is different from the 1st scrambling — it's applied to the coded bits and varies per SS/PBCH block within a burst set. This helps the UE distinguish between different SSB beams from the same cell.</p>
+          <div class="formula">c_init = N_ID_cell | b̃(i) = (b(i) + c(i + v·M_bit)) mod 2</div>
+          <p>Where <b>v = SSB index LSBs</b> (2 bits for L_max=4, 3 bits for L_max=8/64).</p>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">864 scrambled bits (cell-ID + SSB-index specific)</div>
+          <div class="bit-row animating" id="scramble2Bits"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>Like a <b>second layer of encryption</b> specific to each chat thread. The first scrambling identified the "app" (cell), this scrambling identifies the specific "conversation" (beam). Different SSB beams get different scramble sequences, so the UE knows exactly which beam direction it received.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line" id="conn8"></div></div>
+
+  <!-- STEP 9: QPSK MODULATION -->
+  <div class="step-card" data-step="9">
+    <div class="step-header" onclick="toggleStep(9)">
+      <div class="step-number">9</div>
+      <div class="step-title-group">
+        <div class="step-title">QPSK Modulation + RE Mapping</div>
+        <div class="step-spec">TS 38.211 §7.3.3.2 & §7.4.3.1</div>
+      </div>
+      <div class="step-bits">864 bits → 432 symbols</div>
+    </div>
+    <div class="step-body">
+      <div class="step-content">
+        <div class="explanation">
+          <h4>What happens here?</h4>
+          <p><b>QPSK modulation</b> maps every 2 bits to one complex symbol: d(i) = (1/√2)[(1-2b(2i)) + j(1-2b(2i+1))]. This produces <b>432 QPSK symbols</b>. PBCH always uses QPSK (robust, low SNR decoding) — no adaptive modulation here since the UE doesn't have channel quality info yet during initial access.</p>
+          <div class="formula">QPSK: 864 bits / 2 bits per symbol = 432 complex symbols</div>
+          <p>These 432 symbols are mapped to <b>Resource Elements within the SS/PBCH block</b>: occupying symbols 1-3 (out of 0-3) across the 20 PRBs allocated for PBCH (excluding DMRS positions and PSS/SSS).</p>
+        </div>
+
+        <div class="bit-viz">
+          <div class="bit-label">432 QPSK Symbols → mapped to SS/PBCH Block REs</div>
+          <div class="bit-row animating" id="qpskSymbols"></div>
+        </div>
+
+        <!-- SSB GRID -->
+        <div class="ssb-grid-container">
+          <div class="bit-label" style="margin-bottom: 10px;">SS/PBCH Block Resource Grid (4 symbols × 24 PRBs = 240 subcarriers)</div>
+          <div class="ssb-grid" id="ssbGrid"></div>
+        </div>
+
+        <div class="wa-analogy">
+          <h4>💬 WhatsApp Analogy</h4>
+          <p>This is the final step — converting your digital message into <b>actual radio waves</b>. Like WhatsApp converting text into data packets and putting them on your Wi-Fi/LTE signal. QPSK creates the constellation points (the actual waveform shape) that get transmitted over the air at the SSB frequency location. The UE's receiver will demodulate these symbols back to bits.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TX SUMMARY -->
+<div style="max-width: 900px; margin: 0 auto; padding: 0 20px;">
+  <div class="tx-summary">
+    <h3>📡 Complete PBCH Processing Chain</h3>
+    <div class="chain">
+      <span class="chain-item" style="background:rgba(0,229,255,0.1);color:var(--accent-cyan);">MIB 24b</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(255,171,0,0.1);color:var(--accent-amber);">+Timing 32b</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(179,136,255,0.1);color:var(--accent-purple);">Interleave</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(0,229,255,0.1);color:var(--accent-cyan);">Scramble₁</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(255,64,129,0.1);color:var(--accent-pink);">+CRC24 56b</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(179,136,255,0.1);color:var(--accent-purple);">Interleave₂</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(0,230,118,0.1);color:var(--accent-green);">Polar 512b</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(68,138,255,0.1);color:var(--accent-blue);">RM 864b</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(255,171,0,0.1);color:var(--accent-amber);">Scramble₂</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(0,229,255,0.1);color:var(--accent-cyan);">QPSK 432sym</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-item" style="background:rgba(0,230,118,0.1);color:var(--accent-green);">📡 SS/PBCH</span>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  CafeTele Telecom Training — 3GPP TS 38.211/38.212 Rel-17 — PBCH Physical Layer Processing<br>
+  MIB provided once per 80ms | Repeated for each SSB transmission within burst set
+</div>
+
+<script>
+const TOTAL_STEPS = 10;
+let currentStep = -1;
+let isPlaying = false;
+let playTimeout;
+
+// Generate step dots
+const dotsContainer = document.getElementById('stepDots');
+for (let i = 0; i < TOTAL_STEPS; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'step-dot';
+  dot.onclick = () => goToStep(i);
+  dotsContainer.appendChild(dot);
+}
+
+// Generate random bits for display
+function randBit() { return Math.random() > 0.5 ? '1' : '0'; }
+
+function generateBitRow(container, count, className, labels) {
+  const el = document.getElementById(container);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let i = 0; i < Math.min(count, 60); i++) {
+    const bit = document.createElement('div');
+    bit.className = 'bit ' + className;
+    if (labels && labels[i]) {
+      bit.textContent = labels[i];
+    } else {
+      bit.textContent = randBit();
+    }
+    bit.style.animationDelay = (i * 0.02) + 's';
+    el.appendChild(bit);
+  }
+  if (count > 60) {
+    const ellipsis = document.createElement('div');
+    ellipsis.style.cssText = 'color:var(--text-dim);font-family:JetBrains Mono;font-size:11px;padding:0 6px;display:flex;align-items:center;';
+    ellipsis.textContent = `... (${count} total)`;
+    el.appendChild(ellipsis);
+  }
+}
+
+// Initialize bit visualizations
+function initBitVisuals() {
+  // Step 0: MIB bits
+  const mibLabels = [];
+  for (let i = 0; i < 24; i++) mibLabels.push(randBit());
+  generateBitRow('mibBits', 24, 'data', mibLabels);
+
+  // Step 1: Payload = 24 data + 8 timing
+  const payLabels = [];
+  for (let i = 0; i < 24; i++) payLabels.push(randBit());
+  for (let i = 0; i < 4; i++) payLabels.push('S'); // SFN
+  payLabels.push('H'); // Half frame
+  for (let i = 0; i < 3; i++) payLabels.push('I'); // SSB index
+  const payEl = document.getElementById('payloadBits');
+  if (payEl) {
+    payEl.innerHTML = '';
+    payLabels.forEach((l, i) => {
+      const bit = document.createElement('div');
+      bit.className = 'bit ' + (i < 24 ? 'data' : 'timing');
+      bit.textContent = l;
+      bit.style.animationDelay = (i * 0.02) + 's';
+      payEl.appendChild(bit);
+    });
+  }
+
+  // Step 2: Interleaving
+  generateBitRow('preInterleave', 32, 'data');
+  generateBitRow('postInterleave', 32, 'scrambled');
+
+  // Step 3: 1st Scrambling
+  generateBitRow('scramble1Bits', 32, 'scrambled');
+
+  // Step 4: CRC
+  const crcEl = document.getElementById('crcBits');
+  if (crcEl) {
+    crcEl.innerHTML = '';
+    for (let i = 0; i < 32; i++) {
+      const bit = document.createElement('div');
+      bit.className = 'bit scrambled';
+      bit.textContent = randBit();
+      bit.style.animationDelay = (i * 0.02) + 's';
+      crcEl.appendChild(bit);
+    }
+    // separator
+    const sep = document.createElement('div');
+    sep.style.cssText = 'width:2px;height:22px;background:var(--accent-pink);border-radius:1px;margin:0 3px;flex-shrink:0;';
+    crcEl.appendChild(sep);
+    for (let i = 0; i < 24; i++) {
+      const bit = document.createElement('div');
+      bit.className = 'bit crc';
+      bit.textContent = randBit();
+      bit.style.animationDelay = ((32 + i) * 0.02) + 's';
+      crcEl.appendChild(bit);
+    }
+  }
+
+  // Step 5: 2nd Interleaving
+  const il2El = document.getElementById('interleave2Bits');
+  if (il2El) {
+    il2El.innerHTML = '';
+    for (let i = 0; i < 56; i++) {
+      const bit = document.createElement('div');
+      // Distributed CRC shown in pink
+      bit.className = 'bit ' + (Math.random() > 0.6 ? 'crc' : 'scrambled');
+      bit.textContent = randBit();
+      bit.style.animationDelay = (i * 0.015) + 's';
+      il2El.appendChild(bit);
+    }
+  }
+
+  // Step 6: Polar coding
+  generateBitRow('polarBits', 512, 'coded');
+
+  // Step 7: Rate matching
+  generateBitRow('rmBits', 864, 'matched');
+
+  // Step 8: 2nd Scrambling
+  generateBitRow('scramble2Bits', 864, 'scrambled');
+
+  // Step 9: QPSK
+  const qEl = document.getElementById('qpskSymbols');
+  if (qEl) {
+    qEl.innerHTML = '';
+    const constPoints = ['●', '◉', '◈', '◆'];
+    for (let i = 0; i < 48; i++) {
+      const sym = document.createElement('div');
+      sym.className = 'bit symbol';
+      sym.textContent = constPoints[Math.floor(Math.random() * 4)];
+      sym.style.animationDelay = (i * 0.02) + 's';
+      qEl.appendChild(sym);
+    }
+    const ell = document.createElement('div');
+    ell.style.cssText = 'color:var(--text-dim);font-family:JetBrains Mono;font-size:11px;padding:0 6px;display:flex;align-items:center;';
+    ell.textContent = '... (432 symbols)';
+    qEl.appendChild(ell);
+  }
+
+  // SSB Grid
+  buildSSBGrid();
+}
+
+function buildSSBGrid() {
+  const grid = document.getElementById('ssbGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const symLabels = ['Sym 0', 'Sym 1', 'Sym 2', 'Sym 3'];
+
+  for (let sym = 0; sym < 4; sym++) {
+    // Row label
+    const label = document.createElement('div');
+    label.className = 'ssb-cell ssb-label';
+    label.textContent = symLabels[sym];
+    grid.appendChild(label);
+
+    for (let rb = 0; rb < 24; rb++) {
+      const cell = document.createElement('div');
+      if (sym === 0) {
+        // PSS occupies middle 12 RBs (index 6-17)
+        if (rb >= 6 && rb <= 17) {
+          cell.className = 'ssb-cell ssb-pss';
+          cell.textContent = 'PSS';
+        } else {
+          cell.className = 'ssb-cell ssb-empty';
+        }
+      } else if (sym === 2) {
+        // SSS occupies middle 12 RBs
+        if (rb >= 6 && rb <= 17) {
+          cell.className = 'ssb-cell ssb-sss';
+          cell.textContent = 'SSS';
+        } else {
+          cell.className = 'ssb-cell ssb-pbch';
+          cell.textContent = 'PBCH';
+        }
+      } else if (sym === 1 || sym === 3) {
+        // PBCH + DMRS
+        if (rb % 4 === 0) {
+          cell.className = 'ssb-cell ssb-dmrs';
+          cell.textContent = 'DM';
+        } else {
+          cell.className = 'ssb-cell ssb-pbch';
+          cell.textContent = 'PBCH';
+        }
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function updateProgress() {
+  const pct = ((currentStep + 1) / TOTAL_STEPS) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  const dots = document.querySelectorAll('.step-dot');
+  dots.forEach((d, i) => {
+    d.classList.remove('active', 'completed');
+    if (i === currentStep) d.classList.add('active');
+    else if (i < currentStep) d.classList.add('completed');
+  });
+}
+
+function goToStep(stepIdx) {
+  const cards = document.querySelectorAll('.step-card');
+  const connectors = document.querySelectorAll('.connector-line');
+
+  cards.forEach((card, i) => {
+    card.classList.remove('active', 'completed');
+    if (i === stepIdx) {
+      card.classList.add('active');
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    } else if (i < stepIdx) {
+      card.classList.add('completed');
+    }
+  });
+
+  connectors.forEach((conn, i) => {
+    conn.classList.remove('active');
+    if (i < stepIdx) conn.classList.add('active');
+  });
+
+  currentStep = stepIdx;
+  updateProgress();
+
+  // Re-trigger animations
+  const activeCard = cards[stepIdx];
+  const rows = activeCard.querySelectorAll('.bit-row');
+  rows.forEach(row => {
+    row.classList.remove('animating');
+    void row.offsetWidth; // trigger reflow
+    row.classList.add('animating');
+  });
+}
+
+function toggleStep(stepIdx) {
+  const cards = document.querySelectorAll('.step-card');
+  const card = cards[stepIdx];
+
+  if (card.classList.contains('active')) {
+    card.classList.remove('active');
+    card.classList.add('expanded');
+    setTimeout(() => card.classList.remove('expanded'), 500);
+  } else {
+    goToStep(stepIdx);
+  }
+}
+
+function autoPlay() {
+  if (isPlaying) {
+    isPlaying = false;
+    clearTimeout(playTimeout);
+    document.getElementById('playBtn').textContent = '▶ Auto-Play All Steps';
+    document.getElementById('playBtn').classList.remove('active');
+    return;
+  }
+
+  isPlaying = true;
+  document.getElementById('playBtn').textContent = '⏸ Pause';
+  document.getElementById('playBtn').classList.add('active');
+
+  let step = currentStep < 0 ? 0 : (currentStep + 1) % TOTAL_STEPS;
+
+  function playNext() {
+    if (!isPlaying) return;
+    if (step >= TOTAL_STEPS) {
+      isPlaying = false;
+      document.getElementById('playBtn').textContent = '▶ Auto-Play All Steps';
+      document.getElementById('playBtn').classList.remove('active');
+      return;
+    }
+    goToStep(step);
+    step++;
+    playTimeout = setTimeout(playNext, 3000);
+  }
+
+  playNext();
+}
+
+function resetAll() {
+  isPlaying = false;
+  clearTimeout(playTimeout);
+  currentStep = -1;
+  document.getElementById('playBtn').textContent = '▶ Auto-Play All Steps';
+  document.getElementById('playBtn').classList.remove('active');
+
+  document.querySelectorAll('.step-card').forEach(c => {
+    c.classList.remove('active', 'completed', 'expanded');
+  });
+  document.querySelectorAll('.connector-line').forEach(c => {
+    c.classList.remove('active');
+  });
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function expandAll() {
+  document.querySelectorAll('.step-card').forEach((c, i) => {
+    c.classList.add('active');
+  });
+  document.querySelectorAll('.connector-line').forEach(c => {
+    c.classList.add('active');
+  });
+  currentStep = TOTAL_STEPS - 1;
+  updateProgress();
+}
+
+// Initialize
+initBitVisuals();
+
+// Start at step 0 on load
+setTimeout(() => goToStep(0), 500);
+</script>
+
+</body>
+</html>
