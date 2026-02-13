@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5G RLC Layer – ARQ (Acknowledged Mode) PRO v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cyan:#00f5ff;--green:#00ff9d;--orange:#ff8c00;--purple:#a855f7;--red:#ff3a3a;--blue:#3b82f6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#020306,#0a1020,#051015);min-height:100vh;font-family:'Exo 2',sans-serif;color:#e0e6ed}
+.container{max-width:1800px;margin:0 auto;padding:15px}
+header{text-align:center;padding:25px;background:linear-gradient(180deg,rgba(0,245,255,0.08),transparent);border-bottom:2px solid;border-image:linear-gradient(90deg,transparent,var(--cyan),var(--green),transparent) 1;margin-bottom:20px}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--green),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4s linear infinite;background-size:200% auto;letter-spacing:4px}
+@keyframes shimmer{0%{background-position:0% center}100%{background-position:200% center}}
+.subtitle{font-family:'JetBrains Mono',monospace;color:#6b8aaa;font-size:.9rem;margin-top:8px}
+.badge{display:inline-block;background:linear-gradient(135deg,var(--orange),#ffcc00);color:#000;padding:3px 10px;border-radius:15px;font-size:.7rem;font-weight:700;margin-left:10px;font-family:'Orbitron',sans-serif}
+.badge-layer{display:inline-block;background:linear-gradient(135deg,var(--cyan),var(--green));color:#000;padding:3px 10px;border-radius:15px;font-size:.7rem;font-weight:700;margin-left:10px;font-family:'Orbitron',sans-serif}
+.diagram-wrapper{background:linear-gradient(180deg,#050a15,#0a1225,#0d1830);border-radius:20px;border:1px solid rgba(0,245,255,0.2);overflow:hidden;box-shadow:0 0 60px rgba(0,245,255,0.1),0 30px 80px rgba(0,0,0,0.8);position:relative}
+.diagram-wrapper::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--green),var(--orange),transparent)}
+svg{display:block;width:100%;height:auto}
+.scene-controls{display:flex;align-items:center;justify-content:center;gap:18px;padding:16px 0 12px;background:linear-gradient(0deg,rgba(0,0,0,0.6),transparent)}
+.scene-controls button{background:linear-gradient(135deg,rgba(0,245,255,0.12),rgba(0,245,255,0.04));border:1.5px solid var(--cyan);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;padding:9px 22px;border-radius:24px;cursor:pointer;letter-spacing:2px;transition:all .3s}
+.scene-controls button:hover{background:linear-gradient(135deg,rgba(0,245,255,0.3),rgba(0,245,255,0.1));box-shadow:0 0 18px rgba(0,245,255,0.45);transform:translateY(-2px)}
+.scene-controls button:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+#scene-indicator{font-family:'JetBrains Mono',monospace;color:#6b8aaa;font-size:.82rem;min-width:180px;text-align:center}
+.scene-dots{display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(0,245,255,0.18);border:1.5px solid rgba(0,245,255,0.35);cursor:pointer;transition:all .3s}
+.dot.active{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:25px}
+.info-card{background:linear-gradient(135deg,rgba(10,16,32,0.95),rgba(15,25,45,0.95));border:1px solid rgba(0,245,255,0.2);border-radius:16px;padding:22px;transition:all .4s ease}
+.info-card:hover{transform:translateY(-6px);box-shadow:0 15px 40px rgba(0,245,255,0.15)}
+.info-card h3{font-family:'Orbitron',sans-serif;font-size:1.05rem;margin-bottom:10px}
+.info-card.am h3{color:var(--cyan)}.info-card.arq h3{color:var(--green)}.info-card.sn h3{color:var(--orange)}.info-card.buf h3{color:var(--purple)}
+.info-card p{font-size:.88rem;line-height:1.6;color:#a0b4c8;margin-bottom:15px}
+.specs{background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--green);line-height:1.7}
+.arch-panel{background:linear-gradient(135deg,rgba(10,16,32,0.98),rgba(15,25,45,0.98));border:1px solid rgba(0,245,255,0.2);border-radius:16px;padding:25px;margin-top:25px}
+.arch-panel h2{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--cyan);text-align:center;margin-bottom:20px}
+table{width:100%;border-collapse:separate;border-spacing:0 6px}
+th{background:rgba(0,245,255,0.1);padding:12px;text-align:left;font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--cyan)}
+th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}
+td{background:rgba(0,0,0,0.3);padding:12px;font-size:.85rem;color:#a0b4c8}
+tr td:first-child{border-radius:8px 0 0 8px;font-weight:600}tr td:last-child{border-radius:0 8px 8px 0}
+tr:hover td{background:rgba(0,245,255,0.08)}
+footer{text-align:center;padding:25px;margin-top:25px;border-top:1px solid rgba(0,245,255,0.1);font-family:'JetBrains Mono',monospace;color:#4a6080;font-size:.85rem}
+footer a{color:var(--cyan);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>5G RLC LAYER – ARQ</h1>
+<p class="subtitle">Acknowledged Mode – Reliable Delivery Protocol<span class="badge">PRO v1.0</span><span class="badge-layer">RLC AM</span></p>
+<p class="subtitle" style="margin-top:6px;color:#3a5a6a">DU Processing Stack · 3GPP TS 38.322 · Selective Retransmission ARQ</p>
+</header>
+<div class="diagram-wrapper">
+<svg id="arq-svg" viewBox="0 0 1600 860" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#020408"/><stop offset="40%" stop-color="#0a1525"/><stop offset="100%" stop-color="#101c35"/></linearGradient>
+<linearGradient id="towerGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3a4550"/><stop offset="40%" stop-color="#7a8a9a"/><stop offset="100%" stop-color="#4a5a6a"/></linearGradient>
+<linearGradient id="duGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#158540"/></linearGradient>
+<linearGradient id="pktCyan" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00c8e0"/><stop offset="100%" stop-color="#00f5ff"/></linearGradient>
+<linearGradient id="pktGreen" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00cc80"/><stop offset="100%" stop-color="#00ff9d"/></linearGradient>
+<linearGradient id="pktOrange" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#cc7000"/><stop offset="100%" stop-color="#ff8c00"/></linearGradient>
+<linearGradient id="pktPurple" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8a3fd8"/><stop offset="100%" stop-color="#c084fc"/></linearGradient>
+<linearGradient id="ueGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1e3050"/><stop offset="100%" stop-color="#0a1828"/></linearGradient>
+<linearGradient id="statusGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1a0a30"/><stop offset="100%" stop-color="#32055a"/></linearGradient>
+<linearGradient id="successGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0a2a18"/><stop offset="100%" stop-color="#04140c"/></linearGradient>
+<radialGradient id="glowCyan" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(0,245,255,0.4)"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+<radialGradient id="ledRed"><stop offset="0%" stop-color="#ff3333"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="glowStrong" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="shadow"><feDropShadow dx="3" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.6"/></filter>
+<filter id="glowSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="none" stroke="rgba(0,245,255,0.03)"/></pattern>
+<pattern id="hexgrid" width="60" height="52" patternUnits="userSpaceOnUse"><polygon points="30,0 60,15 60,37 30,52 0,37 0,15" fill="none" stroke="rgba(0,245,255,0.02)" stroke-width="1"/></pattern>
+<marker id="arrowC" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#00f5ff"/></marker>
+<marker id="arrowG" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#00ff9d"/></marker>
+<marker id="arrowO" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#ff8c00"/></marker>
+<marker id="arrowR" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#ff3a3a"/></marker>
+<marker id="arrowP" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#a855f7"/></marker>
+</defs>
+<!-- Shared background -->
+<rect width="1600" height="860" fill="url(#sky)"/>
+<rect width="1600" height="860" fill="url(#grid)" opacity="0.6"/>
+<rect width="1600" height="860" fill="url(#hexgrid)" opacity="0.4"/>
+<!-- Stars -->
+<g><circle cx="80" cy="40" r="1.1" fill="#fff"><animate attributeName="opacity" values="0.6;0.1;0.6" dur="3.2s" repeatCount="indefinite"/></circle><circle cx="220" cy="65" r=".8" fill="#fff"><animate attributeName="opacity" values="0.4;0.1;0.4" dur="4.1s" repeatCount="indefinite"/></circle><circle cx="450" cy="30" r="1" fill="#fff"><animate attributeName="opacity" values="0.5;0.15;0.5" dur="2.8s" repeatCount="indefinite"/></circle><circle cx="750" cy="55" r=".9" fill="#a0d0ff"><animate attributeName="opacity" values="0.6;0.2;0.6" dur="3.7s" repeatCount="indefinite"/></circle><circle cx="1100" cy="35" r="1.2" fill="#fff"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="3.1s" repeatCount="indefinite"/></circle><circle cx="1350" cy="50" r=".8" fill="#c0e8ff"><animate attributeName="opacity" values="0.5;0.1;0.5" dur="4.5s" repeatCount="indefinite"/></circle><circle cx="1520" cy="75" r="1" fill="#fff"><animate attributeName="opacity" values="0.6;0.2;0.6" dur="2.9s" repeatCount="indefinite"/></circle></g>
+<!-- Scanning line -->
+<rect x="0" y="0" width="1600" height="1.5" fill="rgba(0,245,255,0.05)"><animateTransform attributeName="transform" type="translate" values="0,0;0,860;0,0" dur="8s" repeatCount="indefinite"/></rect>
+<!-- SCENE 1: Architecture Context -->
+<g id="scene1" opacity="1">
+<path d="M0 680 Q400 660 800 680 Q1200 700 1600 680 L1600 860 L0 860 Z" fill="#0a1810" opacity="0.7"/>
+<!-- gNB Tower -->
+<g transform="translate(100,30)" filter="url(#shadow)">
+<path d="M163 650 L185 90 L193 90 L172 650 Z" fill="url(#towerGrad)"/>
+<path d="M277 650 L259 90 L267 90 L286 650 Z" fill="url(#towerGrad)"/>
+<g stroke="#5a6a7a" stroke-width="2" fill="none"><line x1="165" y1="610" x2="284" y2="575"/><line x1="284" y1="610" x2="165" y2="575"/><line x1="168" y1="520" x2="281" y2="485"/><line x1="281" y1="520" x2="168" y2="485"/><line x1="171" y1="430" x2="278" y2="395"/><line x1="278" y1="430" x2="171" y2="395"/><line x1="174" y1="340" x2="275" y2="305"/><line x1="275" y1="340" x2="174" y2="305"/><line x1="177" y1="250" x2="272" y2="215"/><line x1="272" y1="250" x2="177" y2="215"/><line x1="180" y1="155" x2="269" y2="122"/><line x1="269" y1="155" x2="180" y2="122"/></g>
+<g stroke="#6a7a8a" stroke-width="3" fill="none"><line x1="164" y1="575" x2="285" y2="575"/><line x1="167" y1="485" x2="282" y2="485"/><line x1="170" y1="395" x2="279" y2="395"/><line x1="173" y1="305" x2="276" y2="305"/><line x1="176" y1="215" x2="273" y2="215"/><line x1="179" y1="122" x2="270" y2="122"/></g>
+<rect x="178" y="86" width="88" height="7" rx="2" fill="url(#towerGrad)"/>
+<circle cx="222" cy="78" r="5" fill="url(#ledRed)" filter="url(#glow)"><animate attributeName="opacity" values="1;0.1;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<circle cx="222" cy="78" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.15;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<circle cx="222" cy="305" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.2;1" dur="1.1s" repeatCount="indefinite" begin=".55s"/></circle>
+<circle cx="222" cy="575" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.2;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<!-- Antenna array -->
+<rect x="190" y="60" width="64" height="28" rx="4" fill="#e8eef4" filter="url(#shadow)"/>
+<g fill="#7a828a" opacity="0.5"><rect x="194" y="64" width="56" height="2"/><rect x="194" y="69" width="56" height="2"/><rect x="194" y="74" width="56" height="2"/><rect x="194" y="79" width="56" height="2"/><rect x="194" y="84" width="56" height="2"/></g>
+<g opacity="0.55"><circle cx="222" cy="70" r="5" fill="none" stroke="#00f5ff" stroke-width="1.5"><animate attributeName="r" values="5;55;5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0;.8" dur="3s" repeatCount="indefinite"/></circle></g>
+<g opacity="0.45"><circle cx="222" cy="70" r="8" fill="none" stroke="#00ff9d" stroke-width="1.2"><animate attributeName="r" values="8;80;8" dur="3.8s" repeatCount="indefinite" begin=".5s"/><animate attributeName="opacity" values=".6;0;.6" dur="3.8s" repeatCount="indefinite" begin=".5s"/></circle></g>
+</g>
+<!-- DU Box -->
+<g transform="translate(220,490)" filter="url(#shadow)">
+<rect width="180" height="115" rx="8" fill="url(#duGrad)" stroke="#00ff9d" stroke-width="1.5"/>
+<rect x="8" y="8" width="164" height="98" rx="5" fill="rgba(0,0,0,0.35)"/>
+<text x="90" y="34" text-anchor="middle" fill="#fff" font-family="Orbitron" font-size="12" font-weight="700">DU-01</text>
+<text x="90" y="52" text-anchor="middle" fill="#a0e8a0" font-family="JetBrains Mono" font-size="8">High-PHY + MAC</text>
+<text x="90" y="66" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="9" font-weight="700">+ RLC (AM)</text>
+<text x="90" y="84" text-anchor="middle" fill="#88ccaa" font-family="JetBrains Mono" font-size="7">3GPP TS 38.322</text>
+<text x="90" y="98" text-anchor="middle" fill="#559966" font-family="JetBrains Mono" font-size="6.5">ARQ Window: 4096 SNs</text>
+<g transform="translate(10,104)"><circle r="3" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur=".8s" repeatCount="indefinite"/></circle><circle cx="12" r="3" fill="#00ff88"/><circle cx="24" r="3" fill="#ffcc00"><animate attributeName="opacity" values="1;0.4;1" dur=".5s" repeatCount="indefinite"/></circle><circle cx="36" r="3" fill="#00ff88"/><circle cx="48" r="3" fill="#00ff88"/></g>
+</g>
+<!-- DU label -->
+<g transform="translate(190,462)"><rect width="240" height="24" rx="4" fill="rgba(0,0,0,0.8)" stroke="#10b981"/><text x="120" y="16" text-anchor="middle" fill="#10b981" font-family="Orbitron" font-size="9" font-weight="700">DISTRIBUTED UNIT (DU)</text></g>
+<!-- RLC badge -->
+<g transform="translate(250,618)"><rect width="120" height="22" rx="11" fill="rgba(0,245,255,0.15)" stroke="#00f5ff" stroke-width="1.5"/><text x="60" y="15" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="8" font-weight="700">RLC LAYER</text></g>
+<!-- Signal waves -->
+<g transform="translate(390,380)" opacity="0.55">
+<path fill="none" stroke="#00f5ff" stroke-width="2"><animate attributeName="d" values="M0,0 Q50,-35 100,0 Q150,35 200,0;M0,0 Q50,-50 100,0 Q150,50 200,0;M0,0 Q50,-35 100,0 Q150,35 200,0" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;.2;.8" dur="2.5s" repeatCount="indefinite"/></path>
+<path fill="none" stroke="#00f5ff" stroke-width="1.5" transform="translate(-20,25)"><animate attributeName="d" values="M0,0 Q65,-45 130,0 Q195,45 260,0;M0,0 Q65,-62 130,0 Q195,62 260,0;M0,0 Q65,-45 130,0 Q195,45 260,0" dur="3.2s" repeatCount="indefinite" begin=".6s"/><animate attributeName="opacity" values=".6;.1;.6" dur="3.2s" repeatCount="indefinite" begin=".6s"/></path>
+<path fill="none" stroke="#00ff9d" stroke-width="1.5" transform="translate(-40,50)"><animate attributeName="d" values="M0,0 Q80,-55 160,0 Q240,55 320,0;M0,0 Q80,-75 160,0 Q240,75 320,0;M0,0 Q80,-55 160,0 Q240,55 320,0" dur="4s" repeatCount="indefinite" begin="1.1s"/><animate attributeName="opacity" values=".5;.05;.5" dur="4s" repeatCount="indefinite" begin="1.1s"/></path>
+</g>
+<!-- UE Smartphone -->
+<g transform="translate(1160,340)" filter="url(#shadow)">
+<rect width="120" height="200" rx="16" fill="url(#ueGrad)" stroke="#3b82f6" stroke-width="2"/>
+<rect x="8" y="24" width="104" height="148" rx="5" fill="#0a1835"/>
+<text x="60" y="50" text-anchor="middle" fill="#3b82f6" font-family="Orbitron" font-size="9" font-weight="700">UE</text>
+<text x="60" y="66" text-anchor="middle" fill="#6b8aaa" font-family="JetBrains Mono" font-size="7">RX Buffer</text>
+<rect x="14" y="76" width="92" height="18" rx="3" fill="rgba(0,245,255,0.1)" stroke="rgba(0,245,255,0.25)"/>
+<text x="60" y="89" text-anchor="middle" fill="#00f5ff" font-family="JetBrains Mono" font-size="7">SN_RX_NEXT = 1</text>
+<rect x="14" y="98" width="92" height="16" rx="3" fill="rgba(0,255,157,0.08)" stroke="rgba(0,255,157,0.2)"/>
+<text x="60" y="110" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="6.5">AM Window=4096</text>
+<rect x="14" y="118" width="92" height="16" rx="3" fill="rgba(168,85,247,0.08)" stroke="rgba(168,85,247,0.2)"/>
+<text x="60" y="130" text-anchor="middle" fill="#a855f7" font-family="JetBrains Mono" font-size="6.5">Status: IDLE</text>
+<rect x="14" y="138" width="92" height="16" rx="3" fill="rgba(255,140,0,0.08)" stroke="rgba(255,140,0,0.2)"/>
+<text x="60" y="150" text-anchor="middle" fill="#ff8c00" font-family="JetBrains Mono" font-size="6.5">t-Reorder: OFF</text>
+<rect x="38" y="6" width="44" height="9" rx="4.5" fill="#0a1828"/>
+<circle cx="60" cy="10.5" r="2.5" fill="#3b82f6" opacity="0.6"/>
+<rect x="42" y="188" width="36" height="3" rx="1.5" fill="#3b82f6" opacity="0.4"/>
+</g>
+<!-- UE label -->
+<g transform="translate(1138,558)"><rect width="164" height="24" rx="4" fill="rgba(0,0,0,0.8)" stroke="#3b82f6"/><text x="82" y="16" text-anchor="middle" fill="#3b82f6" font-family="Orbitron" font-size="9" font-weight="700">USER EQUIPMENT</text></g>
+<!-- Animated data particles -->
+<circle r="5" fill="#00f5ff" filter="url(#glow)" opacity=".9"><animateMotion dur="3s" repeatCount="indefinite" path="M395,430 C600,360 900,340 1160,430"/></circle>
+<circle r="4" fill="#00ff9d" filter="url(#glow)" opacity=".8"><animateMotion dur="3s" repeatCount="indefinite" begin="1s" path="M395,430 C600,360 900,340 1160,430"/></circle>
+<circle r="3" fill="#ff8c00" filter="url(#glow)" opacity=".7"><animateMotion dur="3s" repeatCount="indefinite" begin="2s" path="M395,430 C600,360 900,340 1160,430"/></circle>
+<path d="M395 430 C600 360 900 340 1160 430" stroke="rgba(0,245,255,0.1)" stroke-width="2.5" fill="none" stroke-dasharray="8,6"/>
+<!-- Scene title -->
+<g transform="translate(530,714)"><rect width="540" height="76" rx="10" fill="rgba(0,8,18,0.88)" stroke="rgba(0,245,255,0.3)" stroke-width="1.5"/><rect x="0" y="0" width="540" height="2" rx="1" fill="#00f5ff" opacity=".5"/><text x="270" y="28" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="13" font-weight="700" letter-spacing="2">RLC LAYER – RELIABLE DELIVERY</text><text x="270" y="48" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="10">Acknowledged Mode (AM) using ARQ</text><text x="270" y="66" text-anchor="middle" fill="#4a6a8a" font-family="JetBrains Mono" font-size="8">Sequence-numbered PDUs · Status Reports · Selective Retransmission</text></g>
+<!-- Scene label -->
+<g transform="translate(16,16)"><rect width="200" height="26" rx="13" fill="rgba(0,0,0,0.7)" stroke="rgba(0,245,255,0.4)"/><text x="100" y="17" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="9" font-weight="700">SCENE 1 · ARCHITECTURE</text></g>
+</g>
+<!-- SCENE 2: Data Transmission -->
+<g id="scene2" opacity="0">
+<path d="M0 680 Q400 660 800 680 Q1200 700 1600 680 L1600 860 L0 860 Z" fill="#0a1810" opacity="0.6"/>
+<!-- mini tower -->
+<g transform="translate(55,60)" filter="url(#shadow)">
+<path d="M60 620 L74 100 L80 100 L68 620 Z" fill="url(#towerGrad)"/>
+<path d="M100 620 L92 100 L98 100 L108 620 Z" fill="url(#towerGrad)"/>
+<g stroke="#5a6a7a" stroke-width="1.5" fill="none"><line x1="62" y1="560" x2="106" y2="528"/><line x1="106" y1="560" x2="62" y2="528"/><line x1="64" y1="460" x2="104" y2="428"/><line x1="104" y1="460" x2="64" y2="428"/><line x1="66" y1="360" x2="102" y2="328"/><line x1="102" y1="360" x2="66" y2="328"/></g>
+<g stroke="#6a7a8a" stroke-width="2.5" fill="none"><line x1="61" y1="528" x2="107" y2="528"/><line x1="63" y1="428" x2="105" y2="428"/><line x1="65" y1="328" x2="103" y2="328"/></g>
+<rect x="68" y="96" width="28" height="7" rx="2" fill="url(#towerGrad)"/>
+<circle cx="84" cy="88" r="5" fill="url(#ledRed)" filter="url(#glow)"><animate attributeName="opacity" values="1;0.1;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<circle cx="84" cy="88" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.15;1" dur="1.1s" repeatCount="indefinite"/></circle>
+</g>
+<!-- TX Buffer panel -->
+<g transform="translate(185,140)" filter="url(#shadow)">
+<rect width="290" height="430" rx="12" fill="rgba(5,12,28,0.96)" stroke="#00f5ff" stroke-width="2"/>
+<rect x="0" y="0" width="290" height="2" rx="1" fill="#00f5ff"/>
+<text x="145" y="24" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="11" font-weight="700">RLC TX BUFFER</text>
+<text x="145" y="40" text-anchor="middle" fill="#3a6a8a" font-family="JetBrains Mono" font-size="8">Retransmission Window</text>
+<rect x="16" y="52" width="258" height="62" rx="6" fill="rgba(0,245,255,0.1)" stroke="#00f5ff" stroke-width="1.5"/>
+<text x="65" y="79" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="12" font-weight="700">SN 1</text>
+<rect x="100" y="58" width="2" height="50" fill="rgba(0,245,255,0.25)"/>
+<text x="178" y="78" text-anchor="middle" fill="#a0c8e0" font-family="JetBrains Mono" font-size="8">Data PDU · IP Seg #1</text>
+<text x="178" y="96" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="7">Status: PENDING ACK</text>
+<circle cx="24" cy="83" r="4" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur=".8s" repeatCount="indefinite"/></circle>
+<rect x="16" y="124" width="258" height="62" rx="6" fill="rgba(0,255,157,0.1)" stroke="#00ff9d" stroke-width="1.5"/>
+<text x="65" y="151" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="12" font-weight="700">SN 2</text>
+<rect x="100" y="130" width="2" height="50" fill="rgba(0,255,157,0.25)"/>
+<text x="178" y="150" text-anchor="middle" fill="#a0e0c0" font-family="JetBrains Mono" font-size="8">Data PDU · IP Seg #2</text>
+<text x="178" y="168" text-anchor="middle" fill="#4aaa8a" font-family="JetBrains Mono" font-size="7">Status: PENDING ACK</text>
+<circle cx="24" cy="155" r="4" fill="#00ff88"><animate attributeName="opacity" values="1;0.4;1" dur=".6s" repeatCount="indefinite"/></circle>
+<rect x="16" y="196" width="258" height="62" rx="6" fill="rgba(255,140,0,0.1)" stroke="#ff8c00" stroke-width="1.5"/>
+<text x="65" y="223" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="12" font-weight="700">SN 3</text>
+<rect x="100" y="202" width="2" height="50" fill="rgba(255,140,0,0.25)"/>
+<text x="178" y="222" text-anchor="middle" fill="#e0b880" font-family="JetBrains Mono" font-size="8">Data PDU · IP Seg #3</text>
+<text x="178" y="240" text-anchor="middle" fill="#aa8860" font-family="JetBrains Mono" font-size="7">Status: PENDING ACK</text>
+<circle cx="24" cy="227" r="4" fill="#ffcc00"><animate attributeName="opacity" values="1;0.3;1" dur=".5s" repeatCount="indefinite"/></circle>
+<rect x="16" y="268" width="258" height="62" rx="6" fill="rgba(168,85,247,0.1)" stroke="#a855f7" stroke-width="1.5"/>
+<text x="65" y="295" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="12" font-weight="700">SN 4</text>
+<rect x="100" y="274" width="2" height="50" fill="rgba(168,85,247,0.25)"/>
+<text x="178" y="294" text-anchor="middle" fill="#c0a0e0" font-family="JetBrains Mono" font-size="8">Data PDU · IP Seg #4</text>
+<text x="178" y="312" text-anchor="middle" fill="#8a6aaa" font-family="JetBrains Mono" font-size="7">Status: PENDING ACK</text>
+<circle cx="24" cy="299" r="4" fill="#a855f7"><animate attributeName="opacity" values="1;0.3;1" dur=".7s" repeatCount="indefinite"/></circle>
+<rect x="16" y="342" width="258" height="2" fill="rgba(0,245,255,0.12)"/>
+<text x="145" y="362" text-anchor="middle" fill="#4a6a8a" font-family="JetBrains Mono" font-size="8">TX_Next=5 · VT(A)=1</text>
+<text x="145" y="378" text-anchor="middle" fill="#3a5a7a" font-family="JetBrains Mono" font-size="7">Window: [1..4097]</text>
+<text x="145" y="394" text-anchor="middle" fill="#2a4a6a" font-family="JetBrains Mono" font-size="7">Poll bit set on SN4</text>
+<text x="145" y="414" text-anchor="middle" fill="#1a3a5a" font-family="JetBrains Mono" font-size="6.5">t-PollRetransmit: Running</text>
+</g>
+<!-- Wireless path visual -->
+<path d="M476 322 C700 240 980 240 1170 330" stroke="rgba(0,245,255,0.06)" stroke-width="45" fill="none" stroke-linecap="round"/>
+<path d="M476 322 C700 240 980 240 1170 330" stroke="rgba(0,245,255,0.14)" stroke-width="2" fill="none" stroke-dasharray="10,7"/>
+<!-- Label above path -->
+<g transform="translate(590,178)"><rect width="420" height="42" rx="8" fill="rgba(0,0,0,0.72)" stroke="rgba(0,245,255,0.25)"/><text x="210" y="18" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="11" font-weight="700">WIRELESS CHANNEL — DATA TRANSMISSION</text><text x="210" y="34" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="8">SN1 → SN2 → SN3 → SN4  |  Sequential PDU Delivery</text></g>
+<!-- Animated flying packets SN1 -->
+<g><animateMotion dur="2.8s" repeatCount="indefinite" path="M476,322 C700,240 980,240 1170,330"><rect width="56" height="30" rx="5" fill="url(#pktCyan)" opacity=".9"/></animateMotion></g>
+<g><animateMotion dur="2.8s" repeatCount="indefinite" path="M532,322 C756,240 1036,240 1226,330"><text font-family="Orbitron" font-size="9" font-weight="700" fill="#000" text-anchor="middle" x="28" y="20">SN 1</text></animateMotion></g>
+<!-- SN2 -->
+<g><animateMotion dur="2.8s" repeatCount="indefinite" begin=".7s" path="M476,322 C700,240 980,240 1170,330"><rect width="56" height="30" rx="5" fill="url(#pktGreen)" opacity=".9"/></animateMotion></g>
+<g><animateMotion dur="2.8s" repeatCount="indefinite" begin=".7s" path="M532,322 C756,240 1036,240 1226,330"><text font-family="Orbitron" font-size="9" font-weight="700" fill="#000" text-anchor="middle" x="28" y="20">SN 2</text></animateMotion></g>
+<!-- SN3 -->
+<g><animateMotion dur="2.8s" repeatCount="indefinite" begin="1.4s" path="M476,322 C700,240 980,240 1170,330"><rect width="56" height="30" rx="5" fill="url(#pktOrange)" opacity=".9"/></animateMotion></g>
+<g><animateMotion dur="2.8s" repeatCount="indefinite" begin="1.4s" path="M532,322 C756,240 1036,240 1226,330"><text font-family="Orbitron" font-size="9" font-weight="700" fill="#000" text-anchor="middle" x="28" y="20">SN 3</text></animateMotion></g>
+<!-- SN4 -->
+<g><animateMotion dur="2.8s" repeatCount="indefinite" begin="2.1s" path="M476,322 C700,240 980,240 1170,330"><rect width="56" height="30" rx="5" fill="url(#pktPurple)" opacity=".9"/></animateMotion></g>
+<g><animateMotion dur="2.8s" repeatCount="indefinite" begin="2.1s" path="M532,322 C756,240 1036,240 1226,330"><text font-family="Orbitron" font-size="9" font-weight="700" fill="#000" text-anchor="middle" x="28" y="20">SN 4</text></animateMotion></g>
+<!-- UE RX Buffer -->
+<g transform="translate(1168,150)" filter="url(#shadow)">
+<rect width="268" height="410" rx="12" fill="rgba(5,10,25,0.96)" stroke="#3b82f6" stroke-width="2"/>
+<rect x="0" y="0" width="268" height="2" rx="1" fill="#3b82f6"/>
+<text x="134" y="26" text-anchor="middle" fill="#3b82f6" font-family="Orbitron" font-size="11" font-weight="700">UE RX BUFFER</text>
+<rect x="16" y="38" width="236" height="60" rx="6" fill="rgba(0,245,255,0.1)" stroke="rgba(0,245,255,0.35)" stroke-width="1.5"/>
+<text x="72" y="67" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="11" font-weight="700">SN 1</text>
+<rect x="106" y="44" width="2" height="48" fill="rgba(0,245,255,0.22)"/>
+<text x="185" y="64" text-anchor="middle" fill="#7aadca" font-family="JetBrains Mono" font-size="8">Received ✓</text>
+<text x="185" y="82" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="7">In Sequence</text>
+<rect x="16" y="108" width="236" height="60" rx="6" fill="rgba(0,255,157,0.09)" stroke="rgba(0,255,157,0.35)" stroke-width="1.5"/>
+<text x="72" y="137" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="11" font-weight="700">SN 2</text>
+<rect x="106" y="114" width="2" height="48" fill="rgba(0,255,157,0.22)"/>
+<text x="185" y="134" text-anchor="middle" fill="#55aa80" font-family="JetBrains Mono" font-size="8">Waiting...</text>
+<rect x="16" y="178" width="236" height="60" rx="6" fill="rgba(255,140,0,0.09)" stroke="rgba(255,140,0,0.35)" stroke-width="1.5"/>
+<text x="72" y="207" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="11" font-weight="700">SN 3</text>
+<rect x="106" y="184" width="2" height="48" fill="rgba(255,140,0,0.22)"/>
+<text x="185" y="204" text-anchor="middle" fill="#aa8055" font-family="JetBrains Mono" font-size="8">Waiting...</text>
+<rect x="16" y="248" width="236" height="60" rx="6" fill="rgba(168,85,247,0.09)" stroke="rgba(168,85,247,0.35)" stroke-width="1.5"/>
+<text x="72" y="277" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="11" font-weight="700">SN 4</text>
+<rect x="106" y="254" width="2" height="48" fill="rgba(168,85,247,0.22)"/>
+<text x="185" y="274" text-anchor="middle" fill="#8855aa" font-family="JetBrains Mono" font-size="8">Waiting...</text>
+<rect x="16" y="320" width="236" height="2" fill="rgba(59,130,246,0.18)"/>
+<text x="134" y="342" text-anchor="middle" fill="#4a6a8a" font-family="JetBrains Mono" font-size="8">VR(R)=1 · VR(MR)=4097</text>
+<text x="134" y="358" text-anchor="middle" fill="#3a5a7a" font-family="JetBrains Mono" font-size="7">Status Report Timer: Running</text>
+<text x="134" y="374" text-anchor="middle" fill="#2a4a6a" font-family="JetBrains Mono" font-size="7">t-Reordering: Pending</text>
+<text x="134" y="392" text-anchor="middle" fill="#1a3a5a" font-family="JetBrains Mono" font-size="6.5">Reassembly: In Progress</text>
+</g>
+<!-- Arrow -->
+<path d="M476 325 C700 245 980 245 1166 332" stroke="rgba(0,245,255,0.25)" stroke-width="2.5" fill="none" stroke-dasharray="8,5" marker-end="url(#arrowC)"/>
+<!-- Glow particles on path -->
+<circle r="4" fill="#00f5ff" filter="url(#glow)" opacity=".75"><animateMotion dur="1.8s" repeatCount="indefinite" path="M476,325 C700,245 980,245 1166,332"/></circle>
+<!-- Scene info -->
+<g transform="translate(530,714)"><rect width="540" height="60" rx="10" fill="rgba(0,8,18,0.88)" stroke="rgba(0,245,255,0.3)"/><text x="270" y="26" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="12" font-weight="700" letter-spacing="2">DATA PDU TRANSMISSION</text><text x="270" y="46" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="9">Sequence numbers assigned · PDUs dispatched to wireless channel</text></g>
+<!-- Scene label -->
+<g transform="translate(16,16)"><rect width="230" height="26" rx="13" fill="rgba(0,0,0,0.7)" stroke="rgba(0,245,255,0.4)"/><text x="115" y="17" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="9" font-weight="700">SCENE 2 · DATA TRANSMISSION</text></g>
+</g>
+<!-- SCENE 3: Packet Loss -->
+<g id="scene3" opacity="0">
+<path d="M0 680 Q400 660 800 680 Q1200 700 1600 680 L1600 860 L0 860 Z" fill="#0a1810" opacity="0.6"/>
+<!-- mini tower -->
+<g transform="translate(55,60)" filter="url(#shadow)">
+<path d="M60 620 L74 100 L80 100 L68 620 Z" fill="url(#towerGrad)"/>
+<path d="M100 620 L92 100 L98 100 L108 620 Z" fill="url(#towerGrad)"/>
+<g stroke="#6a7a8a" stroke-width="2" fill="none"><line x1="61" y1="528" x2="107" y2="528"/><line x1="63" y1="428" x2="105" y2="428"/></g>
+<circle cx="84" cy="88" r="5" fill="url(#ledRed)" filter="url(#glow)"><animate attributeName="opacity" values="1;0.1;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<circle cx="84" cy="88" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.15;1" dur="1.1s" repeatCount="indefinite"/></circle>
+</g>
+<!-- Wireless channel faint background -->
+<path d="M185 340 C500 255 920 255 1118 345" stroke="rgba(0,245,255,0.05)" stroke-width="48" fill="none" stroke-linecap="round"/>
+<!-- SN1 received OK (left side) -->
+<g transform="translate(188,306)"><rect width="56" height="30" rx="5" fill="url(#pktCyan)" filter="url(#glowSoft)"/><text x="28" y="20" text-anchor="middle" fill="#000" font-family="Orbitron" font-size="9" font-weight="700">SN 1</text></g>
+<!-- SN2 LOST - interference cloud at center -->
+<g transform="translate(540,220)">
+<!-- cloud glow -->
+<ellipse cx="100" cy="55" rx="115" ry="68" fill="rgba(255,40,40,0.09)" stroke="rgba(255,60,60,0.45)" stroke-width="2" stroke-dasharray="7,3"><animate attributeName="rx" values="115;128;115" dur="1.5s" repeatCount="indefinite"/><animate attributeName="ry" values="68;78;68" dur="1.5s" repeatCount="indefinite"/></ellipse>
+<!-- lightning -->
+<g fill="#ff3a3a" filter="url(#glow)" opacity=".9"><polygon points="108,10 96,38 106,38 93,68 118,32 106,32"><animate attributeName="opacity" values="1;0.25;1" dur=".4s" repeatCount="indefinite"/></polygon></g>
+<!-- INTERFERENCE text -->
+<text x="100" y="8" text-anchor="middle" fill="#ff3a3a" font-family="Orbitron" font-size="9" font-weight="600" letter-spacing="2">INTERFERENCE</text>
+<!-- SN2 ghost dissolving -->
+<rect x="68" y="30" width="56" height="30" rx="5" fill="rgba(0,255,157,0.25)" stroke="#00ff9d" stroke-width="1.2" stroke-dasharray="4,3"><animate attributeName="opacity" values=".85;0.15;.85" dur=".8s" repeatCount="indefinite"/></rect>
+<text x="96" y="49" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="9" font-weight="700" opacity=".55">SN 2</text>
+<!-- X marks -->
+<g stroke="#ff3a3a" stroke-width="3.5" filter="url(#glow)" opacity=".9"><line x1="68" y1="30" x2="124" y2="60"><animate attributeName="opacity" values="1;.3;1" dur=".45s" repeatCount="indefinite"/></line><line x1="124" y1="30" x2="68" y2="60"><animate attributeName="opacity" values="1;.3;1" dur=".45s" repeatCount="indefinite"/></line></g>
+<!-- dissolve particles -->
+<circle cx="60" cy="50" r="4" fill="#00ff9d"><animate attributeName="cx" values="60;38;18" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;.2;0" dur="1.4s" repeatCount="indefinite"/></circle>
+<circle cx="90" cy="28" r="3" fill="#00ff9d"><animate attributeName="cy" values="28;10;-5" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;.2;0" dur="1.4s" repeatCount="indefinite"/></circle>
+<circle cx="130" cy="55" r="5" fill="#00ff9d"><animate attributeName="cx" values="130;150;175" dur="1.4s" repeatCount="indefinite"/><animate attributeName="cy" values="55;38;20" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;.2;0" dur="1.4s" repeatCount="indefinite"/></circle>
+<circle cx="75" cy="72" r="3" fill="#00ff9d"><animate attributeName="cy" values="72;92;112" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;.3;0" dur="1.4s" repeatCount="indefinite"/></circle>
+<circle cx="115" cy="24" r="3.5" fill="#00ff9d"><animate attributeName="cx" values="115;138;160" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;.2;0" dur="1.4s" repeatCount="indefinite"/></circle>
+</g>
+<!-- SN3 received out-of-order -->
+<g transform="translate(790,238)"><rect width="56" height="30" rx="5" fill="url(#pktOrange)" filter="url(#glowSoft)" opacity=".85"/><text x="28" y="20" text-anchor="middle" fill="#000" font-family="Orbitron" font-size="9" font-weight="700">SN 3</text></g>
+<!-- SN4 received out-of-order -->
+<g transform="translate(970,252)"><rect width="56" height="30" rx="5" fill="url(#pktPurple)" filter="url(#glowSoft)" opacity=".85"/><text x="28" y="20" text-anchor="middle" fill="#000" font-family="Orbitron" font-size="9" font-weight="700">SN 4</text></g>
+<!-- Gap alert label -->
+<g transform="translate(690,190)"><rect width="220" height="44" rx="8" fill="rgba(30,0,0,0.9)" stroke="#ff3a3a" stroke-width="1.8"><animate attributeName="opacity" values="1;.65;1" dur="1s" repeatCount="indefinite"/></rect><text x="110" y="18" text-anchor="middle" fill="#ff3a3a" font-family="Orbitron" font-size="10" font-weight="800">⚠ PACKET LOST!</text><text x="110" y="35" text-anchor="middle" fill="#aa4a4a" font-family="JetBrains Mono" font-size="8">SN2 destroyed by interference</text></g>
+<!-- UE RX Buffer showing gap -->
+<g transform="translate(1118,152)" filter="url(#shadow)">
+<rect width="278" height="430" rx="12" fill="rgba(5,10,25,0.96)" stroke="#3b82f6" stroke-width="2"/>
+<rect x="0" y="0" width="278" height="2" rx="1" fill="#3b82f6"/>
+<text x="139" y="26" text-anchor="middle" fill="#3b82f6" font-family="Orbitron" font-size="11" font-weight="700">UE RX BUFFER</text>
+<!-- SN1 received -->
+<rect x="16" y="38" width="246" height="62" rx="6" fill="rgba(0,245,255,0.12)" stroke="#00f5ff" stroke-width="1.5"/>
+<text x="72" y="68" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="11" font-weight="700">SN 1</text>
+<rect x="106" y="44" width="2" height="50" fill="rgba(0,245,255,0.25)"/>
+<text x="188" y="65" text-anchor="middle" fill="#00ff88" font-family="JetBrains Mono" font-size="8">✓ RECEIVED</text>
+<text x="188" y="83" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="7">Delivered ↑</text>
+<!-- SN2 MISSING - red dashed -->
+<rect x="16" y="110" width="246" height="62" rx="6" fill="rgba(255,40,40,0.08)" stroke="#ff3a3a" stroke-width="2.2" stroke-dasharray="6,3"><animate attributeName="opacity" values="1;.55;1" dur="1.2s" repeatCount="indefinite"/></rect>
+<text x="72" y="140" text-anchor="middle" fill="#ff3a3a" font-family="Orbitron" font-size="11" font-weight="700">SN 2</text>
+<rect x="106" y="116" width="2" height="50" fill="rgba(255,40,40,0.25)"/>
+<text x="188" y="137" text-anchor="middle" fill="#ff3a3a" font-family="JetBrains Mono" font-size="8" font-weight="700">✗ MISSING</text>
+<text x="188" y="155" text-anchor="middle" fill="#aa4a4a" font-family="JetBrains Mono" font-size="7">Gap Detected!</text>
+<polygon points="72,162 65,175 79,175" fill="#ff3a3a" opacity=".9"><animate attributeName="opacity" values=".9;.2;.9" dur=".6s" repeatCount="indefinite"/></polygon>
+<!-- SN3 OOO -->
+<rect x="16" y="182" width="246" height="62" rx="6" fill="rgba(255,140,0,0.09)" stroke="#ff8c00" stroke-width="1.5"/>
+<text x="72" y="212" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="11" font-weight="700">SN 3</text>
+<rect x="106" y="188" width="2" height="50" fill="rgba(255,140,0,0.22)"/>
+<text x="188" y="209" text-anchor="middle" fill="#cc9a44" font-family="JetBrains Mono" font-size="8">⚠ OUT OF ORDER</text>
+<text x="188" y="227" text-anchor="middle" fill="#8a6a3a" font-family="JetBrains Mono" font-size="7">Buffered</text>
+<!-- SN4 OOO -->
+<rect x="16" y="254" width="246" height="62" rx="6" fill="rgba(168,85,247,0.09)" stroke="#a855f7" stroke-width="1.5"/>
+<text x="72" y="284" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="11" font-weight="700">SN 4</text>
+<rect x="106" y="260" width="2" height="50" fill="rgba(168,85,247,0.22)"/>
+<text x="188" y="281" text-anchor="middle" fill="#9a70c0" font-family="JetBrains Mono" font-size="8">⚠ OUT OF ORDER</text>
+<text x="188" y="299" text-anchor="middle" fill="#7a508a" font-family="JetBrains Mono" font-size="7">Buffered</text>
+<rect x="16" y="328" width="246" height="2" fill="rgba(255,40,40,0.25)"/>
+<text x="139" y="348" text-anchor="middle" fill="#ff5555" font-family="JetBrains Mono" font-size="8" font-weight="600">GAP: SN2 MISSING</text>
+<text x="139" y="364" text-anchor="middle" fill="#aa4a4a" font-family="JetBrains Mono" font-size="7">VR(R) stalled at 1</text>
+<text x="139" y="380" text-anchor="middle" fill="#4a6a8a" font-family="JetBrains Mono" font-size="7">t-Reordering timer started</text>
+<text x="139" y="396" text-anchor="middle" fill="#3a5a7a" font-family="JetBrains Mono" font-size="6.5">Awaiting Status PDU trigger</text>
+<text x="139" y="414" text-anchor="middle" fill="#aa3333" font-family="JetBrains Mono" font-size="7" font-weight="600">⚠ Missing SN2 Detected</text>
+</g>
+<!-- Scene info -->
+<g transform="translate(530,714)"><rect width="540" height="60" rx="10" fill="rgba(18,0,0,0.9)" stroke="rgba(255,40,40,0.4)"/><text x="270" y="25" text-anchor="middle" fill="#ff3a3a" font-family="Orbitron" font-size="12" font-weight="700" letter-spacing="2">PACKET LOSS — INTERFERENCE EVENT</text><text x="270" y="45" text-anchor="middle" fill="#cc6666" font-family="JetBrains Mono" font-size="9">SN2 lost in wireless channel · UE detects sequence gap</text></g>
+<!-- Scene label -->
+<g transform="translate(16,16)"><rect width="220" height="26" rx="13" fill="rgba(25,0,0,0.8)" stroke="rgba(255,60,60,0.5)"/><text x="110" y="17" text-anchor="middle" fill="#ff3a3a" font-family="Orbitron" font-size="9" font-weight="700">SCENE 3 · PACKET LOSS</text></g>
+</g>
+<!-- SCENE 4: Status PDU -->
+<g id="scene4" opacity="0">
+<path d="M0 680 Q400 660 800 680 Q1200 700 1600 680 L1600 860 L0 860 Z" fill="#0a0818" opacity="0.6"/>
+<!-- UE (left) -->
+<g transform="translate(65,200)" filter="url(#shadow)">
+<rect width="122" height="210" rx="16" fill="url(#ueGrad)" stroke="#3b82f6" stroke-width="2"/>
+<rect x="9" y="26" width="104" height="156" rx="5" fill="#0a1835"/>
+<text x="61" y="50" text-anchor="middle" fill="#3b82f6" font-family="Orbitron" font-size="8" font-weight="700">UE DEVICE</text>
+<text x="61" y="64" text-anchor="middle" fill="#ff3a3a" font-family="JetBrains Mono" font-size="7" font-weight="600">GAP: SN2 DETECTED</text>
+<rect x="13" y="74" width="96" height="16" rx="3" fill="rgba(0,245,255,0.1)" stroke="rgba(0,245,255,0.2)"/>
+<text x="61" y="86" text-anchor="middle" fill="#00f5ff" font-family="JetBrains Mono" font-size="7">SN1 ✓</text>
+<rect x="13" y="94" width="96" height="16" rx="3" fill="rgba(255,40,40,0.1)" stroke="rgba(255,40,40,0.3)"/>
+<text x="61" y="106" text-anchor="middle" fill="#ff3a3a" font-family="JetBrains Mono" font-size="7">SN2 ✗ MISSING</text>
+<rect x="13" y="114" width="96" height="16" rx="3" fill="rgba(255,140,0,0.08)" stroke="rgba(255,140,0,0.2)"/>
+<text x="61" y="126" text-anchor="middle" fill="#ff8c00" font-family="JetBrains Mono" font-size="7">SN3 ⚠ buffered</text>
+<rect x="13" y="134" width="96" height="16" rx="3" fill="rgba(168,85,247,0.08)" stroke="rgba(168,85,247,0.2)"/>
+<text x="61" y="146" text-anchor="middle" fill="#a855f7" font-family="JetBrains Mono" font-size="7">SN4 ⚠ buffered</text>
+<rect x="13" y="154" width="96" height="22" rx="4" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1.5"><animate attributeName="opacity" values="1;.5;1" dur="1.5s" repeatCount="indefinite"/></rect>
+<text x="61" y="169" text-anchor="middle" fill="#a855f7" font-family="JetBrains Mono" font-size="7" font-weight="700">▶ Sending STATUS PDU</text>
+<rect x="13" y="180" width="96" height="16" rx="3" fill="rgba(0,0,0,0.2)"/>
+<text x="61" y="192" text-anchor="middle" fill="#4a5a6a" font-family="JetBrains Mono" font-size="6.5">t-StatusProhibit: OFF</text>
+<rect x="42" y="198" width="38" height="3" rx="1.5" fill="#3b82f6" opacity="0.4"/>
+</g>
+<!-- Return path line (purple dashed) -->
+<path d="M192 360 C500 262 880 262 1265 335" stroke="rgba(168,85,247,0.28)" stroke-width="2.5" fill="none" stroke-dasharray="10,6"><animate attributeName="stroke-dashoffset" values="0;-32" dur="1s" repeatCount="indefinite"/></path>
+<path d="M192 360 C500 262 880 262 1265 335" stroke="rgba(168,85,247,0.08)" stroke-width="35" fill="none" stroke-linecap="round"/>
+<!-- Animated envelope along path -->
+<!-- envelope body -->
+<g><animateMotion dur="3.5s" repeatCount="indefinite" path="M192,360 C500,262 880,262 1265,335">
+<rect width="120" height="76" rx="8" fill="url(#statusGrad)" stroke="#a855f7" stroke-width="2" filter="url(#glow)"/>
+</animateMotion></g>
+<!-- envelope V fold -->
+<g><animateMotion dur="3.5s" repeatCount="indefinite" path="M192,360 C500,262 880,262 1265,335">
+<path d="M0,0 L60,30 L120,0" fill="none" stroke="#a855f7" stroke-width="1.5" opacity=".6"/>
+</animateMotion></g>
+<!-- text inside envelope -->
+<g><animateMotion dur="3.5s" repeatCount="indefinite" path="M192,360 C500,262 880,262 1265,335">
+<text x="60" y="18" text-anchor="middle" font-family="Orbitron" font-size="8" font-weight="700" fill="#c084fc">STATUS PDU</text>
+</animateMotion></g>
+<g><animateMotion dur="3.5s" repeatCount="indefinite" path="M192,360 C500,262 880,262 1265,335">
+<text x="60" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#00ff9d">ACK  SN1</text>
+</animateMotion></g>
+<g><animateMotion dur="3.5s" repeatCount="indefinite" path="M192,360 C500,262 880,262 1265,335">
+<text x="60" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ff3a3a" font-weight="700">NACK SN2</text>
+</animateMotion></g>
+<g><animateMotion dur="3.5s" repeatCount="indefinite" path="M192,360 C500,262 880,262 1265,335">
+<text x="60" y="67" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#00ff9d">ACK  SN3, SN4</text>
+</animateMotion></g>
+<!-- "RLC Status PDU" label over path -->
+<g transform="translate(630,202)"><rect width="340" height="40" rx="8" fill="rgba(10,0,20,0.82)" stroke="rgba(168,85,247,0.35)"/><text x="170" y="16" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="10" font-weight="700">RLC STATUS PDU</text><text x="170" y="32" text-anchor="middle" fill="#7a50a0" font-family="JetBrains Mono" font-size="8">Return path: UE → gNB</text></g>
+<!-- Status PDU Content Panel (center lower) -->
+<g transform="translate(520,416)" filter="url(#shadow)">
+<rect width="560" height="270" rx="12" fill="rgba(5,0,18,0.96)" stroke="#a855f7" stroke-width="2"/>
+<rect x="0" y="0" width="560" height="2" rx="1" fill="#a855f7"/>
+<text x="280" y="24" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="13" font-weight="700">STATUS PDU CONTENT</text>
+<text x="280" y="40" text-anchor="middle" fill="#7a5a9a" font-family="JetBrains Mono" font-size="8">3GPP TS 38.322 — RLC AM Status Report</text>
+<!-- ACK SN1 -->
+<rect x="16" y="52" width="250" height="52" rx="6" fill="rgba(0,255,157,0.1)" stroke="#00ff9d" stroke-width="1.5"/>
+<text x="72" y="78" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="13" font-weight="700">ACK</text>
+<rect x="115" y="58" width="2" height="40" fill="rgba(0,255,157,0.28)"/>
+<text x="183" y="76" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="10">SN 1</text>
+<text x="183" y="93" text-anchor="middle" fill="#4a8a6a" font-family="JetBrains Mono" font-size="7">Received OK</text>
+<!-- NACK SN2 -->
+<rect x="294" y="52" width="250" height="52" rx="6" fill="rgba(255,40,40,0.12)" stroke="#ff3a3a" stroke-width="2.2"><animate attributeName="stroke-width" values="2.2;3.5;2.2" dur=".8s" repeatCount="indefinite"/></rect>
+<text x="350" y="78" text-anchor="middle" fill="#ff3a3a" font-family="Orbitron" font-size="13" font-weight="700">NACK</text>
+<rect x="395" y="58" width="2" height="40" fill="rgba(255,40,40,0.28)"/>
+<text x="463" y="76" text-anchor="middle" fill="#ff3a3a" font-family="JetBrains Mono" font-size="10" font-weight="700">SN 2</text>
+<text x="463" y="93" text-anchor="middle" fill="#aa4a4a" font-family="JetBrains Mono" font-size="7">REQUEST RESEND!</text>
+<!-- ACK SN3 -->
+<rect x="16" y="116" width="250" height="52" rx="6" fill="rgba(0,255,157,0.1)" stroke="#00ff9d" stroke-width="1.5"/>
+<text x="72" y="142" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="13" font-weight="700">ACK</text>
+<rect x="115" y="122" width="2" height="40" fill="rgba(0,255,157,0.28)"/>
+<text x="183" y="140" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="10">SN 3</text>
+<text x="183" y="157" text-anchor="middle" fill="#4a8a6a" font-family="JetBrains Mono" font-size="7">Buffered OK</text>
+<!-- ACK SN4 -->
+<rect x="294" y="116" width="250" height="52" rx="6" fill="rgba(0,255,157,0.1)" stroke="#00ff9d" stroke-width="1.5"/>
+<text x="350" y="142" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="13" font-weight="700">ACK</text>
+<rect x="395" y="122" width="2" height="40" fill="rgba(0,255,157,0.28)"/>
+<text x="463" y="140" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="10">SN 4</text>
+<text x="463" y="157" text-anchor="middle" fill="#4a8a6a" font-family="JetBrains Mono" font-size="7">Buffered OK</text>
+<!-- Legend -->
+<rect x="16" y="180" width="528" height="1.5" fill="rgba(168,85,247,0.18)"/>
+<circle cx="36" cy="198" r="7" fill="#00ff9d" opacity=".8"/>
+<text x="52" y="203" fill="#7aaaa0" font-family="JetBrains Mono" font-size="8">ACK = Positive Acknowledgment (received OK)</text>
+<circle cx="302" cy="198" r="7" fill="#ff3a3a" opacity=".8"/>
+<text x="318" y="203" fill="#aa7070" font-family="JetBrains Mono" font-size="8">NACK = Negative Acknowledgment (missing!)</text>
+<text x="280" y="224" text-anchor="middle" fill="#4a3a6a" font-family="JetBrains Mono" font-size="7.5">ACK_SN=5 | NACK_SN=2 | SO_Start=0 | SO_End=511</text>
+<text x="280" y="242" text-anchor="middle" fill="#3a2a5a" font-family="JetBrains Mono" font-size="7">D/C=0 (Control PDU) | CPT=000 (Status PDU) | E1=0</text>
+<text x="280" y="258" text-anchor="middle" fill="#2a1a4a" font-family="JetBrains Mono" font-size="6.5">Polling bit cleared · t-StatusProhibit starts after TX</text>
+</g>
+<!-- gNB receiving indicator -->
+<g transform="translate(1270,240)" filter="url(#shadow)">
+<rect width="140" height="48" rx="8" fill="rgba(10,0,25,0.92)" stroke="#a855f7" stroke-width="1.8"><animate attributeName="opacity" values="1;.55;1" dur="1.5s" repeatCount="indefinite"/></rect>
+<text x="70" y="20" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="9" font-weight="700">gNB DU-01</text>
+<text x="70" y="36" text-anchor="middle" fill="#7a50a0" font-family="JetBrains Mono" font-size="8">RX STATUS PDU</text>
+</g>
+<!-- Scene info -->
+<g transform="translate(530,714)"><rect width="540" height="60" rx="10" fill="rgba(10,0,20,0.9)" stroke="rgba(168,85,247,0.4)"/><text x="270" y="25" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="12" font-weight="700" letter-spacing="2">STATUS PDU — FEEDBACK REPORT</text><text x="270" y="45" text-anchor="middle" fill="#9a70bb" font-family="JetBrains Mono" font-size="9">UE sends ACK/NACK report · gNB identifies SN2 for retransmission</text></g>
+<!-- Scene label -->
+<g transform="translate(16,16)"><rect width="212" height="26" rx="13" fill="rgba(15,0,25,0.8)" stroke="rgba(168,85,247,0.5)"/><text x="106" y="17" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="9" font-weight="700">SCENE 4 · STATUS PDU</text></g>
+</g>
+<!-- SCENE 5: Retransmission -->
+<g id="scene5" opacity="0">
+<path d="M0 680 Q400 660 800 680 Q1200 700 1600 680 L1600 860 L0 860 Z" fill="#0a1008" opacity="0.6"/>
+<!-- mini tower left -->
+<g transform="translate(55,60)" filter="url(#shadow)">
+<path d="M60 620 L74 100 L80 100 L68 620 Z" fill="url(#towerGrad)"/>
+<path d="M100 620 L92 100 L98 100 L108 620 Z" fill="url(#towerGrad)"/>
+<g stroke="#6a7a8a" stroke-width="2" fill="none"><line x1="61" y1="528" x2="107" y2="528"/><line x1="63" y1="428" x2="105" y2="428"/></g>
+<circle cx="84" cy="88" r="5" fill="url(#ledRed)" filter="url(#glow)"><animate attributeName="opacity" values="1;0.1;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<circle cx="84" cy="88" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.15;1" dur="1.1s" repeatCount="indefinite"/></circle>
+</g>
+<!-- Retransmission Buffer Panel -->
+<g transform="translate(170,130)" filter="url(#shadow)">
+<rect width="330" height="470" rx="12" fill="rgba(5,12,28,0.97)" stroke="#ff8c00" stroke-width="2"/>
+<rect x="0" y="0" width="330" height="2" rx="1" fill="#ff8c00"/>
+<text x="165" y="24" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="12" font-weight="700">RETRANSMISSION BUFFER</text>
+<text x="165" y="40" text-anchor="middle" fill="#7a5a2a" font-family="JetBrains Mono" font-size="8">Selective ARQ · NACK received for SN2</text>
+<!-- SN1 - ACKed faded -->
+<rect x="16" y="54" width="298" height="62" rx="6" fill="rgba(0,245,255,0.04)" stroke="rgba(0,245,255,0.18)" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="74" y="84" text-anchor="middle" fill="rgba(0,245,255,0.4)" font-family="Orbitron" font-size="11" font-weight="700">SN 1</text>
+<rect x="112" y="60" width="2" height="50" fill="rgba(0,245,255,0.1)"/>
+<text x="206" y="82" text-anchor="middle" fill="rgba(0,245,255,0.35)" font-family="JetBrains Mono" font-size="8">ACKed – Released</text>
+<text x="206" y="99" text-anchor="middle" fill="rgba(0,245,255,0.2)" font-family="JetBrains Mono" font-size="7">✓ No retransmit needed</text>
+<!-- SN2 - HIGHLIGHTED ORANGE for retransmit -->
+<rect x="16" y="128" width="298" height="76" rx="6" fill="rgba(255,140,0,0.18)" stroke="#ff8c00" stroke-width="3" filter="url(#glowSoft)"><animate attributeName="stroke-width" values="3;5;3" dur=".9s" repeatCount="indefinite"/></rect>
+<!-- orange glow halo -->
+<ellipse cx="165" cy="166" rx="130" ry="32" fill="rgba(255,140,0,0.1)"><animate attributeName="ry" values="32;44;32" dur=".9s" repeatCount="indefinite"/><animate attributeName="opacity" values=".4;.9;.4" dur=".9s" repeatCount="indefinite"/></ellipse>
+<text x="74" y="162" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="13" font-weight="700">SN 2</text>
+<rect x="112" y="134" width="2" height="64" fill="rgba(255,140,0,0.35)"/>
+<text x="206" y="156" text-anchor="middle" fill="#ff8c00" font-family="JetBrains Mono" font-size="8" font-weight="700">▶ RETRANSMITTING</text>
+<text x="206" y="172" text-anchor="middle" fill="#cc7000" font-family="JetBrains Mono" font-size="7">NACK received → Resend</text>
+<text x="206" y="190" text-anchor="middle" fill="#aa5500" font-family="JetBrains Mono" font-size="7">Retry Count: 1 / MAXRETX=4</text>
+<circle cx="26" cy="166" r="6" fill="#ff8c00" filter="url(#glow)"><animate attributeName="opacity" values="1;.3;1" dur=".45s" repeatCount="indefinite"/></circle>
+<!-- SN3 - ACKed -->
+<rect x="16" y="216" width="298" height="62" rx="6" fill="rgba(0,245,255,0.04)" stroke="rgba(0,245,255,0.18)" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="74" y="246" text-anchor="middle" fill="rgba(255,140,0,0.38)" font-family="Orbitron" font-size="11" font-weight="700">SN 3</text>
+<rect x="112" y="222" width="2" height="50" fill="rgba(255,140,0,0.1)"/>
+<text x="206" y="244" text-anchor="middle" fill="rgba(0,245,255,0.35)" font-family="JetBrains Mono" font-size="8">ACKed – Released</text>
+<text x="206" y="261" text-anchor="middle" fill="rgba(0,245,255,0.2)" font-family="JetBrains Mono" font-size="7">✓ Buffered at UE</text>
+<!-- SN4 - ACKed -->
+<rect x="16" y="288" width="298" height="62" rx="6" fill="rgba(168,85,247,0.04)" stroke="rgba(168,85,247,0.18)" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="74" y="318" text-anchor="middle" fill="rgba(168,85,247,0.38)" font-family="Orbitron" font-size="11" font-weight="700">SN 4</text>
+<rect x="112" y="294" width="2" height="50" fill="rgba(168,85,247,0.1)"/>
+<text x="206" y="316" text-anchor="middle" fill="rgba(0,245,255,0.35)" font-family="JetBrains Mono" font-size="8">ACKed – Released</text>
+<text x="206" y="333" text-anchor="middle" fill="rgba(0,245,255,0.2)" font-family="JetBrains Mono" font-size="7">✓ Buffered at UE</text>
+<!-- footer status -->
+<rect x="16" y="362" width="298" height="2" fill="rgba(255,140,0,0.15)"/>
+<text x="165" y="382" text-anchor="middle" fill="#ff8c00" font-family="JetBrains Mono" font-size="8" font-weight="600">VT(A)=1 · NACK SN=2</text>
+<text x="165" y="398" text-anchor="middle" fill="#7a5a2a" font-family="JetBrains Mono" font-size="7">Selective Retransmission</text>
+<text x="165" y="414" text-anchor="middle" fill="#5a3a1a" font-family="JetBrains Mono" font-size="7">ONLY SN2 resent — not SN3, SN4</text>
+<text x="165" y="432" text-anchor="middle" fill="#3a2a0a" font-family="JetBrains Mono" font-size="6.5">Bandwidth efficient: selective vs Go-Back-N</text>
+<text x="165" y="452" text-anchor="middle" fill="#aa7700" font-family="JetBrains Mono" font-size="7" font-weight="600">t-PollRetransmit: Cleared</text>
+</g>
+<!-- Wireless path orange glow -->
+<path d="M502 318 C720 232 960 232 1175 318" stroke="rgba(255,140,0,0.06)" stroke-width="45" fill="none" stroke-linecap="round"/>
+<path d="M502 318 C720 232 960 232 1175 318" stroke="rgba(255,140,0,0.22)" stroke-width="2.5" fill="none" stroke-dasharray="10,6" marker-end="url(#arrowO)"><animate attributeName="stroke-dashoffset" values="0;-32" dur="0.8s" repeatCount="indefinite"/></path>
+<!-- "Selective Retransmission" label over path -->
+<g transform="translate(560,180)"><rect width="478" height="42" rx="8" fill="rgba(12,5,0,0.82)" stroke="rgba(255,140,0,0.4)"/><text x="239" y="16" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="12" font-weight="700">SELECTIVE RETRANSMISSION</text><text x="239" y="34" text-anchor="middle" fill="#8a5a20" font-family="JetBrains Mono" font-size="8">Only SN2 resent · SN3, SN4 already buffered at UE</text></g>
+<!-- Animated SN2 retransmit packet -->
+<g><animateMotion dur="2.5s" repeatCount="indefinite" path="M502,318 C720,232 960,232 1175,318">
+<rect width="60" height="32" rx="6" fill="url(#pktOrange)" filter="url(#glow)" opacity=".95"/>
+</animateMotion></g>
+<g><animateMotion dur="2.5s" repeatCount="indefinite" path="M562,318 C780,232 1020,232 1235,318">
+<text x="30" y="21" text-anchor="middle" font-family="Orbitron" font-size="9" font-weight="700" fill="#000">SN 2</text>
+</animateMotion></g>
+<g><animateMotion dur="2.5s" repeatCount="indefinite" path="M562,325 C780,239 1020,239 1235,325">
+<text x="30" y="12" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#000">RETX</text>
+</animateMotion></g>
+<!-- Glow particle on path -->
+<circle r="6" fill="#ff8c00" filter="url(#glowStrong)" opacity=".8"><animateMotion dur="1.5s" repeatCount="indefinite" path="M502,318 C720,232 960,232 1175,318"/></circle>
+<!-- UE RX Buffer (right) -->
+<g transform="translate(1175,150)" filter="url(#shadow)">
+<rect width="270" height="390" rx="12" fill="rgba(5,10,20,0.96)" stroke="#3b82f6" stroke-width="2"/>
+<rect x="0" y="0" width="270" height="2" rx="1" fill="#3b82f6"/>
+<text x="135" y="26" text-anchor="middle" fill="#3b82f6" font-family="Orbitron" font-size="11" font-weight="700">UE RX BUFFER</text>
+<!-- SN1 delivered -->
+<rect x="16" y="38" width="238" height="58" rx="6" fill="rgba(0,245,255,0.07)" stroke="rgba(0,245,255,0.2)" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="72" y="66" text-anchor="middle" fill="rgba(0,245,255,0.45)" font-family="Orbitron" font-size="10" font-weight="700">SN 1</text>
+<text x="170" y="64" text-anchor="middle" fill="rgba(0,245,255,0.4)" font-family="JetBrains Mono" font-size="8">✓ Delivered ↑</text>
+<!-- SN2 AWAITING -->
+<rect x="16" y="106" width="238" height="60" rx="6" fill="rgba(255,140,0,0.14)" stroke="#ff8c00" stroke-width="2"><animate attributeName="opacity" values="1;.55;1" dur="1s" repeatCount="indefinite"/></rect>
+<text x="72" y="136" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="12" font-weight="700">SN 2</text>
+<rect x="108" y="112" width="2" height="48" fill="rgba(255,140,0,0.3)"/>
+<text x="178" y="132" text-anchor="middle" fill="#ff8c00" font-family="JetBrains Mono" font-size="8" font-weight="700">⏳ AWAITING RETX</text>
+<text x="178" y="150" text-anchor="middle" fill="#aa7030" font-family="JetBrains Mono" font-size="7">Gap holder</text>
+<!-- SN3 buffered -->
+<rect x="16" y="176" width="238" height="58" rx="6" fill="rgba(255,140,0,0.09)" stroke="#ff8c00" stroke-width="1.5"/>
+<text x="72" y="204" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="10" font-weight="700">SN 3</text>
+<rect x="108" y="182" width="2" height="46" fill="rgba(255,140,0,0.2)"/>
+<text x="178" y="200" text-anchor="middle" fill="#cc9a44" font-family="JetBrains Mono" font-size="8">Buffered</text>
+<text x="178" y="218" text-anchor="middle" fill="#8a6a3a" font-family="JetBrains Mono" font-size="7">Out of sequence</text>
+<!-- SN4 buffered -->
+<rect x="16" y="244" width="238" height="58" rx="6" fill="rgba(168,85,247,0.09)" stroke="#a855f7" stroke-width="1.5"/>
+<text x="72" y="272" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="10" font-weight="700">SN 4</text>
+<rect x="108" y="250" width="2" height="46" fill="rgba(168,85,247,0.2)"/>
+<text x="178" y="268" text-anchor="middle" fill="#9a70c0" font-family="JetBrains Mono" font-size="8">Buffered</text>
+<text x="178" y="286" text-anchor="middle" fill="#7a508a" font-family="JetBrains Mono" font-size="7">Out of sequence</text>
+<rect x="16" y="314" width="238" height="2" fill="rgba(255,140,0,0.2)"/>
+<text x="135" y="334" text-anchor="middle" fill="#cc7700" font-family="JetBrains Mono" font-size="8" font-weight="600">Retransmission in flight…</text>
+<text x="135" y="350" text-anchor="middle" fill="#7a5a20" font-family="JetBrains Mono" font-size="7">t-Reordering: Running</text>
+<text x="135" y="366" text-anchor="middle" fill="#4a4a2a" font-family="JetBrains Mono" font-size="7">VR(H)=5 · VR(X)=2</text>
+</g>
+<!-- Scene info -->
+<g transform="translate(530,714)"><rect width="540" height="60" rx="10" fill="rgba(12,5,0,0.9)" stroke="rgba(255,140,0,0.4)"/><text x="270" y="25" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="12" font-weight="700" letter-spacing="2">SELECTIVE RETRANSMISSION</text><text x="270" y="45" text-anchor="middle" fill="#aa7030" font-family="JetBrains Mono" font-size="9">gNB resends only SN2 · Efficient recovery · No need to resend SN3, SN4</text></g>
+<!-- Scene label -->
+<g transform="translate(16,16)"><rect width="240" height="26" rx="13" fill="rgba(12,5,0,0.8)" stroke="rgba(255,140,0,0.5)"/><text x="120" y="17" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="9" font-weight="700">SCENE 5 · RETRANSMISSION</text></g>
+</g>
+<!-- SCENE 6: Reassembly – In-Sequence Delivery -->
+<g id="scene6" opacity="0">
+<path d="M0 680 Q400 660 800 680 Q1200 700 1600 680 L1600 860 L0 860 Z" fill="#041008" opacity="0.7"/>
+<!-- Green success glow background -->
+<ellipse cx="800" cy="400" rx="700" ry="350" fill="rgba(0,255,157,0.025)"><animate attributeName="rx" values="700;750;700" dur="3s" repeatCount="indefinite"/></ellipse>
+<!-- Telecom tower (left) -->
+<g transform="translate(55,60)" filter="url(#shadow)">
+<path d="M60 620 L74 100 L80 100 L68 620 Z" fill="url(#towerGrad)"/>
+<path d="M100 620 L92 100 L98 100 L108 620 Z" fill="url(#towerGrad)"/>
+<g stroke="#6a7a8a" stroke-width="2" fill="none"><line x1="61" y1="528" x2="107" y2="528"/><line x1="63" y1="428" x2="105" y2="428"/></g>
+<circle cx="84" cy="88" r="5" fill="url(#ledRed)" filter="url(#glow)"><animate attributeName="opacity" values="1;0.1;1" dur="1.1s" repeatCount="indefinite"/></circle>
+<circle cx="84" cy="88" r="3" fill="#ff0000"><animate attributeName="opacity" values="1;0.15;1" dur="1.1s" repeatCount="indefinite"/></circle>
+</g>
+<!-- gNB DU - SUCCESS STATUS -->
+<g transform="translate(170,220)" filter="url(#shadow)">
+<rect width="200" height="135" rx="10" fill="rgba(5,20,10,0.96)" stroke="#00ff9d" stroke-width="2"/>
+<rect x="0" y="0" width="200" height="2" rx="1" fill="#00ff9d"/>
+<text x="100" y="24" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="10" font-weight="700">DU-01 STATUS</text>
+<text x="100" y="42" text-anchor="middle" fill="#4aaa6a" font-family="JetBrains Mono" font-size="8">All ACKs Received</text>
+<rect x="14" y="52" width="172" height="22" rx="4" fill="rgba(0,255,157,0.15)" stroke="#00ff9d" stroke-width="1"/>
+<text x="100" y="67" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="8" font-weight="600">✓ SN1 ACKed</text>
+<rect x="14" y="78" width="172" height="22" rx="4" fill="rgba(0,255,157,0.15)" stroke="#00ff9d" stroke-width="1"/>
+<text x="100" y="93" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="8" font-weight="600">✓ SN2 Retransmitted → ACK</text>
+<rect x="14" y="104" width="172" height="22" rx="4" fill="rgba(0,255,157,0.15)" stroke="#00ff9d" stroke-width="1"/>
+<text x="100" y="119" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="8" font-weight="600">✓ SN3, SN4 ACKed</text>
+<g transform="translate(12,128)"><circle r="3" fill="#00ff88"><animate attributeName="opacity" values="1;.3;1" dur=".7s" repeatCount="indefinite"/></circle><circle cx="10" r="3" fill="#00ff88"/><circle cx="20" r="3" fill="#00ff88"/><circle cx="30" r="3" fill="#ffcc00"><animate attributeName="opacity" values="1;.4;1" dur=".5s" repeatCount="indefinite"/></circle></g>
+</g>
+<!-- Wireless path - success green -->
+<path d="M378 360 C600 278 960 278 1180 360" stroke="rgba(0,255,157,0.06)" stroke-width="45" fill="none" stroke-linecap="round"/>
+<path d="M378 360 C600 278 960 278 1180 360" stroke="rgba(0,255,157,0.18)" stroke-width="2.5" fill="none" stroke-dasharray="10,6" marker-end="url(#arrowG)"><animate attributeName="stroke-dashoffset" values="0;-32" dur="0.9s" repeatCount="indefinite"/></path>
+<!-- Label over path -->
+<g transform="translate(560,212)"><rect width="480" height="42" rx="8" fill="rgba(0,10,5,0.82)" stroke="rgba(0,255,157,0.35)"/><text x="240" y="16" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="12" font-weight="700">SN2 RETRANSMISSION RECEIVED</text><text x="240" y="34" text-anchor="middle" fill="#3a8a5a" font-family="JetBrains Mono" font-size="8">Gap filled · Reassembly triggered · In-sequence delivery possible</text></g>
+<!-- UE Reassembly Buffer - COMPLETE -->
+<g transform="translate(1180,130)" filter="url(#shadow)">
+<rect width="296" height="530" rx="12" fill="rgba(5,12,25,0.97)" stroke="#00ff9d" stroke-width="2.5" filter="url(#glow)"><animate attributeName="stroke-width" values="2.5;4;2.5" dur="2s" repeatCount="indefinite"/></rect>
+<!-- Green glow on border -->
+<rect x="0" y="0" width="296" height="2.5" rx="1" fill="#00ff9d"/>
+<text x="148" y="26" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="12" font-weight="700">UE RX BUFFER</text>
+<text x="148" y="42" text-anchor="middle" fill="#3a8a5a" font-family="JetBrains Mono" font-size="8">ALL SEGMENTS RECEIVED ✓</text>
+<!-- SN1 -->
+<rect x="16" y="54" width="264" height="60" rx="6" fill="rgba(0,245,255,0.12)" stroke="#00f5ff" stroke-width="1.5"/>
+<text x="76" y="82" text-anchor="middle" fill="#00f5ff" font-family="Orbitron" font-size="11" font-weight="700">SN 1</text>
+<rect x="110" y="60" width="2" height="48" fill="rgba(0,245,255,0.25)"/>
+<text x="192" y="80" text-anchor="middle" fill="#00ff88" font-family="JetBrains Mono" font-size="9">✓ RECEIVED</text>
+<text x="192" y="98" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="7">Delivered ↑ to PDCP</text>
+<!-- SN2 - RECEIVED (was missing, now back) -->
+<rect x="16" y="124" width="264" height="60" rx="6" fill="rgba(0,255,157,0.16)" stroke="#00ff9d" stroke-width="2.2" filter="url(#glowSoft)"><animate attributeName="opacity" values="1;.8;1" dur="1.5s" repeatCount="indefinite"/></rect>
+<!-- green glow pulse on SN2 -->
+<ellipse cx="148" cy="154" rx="120" ry="25" fill="rgba(0,255,157,0.1)"><animate attributeName="ry" values="25;36;25" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".3;.7;.3" dur="1.5s" repeatCount="indefinite"/></ellipse>
+<text x="76" y="154" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="13" font-weight="800">SN 2</text>
+<rect x="110" y="130" width="2" height="48" fill="rgba(0,255,157,0.35)"/>
+<text x="192" y="150" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="9" font-weight="700">✓ RETRANSMIT OK</text>
+<text x="192" y="168" text-anchor="middle" fill="#3a8a5a" font-family="JetBrains Mono" font-size="7">Gap Filled!</text>
+<!-- SN3 -->
+<rect x="16" y="194" width="264" height="60" rx="6" fill="rgba(255,140,0,0.1)" stroke="#ff8c00" stroke-width="1.5"/>
+<text x="76" y="222" text-anchor="middle" fill="#ff8c00" font-family="Orbitron" font-size="11" font-weight="700">SN 3</text>
+<rect x="110" y="200" width="2" height="48" fill="rgba(255,140,0,0.22)"/>
+<text x="192" y="218" text-anchor="middle" fill="#00ff88" font-family="JetBrains Mono" font-size="9">✓ IN SEQUENCE</text>
+<text x="192" y="236" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="7">Delivering ↑</text>
+<!-- SN4 -->
+<rect x="16" y="264" width="264" height="60" rx="6" fill="rgba(168,85,247,0.1)" stroke="#a855f7" stroke-width="1.5"/>
+<text x="76" y="292" text-anchor="middle" fill="#a855f7" font-family="Orbitron" font-size="11" font-weight="700">SN 4</text>
+<rect x="110" y="270" width="2" height="48" fill="rgba(168,85,247,0.22)"/>
+<text x="192" y="288" text-anchor="middle" fill="#00ff88" font-family="JetBrains Mono" font-size="9">✓ IN SEQUENCE</text>
+<text x="192" y="306" text-anchor="middle" fill="#4a8aaa" font-family="JetBrains Mono" font-size="7">Delivering ↑</text>
+<!-- Merge arrow into message bubble -->
+<g transform="translate(60,338)">
+<path d="M0,0 L176,0" stroke="rgba(0,255,157,0.5)" stroke-width="2" stroke-dasharray="5,3"/>
+<polygon points="176,0 162,-8 162,8" fill="#00ff9d"/>
+</g>
+<!-- Reassembled message bubble -->
+<rect x="16" y="348" width="264" height="80" rx="10" fill="rgba(0,255,157,0.18)" stroke="#00ff9d" stroke-width="2.5" filter="url(#glow)"><animate attributeName="opacity" values="1;.7;1" dur="2s" repeatCount="indefinite"/></rect>
+<text x="148" y="374" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="11" font-weight="800">SDU REASSEMBLED</text>
+<text x="148" y="394" text-anchor="middle" fill="#4aaa6a" font-family="JetBrains Mono" font-size="9">SN1 + SN2 + SN3 + SN4</text>
+<text x="148" y="412" text-anchor="middle" fill="#2a7a4a" font-family="JetBrains Mono" font-size="8">Delivering to PDCP ↑</text>
+<rect x="16" y="442" width="264" height="2" fill="rgba(0,255,157,0.18)"/>
+<text x="148" y="464" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="8" font-weight="600">VR(R)=5 · VR(H)=5</text>
+<text x="148" y="480" text-anchor="middle" fill="#3a8a5a" font-family="JetBrains Mono" font-size="7">t-Reordering: Stopped</text>
+<text x="148" y="496" text-anchor="middle" fill="#2a6a3a" font-family="JetBrains Mono" font-size="7">Window advanced successfully</text>
+<text x="148" y="516" text-anchor="middle" fill="#00ff9d" font-family="JetBrains Mono" font-size="7" font-weight="600">ARQ Cycle Complete ✓</text>
+</g>
+<!-- Flying SN2 retransmit arriving at UE -->
+<g><animateMotion dur="2.2s" repeatCount="indefinite" path="M378,360 C600,278 960,278 1180,360">
+<rect width="60" height="32" rx="6" fill="url(#pktGreen)" filter="url(#glow)" opacity=".95"/>
+</animateMotion></g>
+<g><animateMotion dur="2.2s" repeatCount="indefinite" path="M438,360 C660,278 1020,278 1240,360">
+<text x="30" y="21" text-anchor="middle" font-family="Orbitron" font-size="9" font-weight="700" fill="#000">SN 2</text>
+</animateMotion></g>
+<!-- Success particles radiating from UE buffer -->
+<circle cx="1328" cy="470" r="5" fill="#00ff9d" filter="url(#glow)"><animate attributeName="cx" values="1328;1380;1360" dur="2s" repeatCount="indefinite"/><animate attributeName="cy" values="470;430;410" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;0" dur="2s" repeatCount="indefinite"/></circle>
+<circle cx="1328" cy="470" r="4" fill="#00f5ff" filter="url(#glow)"><animate attributeName="cx" values="1328;1290;1270" dur="2.3s" repeatCount="indefinite" begin=".3s"/><animate attributeName="cy" values="470;440;420" dur="2.3s" repeatCount="indefinite" begin=".3s"/><animate attributeName="opacity" values=".8;0;0" dur="2.3s" repeatCount="indefinite" begin=".3s"/></circle>
+<circle cx="1328" cy="470" r="6" fill="#00ff9d" filter="url(#glow)"><animate attributeName="cx" values="1328;1360;1390" dur="1.8s" repeatCount="indefinite" begin=".6s"/><animate attributeName="cy" values="470;500;520" dur="1.8s" repeatCount="indefinite" begin=".6s"/><animate attributeName="opacity" values=".9;0;0" dur="1.8s" repeatCount="indefinite" begin=".6s"/></circle>
+<!-- BIG SUCCESS TEXT panel -->
+<g transform="translate(310,590)"><rect width="800" height="88" rx="14" fill="rgba(0,10,5,0.94)" stroke="#00ff9d" stroke-width="2" filter="url(#glow)"><animate attributeName="stroke-width" values="2;3.5;2" dur="2s" repeatCount="indefinite"/></rect><rect x="0" y="0" width="800" height="2" rx="1" fill="#00ff9d"/><text x="400" y="30" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="16" font-weight="800" letter-spacing="3">✓ RELIABLE IN-SEQUENCE DELIVERY ACHIEVED</text><text x="400" y="54" text-anchor="middle" fill="#3a8a5a" font-family="JetBrains Mono" font-size="10">ARQ cycle complete · All 4 SDUs delivered in order to PDCP layer</text><text x="400" y="76" text-anchor="middle" fill="#2a6a3a" font-family="JetBrains Mono" font-size="8">RLC AM — 3GPP TS 38.322 — Selective Retransmission ARQ</text></g>
+<!-- Scene label -->
+<g transform="translate(16,16)"><rect width="218" height="26" rx="13" fill="rgba(0,15,8,0.8)" stroke="rgba(0,255,157,0.6)"/><text x="109" y="17" text-anchor="middle" fill="#00ff9d" font-family="Orbitron" font-size="9" font-weight="700">SCENE 6 · REASSEMBLY</text></g>
+</g>
+<!-- Close SVG -->
+</svg>
+<!-- Scene Controls -->
+<div class="scene-controls">
+    <button id="prevBtn" onclick="changeScene(-1)" disabled>◀ PREV</button>
+    <div class="scene-dots" id="dots"></div>
+    <span id="scene-indicator">Scene 1 of 6</span>
+    <button id="nextBtn" onclick="changeScene(1)">NEXT ▶</button>
+</div>
+</div>
+<!-- INFO CARDS -->
+<div class="info-grid">
+    <div class="info-card am">
+        <h3>RLC Acknowledged Mode (AM)</h3>
+        <p>RLC AM provides reliable, in-order data delivery between DU and UE. It uses sequence numbering, acknowledgment feedback, and selective retransmission to guarantee that all PDUs reach the destination without corruption or loss.</p>
+        <div class="specs">• Layer: L2 (RLC sublayer)<br>• Standard: 3GPP TS 38.322<br>• Deployed at: DU (transmit) + UE (receive)<br>• Window Size: up to 4096 SNs (12-bit SN)<br>• Status Report: periodic + on-demand</div>
+    </div>
+    <div class="info-card arq">
+        <h3>ARQ Mechanism</h3>
+        <p>Automatic Repeat reQuest (ARQ) is the error-control protocol at the heart of RLC AM. When the UE detects a missing sequence number in its receive buffer, it generates a Status PDU containing NACK entries for the missing SNs, triggering selective retransmission at the gNB.</p>
+        <div class="specs">• Type: Selective ARQ (not Go-Back-N)<br>• NACK triggers: gap detection + t-Reordering expiry<br>• Poll bit: requests immediate status report<br>• Max retransmissions: configurable (MAXRETX)<br>• t-PollRetransmit: ensures feedback arrives</div>
+    </div>
+    <div class="info-card sn">
+        <h3>Sequence Numbering</h3>
+        <p>Each RLC PDU is assigned a unique Sequence Number (SN) before transmission. The transmit window slides as ACKs arrive. The receive window tracks the next expected SN (VR(R)) and detects gaps when out-of-order PDUs are received.</p>
+        <div class="specs">• TX variables: TX_Next, TX_Next_Ack<br>• RX variables: VR(R), VR(MR), VR(X), VR(H)<br>• SN size: 12-bit (4096 values) or 18-bit<br>• Window: SN_FieldLength defines range<br>• Wrap-around: handled by modular arithmetic</div>
+    </div>
+    <div class="info-card buf">
+        <h3>Retransmission Buffer Logic</h3>
+        <p>The gNB maintains a retransmission buffer holding all unacknowledged PDUs. Upon receiving a NACK in a Status PDU, only the NACKed PDU(s) are retransmitted — this selective approach saves significant radio resources compared to Go-Back-N schemes.</p>
+        <div class="specs">• Buffer holds: all unACKed TX PDUs<br>• On NACK: selective resend of specific SN<br>• On ACK: PDU released from buffer<br>• Priority: retransmissions queued before new data<br>• RLC + HARQ: two-level ARQ mechanism</div>
+    </div>
+</div>
+<!-- ARCHITECTURE TABLE -->
+<div class="arch-panel">
+    <h2>RLC ARQ FUNCTIONAL REFERENCE TABLE</h2>
+    <table>
+        <tr><th>Function</th><th>Role</th><th>Trigger</th><th>Outcome</th></tr>
+        <tr><td style="color:#00f5ff">Data PDU</td><td>Carries user data (RLC SDU segment)</td><td>New data available in TX buffer</td><td>Sent with SN, stored for possible retransmit</td></tr>
+        <tr><td style="color:#a855f7">Status PDU</td><td>Feedback – ACK/NACK per SN</td><td>Gap detected / Poll bit / t-Reordering expires</td><td>gNB identifies missing SNs for retransmit</td></tr>
+        <tr><td style="color:#ff8c00">Retransmission</td><td>Lost packet selective recovery</td><td>NACK received for specific SN</td><td>Only NACKed SN resent — bandwidth efficient</td></tr>
+        <tr><td style="color:#00ff9d">Reassembly</td><td>In-order delivery to PDCP</td><td>All SNs in window received</td><td>SDU reconstructed and delivered upward</td></tr>
+        <tr><td style="color:#ff3a3a">t-Reordering</td><td>Reorder timer for OOO PDUs</td><td>Out-of-sequence PDU received</td><td>Triggers Status PDU on expiry</td></tr>
+        <tr><td style="color:#3b82f6">Poll Bit</td><td>Requests mandatory status report</td><td>Set on last PDU in window</td><td>Forces UE to send Status PDU</td></tr>
+    </table>
+</div>
+<footer>
+    <strong style="color:#00f5ff">CafeTele</strong> | 5G RLC Layer – ARQ (Acknowledged Mode) PRO v1.0 | <a href="https://www.cafetele.com" target="_blank">www.cafetele.com</a> | © 2025 · 3GPP TS 38.322
+</footer>
+</div>
+<script>
+const scenes=['scene1','scene2','scene3','scene4','scene5','scene6'];
+const sceneNames=['Architecture Context','Data Transmission','Packet Loss','Status PDU','Retransmission','Reassembly'];
+let current=0;
+
+function buildDots(){
+    const d=document.getElementById('dots');
+    d.innerHTML='';
+    scenes.forEach((_,i)=>{
+        const dot=document.createElement('div');
+        dot.className='dot'+(i===0?' active':'');
+        dot.title=sceneNames[i];
+        dot.onclick=()=>goScene(i);
+        d.appendChild(dot);
+    });
+}
+
+function goScene(idx){
+    const old=document.getElementById(scenes[current]);
+    const next=document.getElementById(scenes[idx]);
+    old.style.transition='opacity 0.5s ease';
+    old.style.opacity='0';
+    setTimeout(()=>{
+        old.style.opacity='0';
+        next.style.transition='opacity 0.5s ease';
+        next.style.opacity='1';
+    },250);
+    current=idx;
+    document.getElementById('prevBtn').disabled=current===0;
+    document.getElementById('nextBtn').disabled=current===scenes.length-1;
+    document.getElementById('scene-indicator').textContent='Scene '+(current+1)+' of '+scenes.length+' — '+sceneNames[current];
+    const dots=document.querySelectorAll('.dot');
+    dots.forEach((d,i)=>d.classList.toggle('active',i===current));
+}
+
+function changeScene(dir){
+    const nxt=current+dir;
+    if(nxt>=0&&nxt<scenes.length)goScene(nxt);
+}
+
+// Initialize
+buildDots();
+// Set all non-first scenes to 0 opacity initially
+scenes.slice(1).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.opacity='0';
+});
+document.getElementById('scene-indicator').textContent='Scene 1 of 6 — Architecture Context';
+</script>
+</body>
+</html>
